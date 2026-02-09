@@ -5,14 +5,15 @@ k = 26;
 m = zeros(k, 1);
 m(1) = 1;
 g = [1; 0; 1; 0; 0; 1];
+t = 1;
 
 y = [bch_mod_g([zeros(n - k, 1); m],g); m];
 
 %%% TODO TURN SYMBOL TO BPSK AND ADD NOISE
 
-[m_hat, err] = bch_decoder(y, g, "syndrome-table.mat");
+[m_hat, err] = bch_decoder(y, g, t, "syndrome-table.mat");
 
-err_bits = sum(err);
+err_bits = sum(mod(m_hat + m, 2));
 
 fprintf("%d error bits! (%s)\n", err_bits, mat2str(err));
 

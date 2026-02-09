@@ -9,7 +9,7 @@
 function [synd_table] = bch_syndrome_table_gen(n, g, e_num, debug)
     %% Error vector generation
     err_mat = bch_error_vector_gen(n, e_num);
-    fprintf("%d unique error vectors\n", size(err_mat, 2) - 1) %% Minus 1 to remove the all zeros error vector
+    fprintf("%d unique error vectors\n", size(err_mat, 2))
     for ii=1:size(err_mat,2)
         e = err_mat(:,ii); %% Getting error collumn vector from error matrix
         %% Syndrome calculation
