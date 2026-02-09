@@ -14,7 +14,7 @@ function [synd_table] = bch_syndrome_table_gen(n, g, e_num, debug)
         e = err_mat(:,ii); %% Getting error collumn vector from error matrix
         %% Syndrome calculation
         synd = bch_mod_g(e, g);
-        synd_int = bi2de(synd');
+        synd_int = bi2de(synd', "left-msb");
         if debug
           fprintf("Synd: %d Err: %s\n", synd_int, mat2str(e))
         end

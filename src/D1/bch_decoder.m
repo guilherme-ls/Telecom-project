@@ -22,8 +22,7 @@ synd = bch_mod_g(y,g);
 synd_int = bi2de(synd');
 
 %%% Error calculation
-if synd == 0
-    disp("No errors!\n")
+if synd == 0 %% No Errors!
     err = zeros(length(y), 1);
 else
     err = synd_table{synd_int}; %%% Get the error from the syndrome table

@@ -6,16 +6,17 @@ syndrome_table_file_fmt = "syndrome-table-%d.mat";
 
 %%%% BCH Code Parameters %%%%
 n = 31;
-k = 26;
 
-bch_code_option = "1"; %"2"
+bch_code_option = "2";
 if bch_code_option == "1"
-  g = [1; 0; 1; 0; 0; 1];
   t = 1;
-else
   g = [1; 0; 1; 0; 0; 1];
+else
   t = 2;
+  g = [1; 0; 0; 1; 0; 1; 1; 0; 1; 1; 1];
 end
+
+k = n - length(g) + 1;
 
 syndrome_table_file = sprintf(syndrome_table_file_fmt, t); %% Syndrome file table based on the amount of corrected errors
 %%%%%% Simulation %%%%%%
@@ -25,7 +26,7 @@ m = zeros(k, 1);
 m(1) = 1;
 
 %%%% BCH code encoding %%%
-y = bch_coder(m, g)
+y = bch_coder(m, g);
 
 %%%% BPSK Symbol generation %%%
 
@@ -33,7 +34,14 @@ y = bch_coder(m, g)
 
 %%%% Channel model with noise %%%%
 
+%TODO%
+
+y(3) = mod(y(3) + 1, 2); % Bit flip
+y(1) = mod(y(1) + 1, 2); % Bit flip
+
 %%%% BPSK Receiver and symbol detection
+
+%TODO%
 
 %%%% BCH Code decoding %%%
 
@@ -43,5 +51,11 @@ y = bch_coder(m, g)
 
 err_bits = sum(mod(m_hat + m, 2));
 
-fprintf("%d error bits! (%s)\n", err_bits, mat2str(err));
+fprintf("Received message = %s\n", mat2str(m_hat));
+if sum(err) != 0
+  fprintf("Error found e = %s\n", mat2str(err));
+else
+  fprintf("No errors!\n");
+end
+fprintf("%d error bits!\n", err_bits);
 
