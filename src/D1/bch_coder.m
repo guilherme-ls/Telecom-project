@@ -1,19 +1,12 @@
-
-clear all;
-n = 31;
-k = 26;
-m = zeros(k, 1);
-m(1) = 1;
-g = [1; 0; 1; 0; 0; 1];
-t = 1;
-
-y = [bch_mod_g([zeros(n - k, 1); m],g); m];
-
-%%% TODO TURN SYMBOL TO BPSK AND ADD NOISE
-
-[m_hat, err] = bch_decoder(y, g, t, "syndrome-table.mat");
-
-err_bits = sum(mod(m_hat + m, 2));
-
-fprintf("%d error bits! (%s)\n", err_bits, mat2str(err));
-
+%%%%% bch_coder %%%%%
+%%%%% Arguments:
+%%%%% - m : Column vector representation of the m(x) data input polynomial
+%%%%% - g : Column vector representation of the g(x) polynomial
+%%%%% Return:
+%%%%% - y : Column vector representation of the code word 
+function [y] = bch_coder(m, g)
+  g_deg = length(g);
+  shifted_m = [zeros(g_deg - 1, 1); m]; %% m(x) shifted by n - k 
+  parity_bits = bch_mod_g(shifted_m, g);
+  y = [parity_bits; m];
+end
