@@ -1,0 +1,21 @@
+
+clear all;
+n = 31;
+k = 26;
+m = zeros(k, 1);
+m(1) = 1;
+m_rev = zeros(n, 1);
+m_rev(1:length(m)) = m(end:-1:1);
+g = [1 0 1 0 0 1];
+g_deg = size(g,2);
+parity_bits = zeros(g_deg-1, 1);
+
+for ii=1:n
+  parity_bits_prev = parity_bits;
+  parity_bits(1) = mod(m_rev(ii) + g(1) * parity_bits_prev(g_deg-1), 2);
+  for jj=2:g_deg-2
+    parity_bits(jj) = mod(parity_bits_prev(jj - 1) + g(jj) * parity_bits_prev(g_deg-1), 2);
+  end;
+  parity_bits(g_deg-1) = parity_bits_prev(g_deg - 2);
+end;
+display(parity_bits);
