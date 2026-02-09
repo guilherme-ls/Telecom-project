@@ -12,6 +12,7 @@
 *.nav
 *.out
 *.snm
+*.mat
 *.bbl
 *.blg
 *.bcf
