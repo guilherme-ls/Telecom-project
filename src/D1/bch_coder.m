@@ -10,7 +10,7 @@ y = [bch_mod_g([zeros(n - k, 1); m],g); m];
 
 %%% TODO TURN SYMBOL TO BPSK AND ADD NOISE
 
-[m_hat, err] = bch_decoder(y, g);
+[m_hat, err] = bch_decoder(y, g, "syndrome-table.mat");
 
 err_bits = sum(err);
 

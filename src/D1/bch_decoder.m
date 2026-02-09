@@ -2,28 +2,23 @@
 %%%%% Arguments:
 %%%%% - y : Column vector representation of the y(x) received input polynomial
 %%%%% - g : Column vector representation of the g(x) polynomial
+%%%%% - syndrome_table_file : Name of the file for the syndrome table 
 %%%%% Return:
 %%%%% - m_hat : Column vector representation of the closest predicted m(x) 
 function [m_hat, err] = bch_decoder(y, g, syndrome_table_file)
-    arguments
-        y (:,1)
-        g (:,1)
-        syndrome_table_file string  = "syndrome-table.mat"
-    end
-
 %%% If the syndrome table was already generated, don't regenerate it
 if exist(syndrome_table_file, 'file')
     disp("Loading syndrome table...\n");
     load(syndrome_table_file,"synd_table")
 else
     disp("Generating syndrome table...\n");
-    synd_table = bch_syndrome_table_gen(length(y), g, 1);
+    synd_table = bch_syndrome_table_gen(length(y), g, 2, false);
     save(syndrome_table_file, "synd_table",'-mat');
 end
 
 %%% Calculate syndrome and turn it into a integer representation
 synd = bch_mod_g(y,g);
-synd_int = bit2int(synd, length(synd));
+synd_int = bi2de(synd');
 
 %%% Error calculation
 if synd == 0

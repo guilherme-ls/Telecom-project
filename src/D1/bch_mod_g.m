@@ -5,10 +5,6 @@
 %%%%% Return:
 %%%%% - m_mod : Column vector representation of the result m(x) mod g(x)
 function [m_mod] = bch_mod_g(m, g)
-    arguments
-        m (:,1)
-        g (:,1)
-    end
     m(1:length(m)) = m(end:-1:1); %% Reversing m(x) so it gets correctly shifted into the shift registers
     
     g_deg = size(g,1);
