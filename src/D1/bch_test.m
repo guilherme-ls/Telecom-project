@@ -19,6 +19,7 @@ end
 k = n - length(g) + 1;
 
 syndrome_table_file = sprintf(syndrome_table_file_fmt, t); %% Syndrome file table based on the amount of corrected errors
+syndrome_table = bch_syndrome_table_file(n, g, t, syndrome_table_file);
 %%%%%% Simulation %%%%%%
 
 %%%% Data input generation %%%%
@@ -45,7 +46,7 @@ y(1) = mod(y(1) + 1, 2); % Bit flip
 
 %%%% BCH Code decoding %%%
 
-[m_hat, err] = bch_decoder(y, g, t, syndrome_table_file);
+[m_hat, err] = bch_decoder(y, g, t, syndrome_table);
 
 %%%% Total amount of error bits
 
