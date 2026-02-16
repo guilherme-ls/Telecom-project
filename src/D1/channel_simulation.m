@@ -1,4 +1,4 @@
-function [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M, c, N)
+function [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M, c, N, equalizer)
     %%%% BCH code encoding %%%
     m_c = bch_coder(m, g);
     
@@ -22,12 +22,21 @@ function [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modul
       H = toeplitz([h(1 + L) fliplr(h(1:L)) zeros(1,N - L - 1)], [h(1 + L: 2*L) zeros(1,N - L)]);
     end
     y = H*s + noise;
-    %%%% BPSK Receiver and symbol detection
+    
+    %%%% Receiver and symbol detection
+    %%%%%% Symbol Equalization
+    if strcmp(equalizer, "ZF")
+       y_eq = pinv(H) * y;
+    elseif strcmp(equalizer, "DFE")
+       [Q,R] = qr(H);
+       z = Q' * y;
+       y_eq = linsolve(R, z);
+    else
+      y_eq = y;
+    end
     
     %%%%% Symbol Decoding
-    
-    [s_hat, loc] = threshold_detector(y,modulation,M);
-    
+    [s_hat, loc] = threshold_detector(y_eq,modulation,M);
     s_hat_frame = s_hat(1:length(x));
     m_c_hat = symbols2bits(s_hat_frame,modulation,M)';
     %%%% BCH Code decoding %%%
@@ -37,13 +46,4 @@ function [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modul
     %%%% Total amount of error bits
     
     err_bits = sum(mod(m_hat + m, 2));
-    
-    %fprintf("Received message = %s\n", mat2str(m_hat));
-    %if sum(err) != 0
-    %  fprintf("Error found e = %s\n", mat2str(err));
-    %else
-    %  fprintf("No errors!\n");
-    %end
-    %
-    %fprintf("%d error bits!\n", err_bits);
 end

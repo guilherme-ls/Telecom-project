@@ -4,7 +4,7 @@ clear all;
 %%%% Simulation/Configuration Parameters %%%%
 syndrome_table_file_fmt = "syndrome-table-%d.mat";
 N0 = 1;
-simulation_times = 2000;
+simulation_times = 100;
 %%%% Constelation Parameters %%%%
 
 frame_size = 100;
@@ -40,7 +40,7 @@ for ii = 1:snr_length
   err_total = 0;
   for jj = 1:simulation_times
     m = randi([0 1], k, 1);
-    [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M, 1, frame_size);
+    [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M, 1, frame_size, "ZF");
     err_total = err_total + err_bits; 
   end
   ber = (err_total) / (simulation_times * k);
