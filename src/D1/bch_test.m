@@ -4,9 +4,10 @@ clear all;
 %%%% Simulation/Configuration Parameters %%%%
 syndrome_table_file_fmt = "syndrome-table-%d.mat";
 N0 = 1;
-simulation_times = 10000;
+simulation_times = 2000;
 %%%% Constelation Parameters %%%%
 
+frame_size = 100;
 % PBSK
 modulation = 'PAM'; %% 'PAM','PSK','QAM'
 M = 2;
@@ -30,8 +31,7 @@ syndrome_table = bch_syndrome_table_file(n, g, t, syndrome_table_file);
 %%%%%% Simulation %%%%%%
 
 %%%% Data input generation %%%%
-m = zeros(k, 1);
-snr_bits = [0:1:10];
+snr_bits = [0:2:20];
 snr_length = length(snr_bits);
 ber_per_snr = zeros(snr_length, 1);
 for ii = 1:snr_length
@@ -39,7 +39,8 @@ for ii = 1:snr_length
   N0 = 1./10.^(snr_symbol/10);
   err_total = 0;
   for jj = 1:simulation_times
-    [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M);
+    m = randi([0 1], k, 1);
+    [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M, 1, frame_size);
     err_total = err_total + err_bits; 
   end
   ber = (err_total) / (simulation_times * k);
