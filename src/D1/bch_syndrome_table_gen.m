@@ -31,7 +31,7 @@ end
 %%%%% - err_mat: Matrix with all collumn error vectors
 function [err_mat] = bch_error_vector_gen(n, e_num)
     %%% Position 0 means no error, prefixing e_num - 1 zeros to have from 1 to e_num errors vector combinations
-    err_positions = [zeros(1, e_num - 1), 1:n];
+    err_positions = [zeros(1, e_num - 1),1:n];
     %% As there is only one 0 position in err_positions, this results in a matrix with all error combinations
     %% of both 1 error and 2 error positions
     err_combinations = nchoosek(err_positions, e_num);

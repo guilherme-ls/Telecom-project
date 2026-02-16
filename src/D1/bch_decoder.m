@@ -12,10 +12,15 @@ syndrome = bch_mod_g(y,g);
 syndrome_int = bi2de(syndrome');
 
 %%% Error calculation
+syndrome
+syndrome_int
 if syndrome == 0 %% No Errors!
     err = zeros(length(y), 1);
 else
     err = syndrome_table{syndrome_int}; %%% Get the error from the syndrome table
+end
+if isempty(err)
+    err = zeros(length(y), 1);
 end
 
 y_hat = mod(y + err, 2); %%% Error elimination

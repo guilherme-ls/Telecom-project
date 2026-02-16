@@ -3,11 +3,17 @@ clear all;
 
 %%%% Simulation/Configuration Parameters %%%%
 syndrome_table_file_fmt = "syndrome-table-%d.mat";
+N0 = 1;
+%%%% Constelation Parameters %%%%
+
+% PBSK
+modulation = 'PAM'; %% 'PAM','PSK','QAM'
+M = 2;
 
 %%%% BCH Code Parameters %%%%
 n = 31;
 
-bch_code_option = "2";
+bch_code_option = "1";
 if bch_code_option == "1"
   t = 1;
   g = [1; 0; 1; 0; 0; 1];
@@ -27,26 +33,25 @@ m = zeros(k, 1);
 m(1) = 1;
 
 %%%% BCH code encoding %%%
-y = bch_coder(m, g);
+m_c = bch_coder(m, g);
 
 %%%% BPSK Symbol generation %%%
 
-%TODO%
-
+x = bits2symbols(m_c,modulation,M);
 %%%% Channel model with noise %%%%
 
-%TODO%
-
-y(3) = mod(y(3) + 1, 2); % Bit flip
-y(1) = mod(y(1) + 1, 2); % Bit flip
-
+noise = N0 * randn(length(x),1);
+y = x + noise;
 %%%% BPSK Receiver and symbol detection
 
-%TODO%
+%%%%% Symbol Decoding
 
+[s_hat, loc] = threshold_detector(y,modulation,M);
+
+m_c_hat = symbols2bits(s_hat,modulation,M)';
 %%%% BCH Code decoding %%%
 
-[m_hat, err] = bch_decoder(y, g, t, syndrome_table);
+[m_hat, err] = bch_decoder(m_c_hat, g, t, syndrome_table);
 
 %%%% Total amount of error bits
 
