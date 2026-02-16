@@ -12,8 +12,6 @@ syndrome = bch_mod_g(y,g);
 syndrome_int = bi2de(syndrome');
 
 %%% Error calculation
-syndrome
-syndrome_int
 if syndrome == 0 %% No Errors!
     err = zeros(length(y), 1);
 else

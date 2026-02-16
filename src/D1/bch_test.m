@@ -4,6 +4,7 @@ clear all;
 %%%% Simulation/Configuration Parameters %%%%
 syndrome_table_file_fmt = "syndrome-table-%d.mat";
 N0 = 1;
+simulation_times = 10000;
 %%%% Constelation Parameters %%%%
 
 % PBSK
@@ -30,38 +31,22 @@ syndrome_table = bch_syndrome_table_file(n, g, t, syndrome_table_file);
 
 %%%% Data input generation %%%%
 m = zeros(k, 1);
-m(1) = 1;
-
-%%%% BCH code encoding %%%
-m_c = bch_coder(m, g);
-
-%%%% BPSK Symbol generation %%%
-
-x = bits2symbols(m_c,modulation,M);
-%%%% Channel model with noise %%%%
-
-noise = N0 * randn(length(x),1);
-y = x + noise;
-%%%% BPSK Receiver and symbol detection
-
-%%%%% Symbol Decoding
-
-[s_hat, loc] = threshold_detector(y,modulation,M);
-
-m_c_hat = symbols2bits(s_hat,modulation,M)';
-%%%% BCH Code decoding %%%
-
-[m_hat, err] = bch_decoder(m_c_hat, g, t, syndrome_table);
-
-%%%% Total amount of error bits
-
-err_bits = sum(mod(m_hat + m, 2));
-
-fprintf("Received message = %s\n", mat2str(m_hat));
-if sum(err) != 0
-  fprintf("Error found e = %s\n", mat2str(err));
-else
-  fprintf("No errors!\n");
+snr_bits = [0:1:10];
+snr_length = length(snr_bits);
+ber_per_snr = zeros(snr_length, 1);
+for ii = 1:snr_length
+  snr_symbol = snr_bits(ii) + 10*log10(log2(M));
+  N0 = 1./10.^(snr_symbol/10);
+  err_total = 0;
+  for jj = 1:simulation_times
+    [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M);
+    err_total = err_total + err_bits; 
+  end
+  ber = (err_total) / (simulation_times * k);
+  ber_per_snr(ii) = ber;
 end
-fprintf("%d error bits!\n", err_bits);
 
+semilogy(snr_bits,ber_per_snr);
+grid;
+xlabel('Eb/No (in dB)');
+ylabel('BER');
