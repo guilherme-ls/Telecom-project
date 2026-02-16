@@ -14,6 +14,6 @@ function [synd_table] = bch_syndrome_table_file(n, g, e_num, file_name)
   else
       disp("Generating syndrome table...\n");
       synd_table = bch_syndrome_table_gen(n, g, e_num, false);
-      save(syndrome_table_file, "synd_table",'-mat');
+      save(file_name, "synd_table",'-mat');
   end
 end
