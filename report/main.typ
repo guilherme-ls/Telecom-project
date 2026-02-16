@@ -26,5 +26,18 @@ Cloud Radio Access Network (C-RAN)",
 
 
 = Introduction
-$ a =& b \
-b &= c $ <eq:eq>
+
+  In this report, we model the transmit and receive nodes of a transmission chain, implemententing the coding of its information, its transmission through a channel, and its subsequent decoding. Figure @chanel shows the modelled chain.
+
+  #figure(
+    image("./assets/transmission_chain.png", width: 80%),
+    caption: [Transmitter and receiver chain.],
+  ) <chanel>
+
+  The channel coding will be done through a two BCH code defined considering $"GF"(32)= "GF"(2)[x]"/"1+x^2+x^5$
+
+= Theoretical Background
+
+
+
+= Practical Implementation
