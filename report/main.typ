@@ -1,8 +1,16 @@
 #import "template.typ": project
 
 #import "@preview/equate:0.3.2": equate
+#import "@preview/lilaq:0.5.0" as lq
+
+// LTeX: language=en-US
+// LTeX: statusBatItem=true 
+//
 #show: equate.with(breakable: true, sub-numbering: true)
 #set math.equation(numbering: "(1.1)")
+
+// Ploting semilog from csv function
+//#let (bpsk_0_x, bpsk_0_y) = lq.load-txt(read("./graphs/bpsk-0.csv"))
 
 #set par(
   justify: true,
@@ -53,3 +61,21 @@ Cloud Radio Access Network (C-RAN)",
 
 = Practical Implementation
 
+//#figure(
+//  lq.diagram(
+//    width: 15cm,
+//    height: 10cm,
+//    lq.plot(bpsk_0_x, bpsk_0_y, label: [BPSK $alpha = 0%$],
+//            mark: "x", stroke:(thickness: 1pt, dash: "solid")),
+//      title: [BER / $"SNR"_b$ for not coded OFDM.], 
+//    yscale: "log",
+//    ylabel: [BER],
+//    xlabel: [$E_b / N_0$],
+//    xaxis: (subticks: none),    
+//    legend: (position: right + top)
+//  ),
+//  caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK and a 4-QAM
+//  constellation for different values of $alpha in {0, 0.25, 0.5, 0.75}$ in the studied system using 
+//  an OFDM with $N_("carriers") = 64$ and $N_("prefix") = 1$.],
+//
+//) <OFDM-not-coded>
