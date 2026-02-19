@@ -60,3 +60,6 @@ else
 end
 fprintf("%d error bits!\n", err_bits);
 
+%Example how to save as csv 
+%csvwrite(["bpsk-rayleight.csv"], [SNR_bit.', BER.'])
+
