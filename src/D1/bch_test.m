@@ -51,3 +51,6 @@ semilogy(snr_bits,ber_per_snr);
 grid;
 xlabel('Eb/No (in dB)');
 ylabel('BER');
+%Example how to save as csv 
+%csvwrite(["bpsk-rayleight.csv"], [SNR_bit.', BER.'])
+
