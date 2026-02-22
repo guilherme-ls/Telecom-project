@@ -5,8 +5,8 @@
 %%%%% Return:
 %%%%% - y : Column vector representation of the code word 
 function [y] = bch_coder(m, g)
-  g_deg = length(g);
-  shifted_m = [zeros(g_deg - 1, 1); m]; %% m(x) shifted by n - k 
-  parity_bits = bch_mod_g(shifted_m, g);
-  y = [parity_bits; m];
+    g_deg = length(g);
+    shifted_m = [zeros(g_deg - 1, 1); m]; %% m(x) shifted by n - k 
+    parity_bits = bch_mod_g(shifted_m, g);
+    y = [parity_bits; m];
 end

@@ -39,7 +39,7 @@ function [err_mat] = bch_error_vector_gen(n, e_num)
     err_mat = zeros(n, err_amount);
     for ii=1:err_amount
       for jj=1:e_num
-        if err_combinations(ii, jj) != 0 %% If there is an error (position != 0), set the bit in that position
+        if err_combinations(ii, jj) ~= 0 %% If there is an error (position != 0), set the bit in that position
           err_mat(err_combinations(ii,jj), ii) = 1;
         end
       end
