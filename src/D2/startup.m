@@ -1,4 +1,4 @@
-addpath(genpath('subblocks'))
+addpath(genpath('../../ref/D2/subblocks'))
 
 set(groot,'DefaultLineLinewidth',2)
 set(groot,'DefaultAxesFontSize',16)
@@ -7,6 +7,8 @@ set(groot,'DefaultAxesYGrid','on')
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 if isOctave
+    pkg load signal
+    pkg load control 
     pkg load communications
     pkg load miscellaneous
 end

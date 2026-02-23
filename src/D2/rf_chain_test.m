@@ -20,4 +20,5 @@ adc_full_scale   = 1;  % V
 %%%% TX Parameters %%%%
 power_out_tx     = 20; % dBm
 acpr_tx_output   = 45; % dB
-dac_full_scale   = 1;  % V 
+dac_full_scale   = 1;  % V
+
