@@ -25,7 +25,11 @@ t_Cont       = (0:(N*Subsamp_fadc-1))*Ts_Cont; % Time vector (@continuous time r
 t_BB         = (0:(N-1))*Ts_BB;                % Time vector (@baseband rate)
 
 %%%% Input  Generation %%%%
-Input = cos(2*pi*BW*t_Cont);  % Cosinus is also sampled
+fsig_or   = BW;                        % Input frequency (Hz)
+sig_bin   = round(fsig_or/continuousTimeSamplingRate*N);     % Input bin of the signal frequency
+fsig      = sig_bin*continuousTimeSamplingRate/N;            % re-adjusting in a signal bin
+
+Input = cos(2*pi*fsig*t_Cont)';  % Cosinus is also sampled
 
 delay_ADC = 0;
 DigitalOutput = ADC(Input,Nbits_ADC,Vref_ADC,Fs_ADC,delay_ADC,continuousTimeSamplingRate);
@@ -60,6 +64,4 @@ title('All signals (normalized)')
 axis([0,Fs_ADC/2,-200,1])
 
 
-
-
-
+%disp(sprintf('%s will be %d this year.', PSD));
