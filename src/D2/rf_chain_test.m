@@ -2,7 +2,8 @@
 clear all;
 
 %%%% System Parameters %%%%
-rf_bandwidth     = 20e9;    % Hz
+rf_bandwidth     = 30e9;    % Hz
+useful_bandwidth = 20e9;    % Hz
 bb_sampling_rate = 30.72e9; % MSps
 central_freq     = 2400e9;  % Hz
 
