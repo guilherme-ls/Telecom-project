@@ -3,47 +3,61 @@ clear all;
 
 %%%% Simulation/Configuration Parameters %%%%
 syndrome_table_file_fmt = "syndrome-table-%d.mat";
-N0 = 1;
-simulation_times = 200;
-%%%% Constelation Parameters %%%%
+simulation_times = 100;
 
+%%%% General System Parameters (to configure according to preferences) %%%%
 frame_size = 100;
-% PBSK
-modulation = 'PAM'; %% 'PAM','PSK','QAM'
-M = 2;
+modulation = 'QAM'; %% 'PAM','PSK','QAM'
+M = 4;
+channel = 2;
+equalization = "DFE";
+bch_code_option = 0;
 
 %%%% BCH Code Parameters %%%%
-n = 31;
-
-bch_code_option = "1";
-if bch_code_option == "1"
-  t = 1;
-  g = [1; 0; 1; 0; 0; 1];
+if bch_code_option == 0
+    n = frame_size * log2(M);
+    k = frame_size * log2(M);
+    syndrome_table = 0;
+    g = 0;
+    t = 0;
 else
-  t = 2;
-  g = [1; 0; 0; 1; 0; 1; 1; 0; 1; 1; 1];
+    n = 31;
+
+    if bch_code_option == 1
+        t = 1;
+        g = [1; 0; 1; 0; 0; 1];
+    else
+        t = 2;
+        g = [1; 0; 0; 1; 0; 1; 1; 0; 1; 1; 1];
+    end
+
+    k = n - length(g) + 1;
+
+    syndrome_table_file = sprintf(syndrome_table_file_fmt, t); %% Syndrome file table based on the amount of corrected errors
+    syndrome_table = bch_syndrome_table_file(n, g, t, syndrome_table_file);
 end
 
-k = n - length(g) + 1;
-
-syndrome_table_file = sprintf(syndrome_table_file_fmt, t); %% Syndrome file table based on the amount of corrected errors
-syndrome_table = bch_syndrome_table_file(n, g, t, syndrome_table_file);
 %%%%%% Simulation %%%%%%
 
 %%%% Data input generation %%%%
 snr_bits = [0:2:20];
 snr_length = length(snr_bits);
 ber_per_snr = zeros(snr_length, 1);
+%% Calculates BER for each SNR
 for ii = 1:snr_length
-    snr_symbol = snr_bits(ii) + 10*log10(log2(M));
-    N0 = 1./10.^(snr_symbol/10);
+    % snr_symbol = snr_bits(ii) + 10*log10(log2(M));
+    % analysing the bits2symbols code provided, it considers Eb=1, not Es=1 as in the TE02 subject
+    N0 = 1./10.^(snr_bits(ii)/10);
     err_total = 0;
+    %% Sends a given number of frames through the channel and calculates error
     for jj = 1:simulation_times
-        m = randi([0 1], k, 1);
-        [err, err_bits] = channel_simulation(m, g, t, syndrome_table, N0, modulation, M, 2, frame_size, "DFE");
+        [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, bch_code_option);
+        frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
+        err_bits = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
         err_total = err_total + err_bits;
     end
-    ber = (err_total) / (simulation_times * k);
+    %% Calculates final BER
+    ber = err_total / simulation_times;
     ber_per_snr(ii) = ber;
 end
 
@@ -51,6 +65,55 @@ semilogy(snr_bits,ber_per_snr);
 grid;
 xlabel('Eb/No (in dB)');
 ylabel('BER');
+
+
+function [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, bch_code_option)
+    number_bits = log2(M) * frame_size; % number of bits in a frame
+    n_words = floor(number_bits / n); % number of words in a frame
+    m_c_total = zeros(number_bits,1);
+    m_total = zeros(n_words * k,1);
+
+    %% Creates the necessary amount of words to fill a frame
+    for ii = 1:n_words
+        m = randi([0 1], k, 1);
+
+        %% BCH code encoding
+        if bch_code_option ~= 0
+            m_c = bch_coder(m, g);
+        else
+            m_c = m;
+        end
+
+        %% Stores coded and non-coded words
+        m_c_total((ii-1)*n + 1:ii * n) = m_c;
+        m_total((ii-1)*k + 1:ii * k) = m;
+    end
+end
+
+function [errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k)
+    %% Symbol Decoding
+    number_bits = length(frame_bits); % number of bits in a frame
+    n_words = floor(number_bits / n);
+    m_total_hat = zeros(n_words * k,1);
+
+    %% Separates bits into words and decode them
+    for ii = 1:n_words
+        m_c_hat = frame_bits((ii-1)*n + 1:ii * n);
+
+        %% BCH code decoding
+        if t ~= 0
+            [m_hat, ~] = bch_decoder(m_c_hat, g, t, syndrome_table);
+        else
+            m_hat = m_c_hat;
+        end
+
+        m_total_hat((ii-1)*k + 1:ii * k) = m_hat;
+    end
+
+    %%%% Total amount of error bits
+    
+    errors = sum(mod(m_total_hat + m_total, 2)) / length(m_total);
+end
+
 %Example how to save as csv 
 %csvwrite(["bpsk-rayleight.csv"], [SNR_bit.', BER.'])
-
