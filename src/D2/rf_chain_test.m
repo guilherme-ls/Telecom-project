@@ -13,10 +13,11 @@ temperature      = 290;  % K
 match_resist     = 50;   % Ohms
 
 %%%% RX Parameters %%%%
-snr_receiver_out = 10;   % dB 
-adc_full_scale   = 1;    % V 
+snr_receiver_out = 10; % dB
+in_band_ripple   = 1;  % dB 
+adc_full_scale   = 1;  % V 
 
 %%%% TX Parameters %%%%
-power_out_tx     = 20;   % dBm
-acpr_tx_output   = 45;   % dB
-dac_full_scale   = 1;    % V 
+power_out_tx     = 20; % dBm
+acpr_tx_output   = 45; % dB
+dac_full_scale   = 1;  % V 
