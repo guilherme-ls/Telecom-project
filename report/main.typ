@@ -103,15 +103,89 @@ Cloud Radio Access Network (C-RAN)",
 
   In the matlab code, the encoder was dully implemented as a function that first reverses the order of the input word's coefficients and then performs a loop that consecutively inserts these coefficients into an empty vector of size $n-k$, shifting the values forward and adding the feedback components at each step.
 
+  ```matlab
+  function [m_mod] = bch_mod_g(m, g)
+    m(1:length(m)) = m(end:-1:1); % Reversing m(x)
+    g_deg = size(g,1) - 1;
+    m_mod = zeros(g_deg, 1); % m(x) mod g(x)
+    for ii=1:length(m)
+        m_mod_prev = m_mod;
+        m_mod(1) = mod(m(ii) + g(1) * m_mod_prev(g_deg), 2);
+        for jj=2:g_deg
+            m_mod(jj) = mod(m_mod_prev(jj - 1) + g(jj) ...
+              * m_mod_prev(g_deg), 2);
+        end
+    end
+  end
+  ```
+
   For the generation of the coded word $c(x)$, we inserted the shifted information word $x^(n-k)m(x)$ in the encoder to get the parity bits, and them built a vector of size $n=31$ by concatenating first the parity bits and them the information word $m(x)$. This finalizes the coding operation.
+
+  ```matlab
+  g_deg = length(g);
+  shifted_m = [zeros(g_deg - 1, 1); m]; % m(x) shifted by n - k 
+  parity_bits = bch_mod_g(shifted_m, g);
+  y = [parity_bits; m];
+  ```
 
   We highlight that the encoder depends on $g(x)$ and is therefore distinct for each code.
 
 === Implementing Optimal ML Decoding
 
+  Under a theoretical Binary Symmetric Channel (BSC) hypothesis, one can show that the optimal ML decoding consists in minimizing the Hamming distance between the sent $c(x)$ and received $r(x)$ messages, which is equivalent to minimizing the Hamming weight of the error $e(x)$ added to the received message ($R(x) = c(x) + e(x)$).
 
+  In practice, this decoding is done through syndromes, which in the case of cyclic codes consists in the modulo $g(x)$ of the received message $r(x)$ (Equation @eq:syndrome1). 
+
+  $ s(x) = r(x)"mod"g(x) $ <eq:syndrome1>
+  
+  Since the received message is given in function of the sent message and some error ($r(x) = c(x) + e(x)$) and the sent message is a multiple of $g(x)$ ($c(x)"mod"g(x) = 0$), we can show that the syndrome is directly related to the modulo of the error (@eq:mod_error).
+
+  $ s(x) = c(x)"mod"g(x) + e(x)"mod"g(x) = e(x)"mod"g(x) $ <eq:mod_error>
+
+  Therefore, to each syndrome we can relate an error polynomial of minimal weight that generates it, which can be stored in a look-up table. And for correcting the errors in $r(x)$, one can simply sum the error $e(x)$ corresponding to its syndrome, letting us recuperate $c(x)$ (this is valid because each polynomial coefficient belongs to $"GF"(2)$).
+
+  In the code, we first implement the syndrome look-up table, going through all the error polynomials possible for $t=1$ and $t=2$ errors, depending on the BCH code, and calculating the respective syndrome using the modulo operation previously implemented in the encoder. Each pair error-syndrome is then saved in memory.
+
+  ```matlab
+  %% Calculates all error vectors given a max error number
+  err_mat = bch_error_vector_gen(n, error_num);
+  %% Loops over error vectors
+  for ii=1:size(err_mat,2)
+      e = err_mat(:,ii); % Gets error collumn vector from error matrix
+      %% Syndrome calculation
+      synd = bch_mod_g(e, g);
+      synd_int = bi2de(synd', "left-msb"); % Converts vector into index
+      %% Associating syndrome to error vector and storing
+      synd_table{synd_int} = e;
+  end
+  ```
+
+  One important observation is that for the case of the BCH code where $t=2$ there are more syndromes than error polynomials with 1 and 2 errors, implying that some possible syndromes would lead to polynomials with 3 or more errors. However, since the code is not consistently capable of correcting more than 2 errors, we chose to ignore these syndromes and employ a default case where we do not correct any errors.
+
+  The decoder itself is then implemented as a code that first calculates the syndrome of the received message through the previous modulo function and finds the respective error in the syndrome look-up table. Then it sums the error to the received message bit by bit to get the original coded message. Ta finalize the decoding, since the systematic encoding is being employed, we remove the parity bits at the start of the message to leave only the information bits.
+
+  ```matlab
+  %% Calculates syndrome and turn it into a integer representation
+  syndrome = bch_mod_g(y,g);
+  syndrome_int = bi2de(syndrome', "left-msb");
+
+  % Error calculation
+  if syndrome == 0 % No errors
+      err = zeros(length(y), 1);
+  else % Get the error from the syndrome table
+      err = syndrome_table{syndrome_int};
+  end
+  if isempty(err) % Default case (>2 errors)
+      err = zeros(length(y), 1);
+  end
+
+  y_hat = mod(y + err, 2); %% Error elimination
+  m_hat = y_hat(length(g):1:end); %% Removes parity bits
+  ```
 
 === BER Analysis on BPSK Modulation
+
+  With all the BCH coding aspects implemented, we now use the code provided to build the modulation and demodulation systems and to simulate the transmission channel itself.
 
   Discuss asymptotic gain.
 
