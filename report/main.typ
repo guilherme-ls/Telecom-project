@@ -6,7 +6,7 @@
 // LTeX: language=en-US
 // LTeX: statusBatItem=true 
 //
-#show: equate.with(breakable: true, sub-numbering: true)
+#show: equate.with(breakable: true, sub-numbering: false)
 #set math.equation(numbering: "(1.1)")
 
 // Ploting semilog from csv function
@@ -59,7 +59,36 @@ Cloud Radio Access Network (C-RAN)",
 
   Based on the described system, we perform in this report a simulation and evaluation of its performance considering different codes, channels and modulations, discussing the employed methods and the obtained results.
 
-= Practical Implementation
+= System Simulation
+
+== BCH Implementation
+
+ Two distinct BCH codes will be implemented in this section, both in the $"GF"(32)$ extension field, correcting $t=1$ and $t=2$ errors respectively.
+
+=== Determining the Generator Polynomials and Code Rates
+
+  To implement the desired BCH codes we must first determine their corresponding generator polynomials. For a given number of errors $t$ that the BCH code must correct, its generator polynomial must have $2t$ consecutive roots $alpha^i$ ($i = 1...t$), powers of the primitive element $alpha$ and also roots of $x^(31)-1$. For each root $alpha^i$ there is a corresponding minimal polynomial $mu_(alpha^i) (x)$, and $g(x)$ will be given by lowest common multiplier between the minimal polynomials of its roots:
+
+  $ g(x) = L C M(mu_(alpha^1)(x), ..., mu_(alpha^(2t))(x) ) $
+
+  Therefore, starting with the code capable of correcting one error, $g(x)$ must have as roots ${alpha^1, alpha^2}$. To determine the corresponding minimal polynomials, we must highlight the fact that a power of two of a root is also root, and that $alpha^(32) = alpha$. This lets us describe the minimal polynomial $mu_(alpha^1)(x)$ in @eq:primitive_poly and show that both $alpha^1$ and $alpha^2$ will have the same minimal polynomial.
+
+  $ mu_(alpha^1) (x) = (alpha - 1)(alpha^2 - 1)(alpha^4 - 1)(alpha^8 - 1)(alpha^16 - 1) = mu_(alpha^2) (x) $ <eq:primitive_poly>
+
+  To find its value, we must notice that $alpha$ is one of the roots of the primitive polynomial of the $"GF"(32)$ extension field, which in our case is $1+x^2+x^5$. Therefore, we conclude that $mu_(alpha^1) (x) = mu_(alpha^2) (x) = 1+x^2+x^5$.
+
+  Thus according to the previously stated theory, the LCM of both polynomials gives us $g(x) = 1+x^2+x^5$. Now to calculate the code's efficiency, we must first determine its length $n$ and dimension $k$. The length will be given by $n=2^m-1$, where $m=5$ for $"GF"(32)$, leading to $n=31$. Concerning the dimension, a fundamental property of cyclic codes tells us that for each to be unique the equality $d^o g(x) = n - k$ must hold. Since $d^o g(x) = 5$ for the first BCH code, its dimension must be $k = 26$. Finally, the code rate for the BCH code where $t=1$ will be $R=26"/"31$.
+
+  We now proceed with the second code. It is capable of correcting $t=2$ errors, such that the roots of its generator polynomial will be ${alpha^1, alpha^2, alpha^3, alpha^4}$. From @eq:primitive_poly we conclude that $mu_(alpha^1) (x) = mu_(alpha^2) (x)= mu_(alpha^4) (x) = 1+x^2+x^5$. @eq:primitive_poly3 shows $mu_(alpha^3) (x)$.
+
+  $ mu_(alpha^3) (x) &= (alpha^3 - 1)(alpha^6 - 1)(alpha^12 - 1)(alpha^24 - 1)(alpha^17 - 1) #<equate:revoke> \
+  &= 1 + x + x^2 + x^3 + x^4 + x^5 $ <eq:primitive_poly3>
+
+  Therefore, we get that the generator polynomial is $g(x) = x^(10) + x^9 + x^8 + x^6 + x^5 + x^3 + 1$. From this, we can again deduce that the code length is $n = 2^m - 1 = 31$ and its dimension is $k = n - d^o g(x) = 21$. Thus, the code rate for the BCH code capable of correcting $t=2$ errors is $R=21"/"31$.
+
+=== Implementing the Standard Coding Operation
+
+
 
 //#figure(
 //  lq.diagram(
