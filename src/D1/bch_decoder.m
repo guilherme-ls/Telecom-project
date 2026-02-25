@@ -9,7 +9,7 @@
 function [m_hat, err] = bch_decoder(y, g, t, syndrome_table)
     %%% Calculate syndrome and turn it into a integer representation
     syndrome = bch_mod_g(y,g);
-    syndrome_int = bi2de(syndrome');
+    syndrome_int = bi2de(syndrome', "left-msb");
 
     %%% Error calculation
     if syndrome == 0 %% No Errors!
