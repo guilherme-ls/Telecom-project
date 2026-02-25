@@ -185,13 +185,22 @@ Cloud Radio Access Network (C-RAN)",
 
 === BER Analysis on BPSK Modulation
 
-  With all the BCH coding aspects implemented, we now use the code provided to build the modulation and demodulation systems and to simulate the transmission channel itself.
+  With all the BCH coding aspects implemented, we now use the code provided to build the modulation and demodulation systems and to simulate the transmission channel itself. In fact, first we take the bits that compose the coded (or not) message and pass them through the ``` bits2symbols``` function to get the modulated signal (BPSK in this section).
+  
+  Then, considering that the provided codes need the bit energy to be normalized at $E_b = 1$, we calculate instead the noise variance necessary to achieve a desired $E_b"/"N_0$ value as $N_0 = (1/10)^((S N R_b)/10) $. Taking into account the code rate, we must divide the variance by $R$.
+
+  This variance is then used create a complex circular white noise to apply on the symbols as they are passing the transmission channel. The resulting noisy signal then passes through a threshold detector, estimating the symbols received, and is demodulated through the ``` symbols2bits``` function, proceeding through the decoding and finally measuring the Bit Error Rate for plotting.
+
+  Present plot. 
+
+  From this graph we can identify the empirical coding gain of both the implemented BCH codes and compare them to the theory. The theoretical coding gain considering an Additive White Gaussian Noise (AWGN) channel and a hard decision, as is our case, is given by $gamma_(d B) = 10 "log"(R(t+1))$, therefore the first BCH code must have a coding gain of $gamma_(1 d B) = 10 "log"(26/31 times 2) = 2.25 "dB"$ and the second code $gamma_(1 d B) = 10 "log"(21/31 times 3) = 3.08 "dB"$. From the graphs we get that ...
 
   Discuss asymptotic gain.
 
 == Frequency Selective Channels
 
 === Implementation
+
 
 
 === BER Plots and Discussions
