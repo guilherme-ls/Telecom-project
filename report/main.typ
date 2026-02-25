@@ -44,7 +44,7 @@ Cloud Radio Access Network (C-RAN)",
 
   #figure(
     image("./assets/transmission_chain.png", width: 80%),
-    caption: [Transmitter and receiver chain.],
+    caption: [Transmitter and receiver chain.]
   ) <chanel>
 
   The channel coding will be done through two distinct BCH codes, correcting $t=1$ and $t=2$ errors respectively. Each implemented code will have a length of $N_c = 31$ and be defined considering the Galois Field extension $"GF"(32)= "GF"(2)[x]"/"1+x^2+x^5$. Both codes will adopt the systematic form to facilitate decoding 
@@ -88,7 +88,45 @@ Cloud Radio Access Network (C-RAN)",
 
 === Implementing the Standard Coding Operation
 
+  Proceeding to the next step, we now seek to implement the encoder. With the aim of facilitating the decoding, we will describe the code in its systematic form, where the first $n - k$ bits of the codeword $c(x)$ are the parity bits and the following $k$ bits are the original information $m(x)$, as shown in @eq:systematic_code.
 
+  $ c(x) = x^(n-k)m(x) + t(x) " where " t(x) = x^(n-k) m(x)"mod"g(x) $ <eq:systematic_code>
+
+  The encoder here implemented will calculate $t(x)$, that is, perform the $"mod"g(x)$ operation. It adopts the form of linear feedback shift registers, as shown in @encoder, where the generator polynomial's coefficients determine the feedback components (considering $g(x) = g_0 + g_1 x + ... + g_m x^m$).
+
+  #figure(
+    image("./assets/coding_scheme.png", width: 90%),
+    caption: [Encoder architecture.]
+  ) <encoder>
+
+  The encoding process consists in initializing the shift registers as 0 and consecutively inserting the coefficients of $m(x)$ one at a time, from the highest order to the lowest until the word ends. The values at the shift register at the end will be the result of the modulo operation.
+
+  In the matlab code, the encoder was dully implemented as a function that first reverses the order of the input word's coefficients and then performs a loop that consecutively inserts these coefficients into an empty vector of size $n-k$, shifting the values forward and adding the feedback components at each step.
+
+  For the generation of the coded word $c(x)$, we inserted the shifted information word $x^(n-k)m(x)$ in the encoder to get the parity bits, and them built a vector of size $n=31$ by concatenating first the parity bits and them the information word $m(x)$. This finalizes the coding operation.
+
+  We highlight that the encoder depends on $g(x)$ and is therefore distinct for each code.
+
+=== Implementing Optimal ML Decoding
+
+
+
+=== BER Analysis on BPSK Modulation
+
+  Discuss asymptotic gain.
+
+== Frequency Selective Channels
+
+=== Implementation
+
+
+=== BER Plots and Discussions
+
+  Suggested analysis.
+
+  Mention that ZF for non-unitary H matrices increases noise.
+  
+  Mention that DFE does not increase noise, but if you make a bad decision on a symbol at the start the error will be compounded throughout the demodulation.
 
 //#figure(
 //  lq.diagram(
