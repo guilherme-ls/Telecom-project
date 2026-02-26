@@ -29,7 +29,7 @@ function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, e
         end
     else
         y_eq = y;
-        [s_hat, ~] = threshold_detector(y_eq(1:end, :), modulation, M);
+        [s_hat, ~] = reshape(threshold_detector(y_eq(:), modulation, M), N, []);
     end
 
     frame_bits = reshape(symbols2bits(s_hat(:), modulation, M)', N*log2(M), []);
