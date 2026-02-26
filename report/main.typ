@@ -111,6 +111,39 @@ Cloud Radio Access Network (C-RAN)",
 
   Therefore, we get that the generator polynomial is $g(x) = x^(10) + x^9 + x^8 + x^6 + x^5 + x^3 + 1$. From this, we can again deduce that the code length is $n = 2^m - 1 = 31$ and its dimension is $k = n - d^o g(x) = 21$. Thus, the code rate for the BCH code capable of correcting $t=2$ errors is $R=21"/"31$.
 
+  @tab:code_information gives the code rates and generator polynomials of each studied BCH code.
+
+#figure(
+  caption: [Generator polynomials and code rates of the studied BCH codes.],
+  table(
+    columns: (1fr, 2fr, 1fr),
+    inset: 12pt,
+    align: center,
+    stroke: 0.6pt,
+
+    table.header(
+      [$"Error Capability"$],
+      [$g(x)$],
+      [$R$],
+    ),
+
+    table.hline(),
+
+    [$t = 1$],
+    [$x^5 + x^2 + 1$],
+    [$26"/"31$],
+
+    table.hline(),
+
+    [$t = 2$],
+    [$x^(10) + x^9 + x^8 + x^6 + x^5 + x^3 + 1$],
+    [$21"/"31$],
+
+    table.hline(),
+  ),
+) <tab:code_information>
+
+
 === Implementing the Standard Coding Operation
 
   Proceeding to the next step, we now seek to implement the encoder. With the aim of facilitating the decoding, we will describe the code in its systematic form, where the first $n - k$ bits of the codeword $c(x)$ are the parity bits and the following $k$ bits are the original information $m(x)$, as shown in @eq:systematic_code.
@@ -159,7 +192,7 @@ Cloud Radio Access Network (C-RAN)",
 
   Under a theoretical Binary Symmetric Channel (BSC) hypothesis, one can show that the optimal ML decoding consists in minimizing the Hamming distance between the sent $c(x)$ and received $r(x)$ messages, which is equivalent to minimizing the Hamming weight of the error $e(x)$ added to the received message ($R(x) = c(x) + e(x)$).
 
-  In practice, this decoding is done through syndromes, which in the case of cyclic codes consists in the modulo $g(x)$ of the received message $r(x)$ (Equation @eq:syndrome1). 
+  In practice, this decoding is done through syndromes, which in the case of cyclic codes consists in the modulo $g(x)$ of the received message $r(x)$ (@eq:syndrome1). 
 
   $ s(x) = r(x)"mod"g(x) $ <eq:syndrome1>
   
@@ -187,7 +220,7 @@ Cloud Radio Access Network (C-RAN)",
 
   One important observation is that for the case of the BCH code where $t=2$ there are more syndromes than error polynomials with 1 and 2 errors, implying that some possible syndromes would lead to polynomials with 3 or more errors. However, since the code is not consistently capable of correcting more than 2 errors, we chose to ignore these syndromes and employ a default case where we do not correct any errors.
 
-  The decoder itself is then implemented as a code that first calculates the syndrome of the received message through the previous modulo function and finds the respective error in the syndrome look-up table. Then it sums the error to the received message bit by bit to get the original coded message. Ta finalize the decoding, since the systematic encoding is being employed, we remove the parity bits at the start of the message to leave only the information bits.
+  The decoder itself is then implemented as a code that first calculates the syndrome of the received message through the previous modulo function and finds the respective error in the syndrome look-up table. Then it sums the error to the received message bit by bit to get the original coded message. To finalize the decoding, since the systematic encoding is being employed, we remove the parity bits at the start of the message to leave only the information bits.
 
   ```matlab
   %% Calculates syndrome and turn it into a integer representation
@@ -238,11 +271,13 @@ Cloud Radio Access Network (C-RAN)",
 
   @BPSK-coded shows us the BER versus $E_b"/"N_0$ curve comparison between the not coded case and the two implemented BCH codes, using a BPSK modulation and an AWGN channel on all cases. First, we observe that for low SNR the performance of the coded case is bellow the not coded one, indicating that the decrease in the energy per bit as a result of the reduced code rate outwheighs the increase in performance due to the error correcting. Indeed, for low SNRs the error frequency tends to be so high that the code is rarely capable of correcting all of them.
 
+  #emph(text(red)[Write here the number of samples used to calculate the BER, if the 100 errors minimum number to estimate the BER was followed. Also alter the emprircal coding gain part accordingly.])
+
   However, from an SNR of $4 "dB"$ onwards the coded cases start performing better than the non-coded one, indicating that the error correcting capacity of the code becomes increasingly relevant in reducing the BER. The coding gain becomes highly perceptible for high SNRs.
 
   From this graph we can identify the empirical coding gain of both the implemented BCH codes and compare them to the theory. The theoretical coding gain considering an Additive White Gaussian Noise (AWGN) channel and a hard decision, as is our case, is given by $gamma_(d B) = 10 "log"(R(t+1))$, therefore the first BCH code must have a coding gain of $gamma_(1 d B) = 10 "log"(26/31 times 2) = 2.25 "dB"$ and the second code $gamma_(1 d B) = 10 "log"(21/31 times 3) = 3.08 "dB"$.
   
-  Note that the graph does not capture the asymptotic coding gains, as that would require an extreme amount of computational resources. However, we can still analyze the gain at the BER of $3 times 10^-40$, relatively trustworthy given the simulation parameters, to get empirical gains of approximately $2.14 "dB"$ for the first code and $3.28 "dB"$ for the second one. This is close to the theoretical gains and show that our simulations reasonably approximate theory within our computational limitations.
+  Note that the graph does not capture the asymptotic coding gains, as that would require an extreme amount of computational resources. However, we can still analyze the gain at the BER of $3 times 10^(-4)$, relatively trustworthy given the simulation parameters, to get empirical gains of approximately $2.14 "dB"$ for the first code and $3.28 "dB"$ for the second one. This is close to the theoretical gains and show that our simulations reasonably approximate theory within our computational limitations.
 
 == Multipath Channels
 
@@ -283,7 +318,7 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
 === Implementation
 
-  The implementation of these multipath channels started by dividing the data into frames. Since at first we are dealing only with the case where there is no channel coding, it suffices to separate the message bits into groups of size $N"log"_2M$, where $M$ is the size of the constellation employed, and then convert these groups of bits into symbols, which will compose the desired frames.
+  The implementation of these multipath channels started by dividing the data into frames. Since at first we are dealing only with the case where there is no channel coding, it suffices to separate the message bits into groups of size $N"log"_2M$, where $M$ is the size of the constellation employed and $N$ the frame size, and then convert these groups of bits into symbols, which will compose the desired frames.
 
   Continuing, the multipath channels were implemented by first taking samples from $h(m)$ given by the provided function ``` response_channel``` and then building a Toeplitz matrix of size $N times N$ from these samples. Finally, the AWGN is added.
 
@@ -372,6 +407,10 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
   Mention that ZF for non-unitary H matrices increases noise.
   
   Mention that DFE does not increase noise, but if you make a bad decision on a symbol at the start the error will be compounded throughout the demodulation.
+
+= Conclusions
+
+  Something here.
 
 //#figure(
 //  lq.diagram(
