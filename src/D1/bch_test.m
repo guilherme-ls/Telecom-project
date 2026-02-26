@@ -9,7 +9,7 @@ simulation_times = 100;
 frame_size = 100;
 modulation = 'QAM'; %% 'PAM','PSK','QAM'
 M = 4;
-channel = 1;
+channel = 0;
 equalization = "ZF";
 bch_code_option = 1;
 
