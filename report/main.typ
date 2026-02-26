@@ -53,7 +53,7 @@ Cloud Radio Access Network (C-RAN)",
 
   $ x(t) = sum_n s(n) g(t-n T_s) $ <eq:input_filter>
 
-  On the reception side, after sampling the received signal at $1"/"T_s$ intervals and performing some mathematical simplifications, it can be described by @eq:received_signal, where *H* is a Toeplitz matrix representing the frequency selective channel and *w* is the Gaussian noise.
+  On the reception side, after sampling the received signal at $1"/"T_s$ intervals and performing some mathematical simplifications, it can be described by @eq:received_signal, where *H* is a Toeplitz matrix representing the multipath channel and *w* is the Gaussian noise.
   
   $ bold("z") = bold("H s") + bold("w") $ <eq:received_signal>
 
@@ -197,11 +197,82 @@ Cloud Radio Access Network (C-RAN)",
 
   Discuss asymptotic gain.
 
-== Frequency Selective Channels
+== Multipath Channels
+
+  Furthering the analysis, we seek to study how distinct multipath channels, in addition to the AWGN, may affect performance. These multipath channels are described by @eq:multipath, being characterized by a sum of attenuated and delayed Nyquist filters representing the different paths the signal might take.
+
+  $ tilde(h) (t) = sum_(k=0)^M A_k tilde(g)(t - tau_k) $ <eq:multipath>
+
+  In our analysis the attenuations $bold(A)$ and delays $tau$ that characterize the channel are given bellow. Observe that channel 0 corresponds to the pure AWGN case. Note that $T_s = 0.05 mu s$.
+
+  - Channel 0: $bold(A) = [1], tau = [0] times T_s, (M = 0),$
+  - Channel 1: $bold(A) = [1, 0.1, 0.1, 0.1, 0.1], tau = [0, 0.5, 1, 1.5, 2] times T_s, (M = 4),$
+  - Channel 2: $bold(A) = [1, 0.8, 0.6, 0.4, 0.2], tau = [0, 0.5, 1, 1.5, 2] times T_s, (M = 4),$
+  - Channel 3: $bold(A) = [1, 0.8, 0.8, 0.8, 0.8], tau = [0, 0.5, 1, 1.5, 2] times T_s, (M = 4),$
+
+  Considering that the symbols being transmitted stay the same for a period $T_s$, we may sample the $tilde(h) (t)$ at $T_s$ intervals (@eq:channel_filter). The resulting filter is also normalized so that $Sigma_(m=-L)^L ||h(m)||^2=1$.
+
+  $ h(m) = tilde(h) (m T_s) = sum_(k=0)^M A_k tilde(g)(m T_s - tau_k) $ <eq:channel_filter>
+
+  This lets us describe the channel through a Toeplitz matrix, as represented in @eq:toeplitz, and lets us conveniently analyze the digital transmission chain following the matrix framework given by @eq:matrix_framework. $bold("w")$ represents the added white gaussian noise, $bold("s")$ the signal sent through the channel and $bold("z")$ the received signal.
+
+  $ bold("z") = bold("Hs") + bold("w") $ <eq:matrix_framework>
+
+  $
+  bold("H") = mat(
+    h(0), h(1), dots, h(L), 0, dots, 0;
+    h(-1), h(0), h(1), dots, h(L), 0, dots;
+    dots, 0, h(-L), dots, h(-1), h(0), h(1);
+    0, dots, 0, h(-L), dots, h(-1), h(0);
+  ) $ <eq:toeplitz>
+
+  For this to work the symbols to be sent were organized in frames of size $N=100$, which is also the size of the matrix $bold("H")$.
+
+  To deal with the distortions introduced by the multipath channels we will employ two distinct approaches. The first is the Zero Forcing (ZF) equalizer, which multiplies $bold("z")$ by the pseudoinverse $bold("H")^\#$ of the channel matrix $bold("H")$, eliminating the interference on the signal $bold("z")'_(Z F) = bold("s") + bold("H")^\#bold("w")$. After the equalization, a threshold detector is applied.
+
+  The second is given by the Decision-Feedback Equalizer (DFE), which applies QR decomposition on $bold("H")$ so that $bold("H") = bold("VT")$, where $bold("V")$ is a unitary matrix and $bold("T")$ is superior triangular. Multiplying $bold("z")$ by $bold("V")^H$ we get @eq:dfe, where $bold("w")'$ has the same distribution as $bold("w")$. $bold("z")'_(D F E)$ is determined by performing backward substitution on the linear system given by $bold("Ts")$ and applying a threshold detector on newly determined component at each step.
+
+$ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
 === Implementation
 
+  The implementation of these multipath channels started by dividing the data into frames. Since at first we are dealing only with the case where there is no channel coding, it suffices to separate the message bits into groups of size $N"log"_2M$, where $M$ is the size of the constellation employed, and then convert these groups of bits into symbols, which will compose the desired frames.
 
+  Continuing, the multipath channels were implemented by first taking samples from $h(m)$ given by the provided function ``` response_channel``` and then building a Toeplitz matrix of size $N times N$ from these samples. Finally, the AWGN is added.
+
+```matlab
+  if c == 0 % c is the channel number
+      H = eye(N);
+  else
+      h = response_channel(c);
+      L = (length(h) - 1) / 2;
+      H = toeplitz([h(1 + L) fliplr(h(1:L)) zeros(1,N - L - 1)], ...
+          [h(1 + L: 2*L) zeros(1,N - L)]);
+  end
+  y = H*s + noise;
+  ```
+
+  As a last step, the different equalizers are all implemented following the equations described in the previous section.
+
+  ```matlab
+  if strcmp(equalizer, "ZF") % Zero Forcing using the pseudoinverse
+      y_eq = pinv(H) * y;
+      [s_hat, ~] = threshold_detector(y_eq, modulation, M);
+  elseif strcmp(equalizer, "DFE") % Decision-Feedback Equalizer
+      [Q,R] = qr(H);
+      z = Q' * y; % Applies adjoint of unitary matrix
+      s_hat = zeros(N,1);
+      for ii = N:-1:1 % Performs backward substitution and decision
+          y_eq = (z(ii) - R(ii,ii+1:N) * s_hat(ii+1:N)) / R(ii,ii);
+          [s_hat(ii), ~] = threshold_detector(y_eq, modulation, M);
+      end
+  else % No equalization
+      y_eq = y;
+      [s_hat, ~] = threshold_detector(y_eq, modulation, M);
+  end
+  ```
+
+  This finalizes the multipath channels and equalization implementations.
 
 === BER Plots and Discussions
 
