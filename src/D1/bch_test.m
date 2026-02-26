@@ -51,8 +51,9 @@ for ii = 1:snr_length
     N0 = 1./10.^(snr_bits(ii)/10);
     err_total = 0;
     %% Sends a given number of frames through the channel and calculates error
-    for jj = 1:simulation_times
-        [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, bch_code_option);
+    for jj = 1:simulation_times/2
+        frame_number = 2
+        [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
         frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
         err_bits = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
         err_total = err_total + err_bits;
