@@ -25,7 +25,18 @@
 #let (bpsk_1_x_f, bpsk_1_y_f) = filter-positive(bpsk_1_x, bpsk_1_y)
 #let (bpsk_2_x, bpsk_2_y) = lq.load-txt(read("./graphs/bpsk-coded2.csv"))
 #let (bpsk_2_x_f, bpsk_2_y_f) = filter-positive(bpsk_2_x, bpsk_2_y)
-
+#let (bpsk_channel1_th_x, bpsk_channel1_th_y) = lq.load-txt(read("./graphs/bpsk-channel1_th.csv"))
+#let (bpsk_channel1_th_x_f, bpsk_channel1_th_y_f) = filter-positive(bpsk_channel1_th_x, bpsk_channel1_th_y)
+#let (bpsk_channel1_zf_x, bpsk_channel1_zf_y) = lq.load-txt(read("./graphs/bpsk-channel1_zf.csv"))
+#let (bpsk_channel1_zf_x_f, bpsk_channel1_zf_y_f) = filter-positive(bpsk_channel1_zf_x, bpsk_channel1_zf_y)
+#let (bpsk_channel1_dfe_x, bpsk_channel1_dfe_y) = lq.load-txt(read("./graphs/bpsk-channel1_dfe.csv"))
+#let (bpsk_channel1_dfe_x_f, bpsk_channel1_dfe_y_f) = filter-positive(bpsk_channel1_dfe_x, bpsk_channel1_dfe_y)
+#let (bpsk_channel3_th_x, bpsk_channel3_th_y) = lq.load-txt(read("./graphs/bpsk-channel3_th.csv"))
+#let (bpsk_channel3_th_x_f, bpsk_channel3_th_y_f) = filter-positive(bpsk_channel3_th_x, bpsk_channel3_th_y)
+#let (bpsk_channel3_zf_x, bpsk_channel3_zf_y) = lq.load-txt(read("./graphs/bpsk-channel3_zf.csv"))
+#let (bpsk_channel3_zf_x_f, bpsk_channel3_zf_y_f) = filter-positive(bpsk_channel3_zf_x, bpsk_channel3_zf_y)
+#let (bpsk_channel3_dfe_x, bpsk_channel3_dfe_y) = lq.load-txt(read("./graphs/bpsk-channel3_dfe.csv"))
+#let (bpsk_channel3_dfe_x_f, bpsk_channel3_dfe_y_f) = filter-positive(bpsk_channel3_dfe_x, bpsk_channel3_dfe_y)
 #set par(
   justify: true,
   leading: 0.52em,
@@ -311,6 +322,50 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
   This finalizes the multipath channels and equalization implementations.
 
 === BER Plots and Discussions
+
+  We start the analysis by plotting the BER versus SNR curves of a BPSK modulated signal using both of the equalization methods discussed and comparing to a non equalized signal, repeating the analysis for each channel.
+
+#figure(
+  lq.diagram(
+    width: 15cm,
+    height: 10cm,
+    lq.plot(bpsk_channel1_th_x_f, bpsk_channel1_th_y_f, label: [BPSK - no equalization],
+            mark: "x", stroke:(thickness: 1pt, dash: "solid")),
+    lq.plot(bpsk_channel1_zf_x_f, bpsk_channel1_zf_y_f, label: [BPSK - ZF equalization],
+            mark: "o", stroke:(thickness: 1pt, dash: "solid")),
+    lq.plot(bpsk_channel1_dfe_x_f, bpsk_channel1_dfe_y_f, label: [BPSK - DFE],
+            mark: "+", stroke:(thickness: 1pt, dash: "solid")),
+    title: [BER versus $E_b"/"N_0$ for distinct equalizations with BPSK modulation in channel 1], 
+    yscale: "log",
+    ylabel: [BER],
+    xlabel: [$E_b"/"N_0 ("dB")$],
+    xaxis: (subticks: none),
+    legend: (position: left + bottom)
+  ),
+  caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK constellation in channel 1 using three distinct equalizations: no equalization, Zero Forcing and DFE.],
+) <BPSK-channel1>
+
+#figure(
+  lq.diagram(
+    width: 15cm,
+    height: 10cm,
+    lq.plot(bpsk_channel3_th_x_f, bpsk_channel3_th_y_f, label: [BPSK - no equalization],
+            mark: "x", stroke:(thickness: 1pt, dash: "solid")),
+    lq.plot(bpsk_channel3_zf_x_f, bpsk_channel3_zf_y_f, label: [BPSK - ZF equalization],
+            mark: "o", stroke:(thickness: 1pt, dash: "solid")),
+    lq.plot(bpsk_channel3_dfe_x_f, bpsk_channel3_dfe_y_f, label: [BPSK - DFE],
+            mark: "+", stroke:(thickness: 1pt, dash: "solid")),
+    title: [BER versus $E_b"/"N_0$ for distinct equalizations with BPSK modulation in channel 3], 
+    yscale: "log",
+    ylabel: [BER],
+    xlabel: [$E_b"/"N_0 ("dB")$],
+    xaxis: (subticks: none),
+    legend: (position: left + bottom)
+  ),
+  caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK constellation in channel 3 using three distinct equalizations: no equalization, Zero Forcing and DFE.],
+) <BPSK-channel3>
+
+  From @BPSK-channel1 and @BPSK-channel3 we can conclude that equalization promotes a distinctive performance increase to the system, significantly reducing the BER for a same SNR. Furthermore, the DFE shows a far superior performance when compared to the ZF equalization in high interference channels, being capable of reducing the interference between symbols without increasing the noise.
 
   Suggested analysis.
 
