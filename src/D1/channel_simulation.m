@@ -18,7 +18,7 @@ function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, e
     %%%%%% Symbol Equalization
     if strcmp(equalizer, "ZF")
         y_eq = pinv(H) * y(1:end, :);
-        [s_hat, ~] = threshold_detector(y_eq(1:end, :), modulation, M);
+        [s_hat, ~] = reshape(threshold_detector(y_eq(:), modulation, M), N, []);
     elseif strcmp(equalizer, "DFE")
         [Q,R] = qr(H);
         z = Q' * y;
