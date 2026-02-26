@@ -5,7 +5,7 @@ clear all;
 syndrome_table_file_fmt = "syndrome-table-%d.mat";
 min_frame_number = 100;
 min_error_bits_per_snr = 3;
-max_snr_simulation_iterations = 10;
+max_snr_simulation_iterations = 20;
 
 %%%% General System Parameters (to configure according to preferences) %%%%
 frame_size = 100;
@@ -56,7 +56,7 @@ for ii = 1:snr_length
     snr_iteration = 1;
     while err_total < min_error_bits_per_snr && snr_iteration <= max_snr_simulation_iterations
         tic;
-        frame_number = min_frame_number*snr_iteration;
+        frame_number = min_frame_number*(snr_bits(ii) + 1)*snr_iteration;
         [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
         frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
         err_bits = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
