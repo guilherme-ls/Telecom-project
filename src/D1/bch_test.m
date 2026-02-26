@@ -10,7 +10,7 @@ frame_size = 100;
 modulation = 'QAM'; %% 'PAM','PSK','QAM'
 M = 4;
 channel = 0;
-equalization = "DFE";
+equalization = "ZF";
 bch_code_option = 1;
 
 %%%% BCH Code Parameters %%%%
