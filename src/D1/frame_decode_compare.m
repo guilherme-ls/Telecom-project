@@ -14,5 +14,5 @@ function [errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_tab
     end
 
     %%%% Total amount of error bits
-    errors = sum(mod(m_hat(:) + m_total, 2)) / length(m_total);
+    errors = sum(mod(m_hat(:) + m_total(:), 2)) / length(m_total);
 end
