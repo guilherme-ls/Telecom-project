@@ -9,7 +9,7 @@ simulation_times = 100;
 frame_size = 100;
 modulation = 'QAM'; %% 'PAM','PSK','QAM'
 M = 4;
-channel = 2;
+channel = 0;
 equalization = "DFE";
 bch_code_option = 0;
 
@@ -45,6 +45,7 @@ snr_length = length(snr_bits);
 ber_per_snr = zeros(snr_length, 1);
 %% Calculates BER for each SNR
 for ii = 1:snr_length
+    disp(sprintf("Simulating snr %d dB\n", snr_bits(ii)));
     % snr_symbol = snr_bits(ii) + 10*log10(log2(M));
     % analysing the bits2symbols code provided, it considers Eb=1, not Es=1 as in the TE02 subject
     N0 = 1./10.^(snr_bits(ii)/10);
