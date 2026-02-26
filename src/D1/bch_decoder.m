@@ -12,6 +12,7 @@ function [m_hat, err] = bch_decoder(y, g, t, syndrome_table)
     syndrome_int(1, :) = bi2de(syndrome(1:end, :)', "left-msb");
     err = zeros(size(y, 1), size(y, 2));
     %%% Error calculation
+    %%% TODO Vectorize this! This is the last major bottleneck I was able to find
     for ii = 1:size(y, 2)
         if syndrome(1:end, ii) == 0 %% No Errors!
             err(1:end, ii) = zeros(size(y, 1), 1);
