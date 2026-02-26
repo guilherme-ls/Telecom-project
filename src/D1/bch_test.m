@@ -11,7 +11,7 @@ modulation = 'QAM'; %% 'PAM','PSK','QAM'
 M = 4;
 channel = 0;
 equalization = "DFE";
-bch_code_option = 0;
+bch_code_option = 1;
 
 %%%% BCH Code Parameters %%%%
 if bch_code_option == 0
@@ -40,7 +40,7 @@ end
 %%%%%% Simulation %%%%%%
 
 %%%% Data input generation %%%%
-snr_bits = [0:2:20];
+snr_bits = [0:2:4];
 snr_length = length(snr_bits);
 ber_per_snr = zeros(snr_length, 1);
 %% Calculates BER for each SNR
