@@ -3,7 +3,6 @@ function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, e
     s = reshape(bits2symbols(m_c_total(:), modulation, M), N, []);
     %%%% Channel model with noise %%%%
     noise = sqrt(N0/2) * (randn(size(s, 1),size(s, 2)) + 1i*randn(size(s, 1),size(s, 2)));
-    
     if c == 0
         H = eye(N);
     else
@@ -13,7 +12,6 @@ function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, e
     end
     y = zeros(size(s, 1), size(s,2));
     y(1:end, :) = H*s(1:end, :) + noise(1:end, :);
-    
     %%%% Receiver and symbol detection
     %%%%%% Symbol Equalization
     if strcmp(equalizer, "ZF")
@@ -31,6 +29,8 @@ function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, e
         y_eq = y;
         [s_hat, ~] = reshape(threshold_detector(y_eq(:), modulation, M), N, []);
     end
-
+    %%% TODO symbols2bits is taking the majority of the simulation simulation time 
+    %%%% Maybe we can refactor it to make it faster? Depends on what is making it 
+    %%%% slow in the first place
     frame_bits = reshape(symbols2bits(s_hat(:), modulation, M)', N*log2(M), []);
 end
