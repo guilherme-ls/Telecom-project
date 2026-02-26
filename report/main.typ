@@ -9,8 +9,22 @@
 #show: equate.with(breakable: true, sub-numbering: false)
 #set math.equation(numbering: "(1.1)")
 
+#let filter-positive(xdata, ydata) = {
+  let pairs = xdata.zip(ydata)
+  let filtered = pairs.filter(p => p.at(1) > 0)
+  (
+    filtered.map(p => p.at(0)),
+    filtered.map(p => p.at(1)),
+  )
+}
+
 // Ploting semilog from csv function
-//#let (bpsk_0_x, bpsk_0_y) = lq.load-txt(read("./graphs/bpsk-0.csv"))
+#let (bpsk_0_x, bpsk_0_y) = lq.load-txt(read("./graphs/bpsk-uncoded.csv"))
+#let (bpsk_0_x_f, bpsk_0_y_f) = filter-positive(bpsk_0_x, bpsk_0_y)
+#let (bpsk_1_x, bpsk_1_y) = lq.load-txt(read("./graphs/bpsk-coded1.csv"))
+#let (bpsk_1_x_f, bpsk_1_y_f) = filter-positive(bpsk_1_x, bpsk_1_y)
+#let (bpsk_2_x, bpsk_2_y) = lq.load-txt(read("./graphs/bpsk-coded2.csv"))
+#let (bpsk_2_x_f, bpsk_2_y_f) = filter-positive(bpsk_2_x, bpsk_2_y)
 
 #set par(
   justify: true,
@@ -191,11 +205,33 @@ Cloud Radio Access Network (C-RAN)",
 
   This variance is then used create a complex circular white noise to apply on the symbols as they are passing the transmission channel. The resulting noisy signal then passes through a threshold detector, estimating the symbols received, and is demodulated through the ``` symbols2bits``` function, proceeding through the decoding and finally measuring the Bit Error Rate for plotting.
 
-  Present plot. 
+#figure(
+  lq.diagram(
+    width: 15cm,
+    height: 10cm,
+    lq.plot(bpsk_0_x_f, bpsk_0_y_f, label: [BPSK - not coded],
+            mark: "x", stroke:(thickness: 1pt, dash: "solid")),
+    lq.plot(bpsk_1_x_f, bpsk_1_y_f, label: [BPSK - BCH code $t=1$],
+            mark: "o", stroke:(thickness: 1pt, dash: "solid")),
+    lq.plot(bpsk_2_x_f, bpsk_2_y_f, label: [BPSK - BCH code $t=2$],
+            mark: "+", stroke:(thickness: 1pt, dash: "solid")),
+    title: [BER versus $E_b"/"N_0$ for distinct coding schemes with BPSK modulation.], 
+    yscale: "log",
+    ylabel: [BER],
+    xlabel: [$E_b"/"N_0 ("dB")$],
+    xaxis: (subticks: none),
+    legend: (position: right + top)
+  ),
+  caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK constellation and three distinct channel coding schemes: a not coded base case, a BCH code correcting $t=1$ error, and a BCH code correcting $t=2$ errors.],
+) <BPSK-coded>
 
-  From this graph we can identify the empirical coding gain of both the implemented BCH codes and compare them to the theory. The theoretical coding gain considering an Additive White Gaussian Noise (AWGN) channel and a hard decision, as is our case, is given by $gamma_(d B) = 10 "log"(R(t+1))$, therefore the first BCH code must have a coding gain of $gamma_(1 d B) = 10 "log"(26/31 times 2) = 2.25 "dB"$ and the second code $gamma_(1 d B) = 10 "log"(21/31 times 3) = 3.08 "dB"$. From the graphs we get that ...
+  @BPSK-coded shows us the BER versus $E_b"/"N_0$ curve comparison between the not coded case and the two implemented BCH codes, using a BPSK modulation and an AWGN channel on all cases. First, we observe that for low SNR the performance of the coded case is bellow the not coded one, indicating that the decrease in the energy per bit as a result of the reduced code rate outwheighs the increase in performance due to the error correcting. Indeed, for low SNRs the error frequency tends to be so high that the code is rarely capable of correcting all of them.
 
-  Discuss asymptotic gain.
+  However, from an SNR of $4 "dB"$ onwards the coded cases start performing better than the non-coded one, indicating that the error correcting capacity of the code becomes increasingly relevant in reducing the BER. The coding gain becomes highly perceptible for high SNRs.
+
+  From this graph we can identify the empirical coding gain of both the implemented BCH codes and compare them to the theory. The theoretical coding gain considering an Additive White Gaussian Noise (AWGN) channel and a hard decision, as is our case, is given by $gamma_(d B) = 10 "log"(R(t+1))$, therefore the first BCH code must have a coding gain of $gamma_(1 d B) = 10 "log"(26/31 times 2) = 2.25 "dB"$ and the second code $gamma_(1 d B) = 10 "log"(21/31 times 3) = 3.08 "dB"$.
+  
+  Note that the graph does not capture the asymptotic coding gains, as that would require an extreme amount of computational resources. However, we can still analyze the gain at the BER of $3 times 10^-40$, relatively trustworthy given the simulation parameters, to get empirical gains of approximately $2.14 "dB"$ for the first code and $3.28 "dB"$ for the second one. This is close to the theoretical gains and show that our simulations reasonably approximate theory within our computational limitations.
 
 == Multipath Channels
 
