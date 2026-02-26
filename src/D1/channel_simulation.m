@@ -24,8 +24,8 @@ function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, e
         z = Q' * y;
         s_hat = zeros(N, size(s, 2));
         for ii = N:-1:1
-            y_eq = (z(ii) - R(ii,ii+1:N) * s_hat(ii+1:N, :)) / R(ii,ii);
-            [s_hat(ii, :), ~] = threshold_detector(y_eq(1:end, :), modulation, M);
+            y_eq = (z(ii, :) - R(ii,ii+1:N) * s_hat(ii+1:N, :)) / R(ii,ii);
+            [s_hat(ii, :), ~] = threshold_detector(y_eq, modulation, M);
         end
     else
         y_eq = y;

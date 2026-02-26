@@ -10,7 +10,7 @@ frame_size = 100;
 modulation = 'QAM'; %% 'PAM','PSK','QAM'
 M = 4;
 channel = 0;
-equalization = "";
+equalization = "DFE";
 bch_code_option = 1;
 
 %%%% BCH Code Parameters %%%%
@@ -51,8 +51,8 @@ for ii = 1:snr_length
     N0 = 1./10.^(snr_bits(ii)/10);
     err_total = 0;
     %% Sends a given number of frames through the channel and calculates error
-    for jj = 1:simulation_times/100
-        frame_number = 100;
+    for jj = 1:simulation_times/2
+        frame_number = 2;
         [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
         frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
         err_bits = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
