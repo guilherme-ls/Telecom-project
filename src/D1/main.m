@@ -28,6 +28,7 @@ for bch=0:2
                        "bch_code_option", bch,
                        "snr_bits", [0:1:10],
                        "normalize_symbol_energy", false,
+                       "Ts", 0.05*10e-6,
                        "output_throughtput", false 
                        );
 end
@@ -38,7 +39,7 @@ simulations.bch_sims = bch_sims;
 equalizers = {"none", "ZF", "DFE"};
 modulations = {{"PSK", 2, [0:2:20]}, {"QAM", 8, [0:3:30]}, {"QAM", 16, [0:3:30]}};
 
-for channel=1:1
+for channel=1:3
 for ii=1:length(equalizers)
 for jj=1:length(modulations)
   eq = equalizers{ii};
@@ -51,6 +52,7 @@ for jj=1:length(modulations)
                        "bch_code_option", 0,
                        "snr_bits", modulations{jj}{3},
                        "normalize_symbol_energy", false,
+                       "Ts", 0.05*10e-6,
                        "output_throughtput", false
                        );
 end
@@ -72,6 +74,7 @@ for ii=1:length(equalizers)
                        "bch_code_option", bch,
                        "snr_bits", [0:2:20],
                        "normalize_symbol_energy", false,
+                       "Ts", 0.05*10e-6,
                        "output_throughtput", false
                        );
 end
@@ -92,6 +95,7 @@ for jj=1:length(modulations)
                        "bch_code_option", bch,
                        "snr_bits", modulations{jj}{3},
                        "normalize_symbol_energy", true,
+                       "Ts", 0.05*10e-6,
                        "output_throughtput", true
                        );
 end

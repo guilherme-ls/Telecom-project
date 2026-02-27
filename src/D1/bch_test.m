@@ -15,6 +15,8 @@ M = system_params.M;
 channel = system_params.channel;
 equalization = system_params.equalization;
 bch_code_option = system_params.bch_code_option;
+
+Ts = system_params.Ts;
 normalize_symbol_energy = system_params.normalize_symbol_energy;
 
 snr_bits = system_params.snr_bits;
@@ -77,7 +79,7 @@ for ii = 1:snr_length
         err_per_bit_total = err_per_bit_total + errors_per_bit;
         err_total = err_total + amount_of_errors;
         frame_sucess = sum(errors_per_frame == 0);
-        frame_sucess_rate = frame_sucess * k / (frame_size * log2(M));
+        frame_sucess_rate = frame_sucess * k / (frame_size * Ts);
         throughput_total = throughput_total + frame_sucess_rate / length(errors_per_frame) ;
         snr_iteration = snr_iteration + 1;
         toc
