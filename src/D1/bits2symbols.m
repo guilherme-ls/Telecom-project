@@ -28,7 +28,7 @@ end
 %% Constellation PAM
 if (mod=='PAM')
     V=reshape(a,m,floor(length(a)/m))';
-    ipDec = V(:,[1:m]) * powers_of_two(1:m);
+    ipDec = V(:,[1:m]) * powers_of_two(m:-1:1);
     ipGrayDec = bitxor(ipDec,floor(ipDec/2));
     
     s = ipGrayDec*2-M+1;
@@ -38,7 +38,7 @@ end
 %% Constellation PSK
 if(mod=='PSK')
     V=reshape(a,m,floor(length(a)/m))';
-    ipDec = V(:,[1:m]) * powers_of_two(1:m);
+    ipDec = V(:,[1:m]) * powers_of_two(m:-1:1);
     ipGrayDec = bitxor(ipDec,floor(ipDec/2));
     
     s = sqrt(log2(M))*exp(2*1i*pi*(ipGrayDec/M));
@@ -50,11 +50,11 @@ if(mod=='QAM')
     if (floor(sqrt(M))^2-M ==0)
         V=reshape(a,m,floor(length(a)/m))';
         % taking the first bits to code real axis
-        ipDecRe = V(:,[1:m/2]) * powers_of_two(1:m/2);
+        ipDecRe = V(:,[1:m/2]) * powers_of_two(m/2:-1:1);
         ipGrayDecRe = bitxor(ipDecRe,floor(ipDecRe/2));
         
         % taking the last bits to code imaginary axis
-        ipDecIm = V(:,[m/2+1:m]) * powers_of_two(1:m/2);
+        ipDecIm = V(:,[m/2+1:m]) * powers_of_two(m/2:-1:1);
         ipGrayDecIm = bitxor(ipDecIm,floor(ipDecIm/2));
         mm=floor(sqrt(M));
         

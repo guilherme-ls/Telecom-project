@@ -18,22 +18,21 @@ simulation_params.max_simultaneous_frame_simulation = 1000;
 %%%% Simulated simulation types %%%%
 
 %%%%%% Simulations for BCH Simulation Part %%%%%%
-%for bch=0:2
-%  bch_sims.(sprintf("bch%d", bch)) = struct(
-%                       "frame_size", 100,
-%                       "modulation", 'PSK',
-%                       "M", 2,
-%                       "channel", 0,
-%                       "equalization", '',
-%                       "bch_code_option", bch,
-%                       "snr_bits", [0:1:10]);
-%end
-%
-%simulations.bch_sims = bch_sims;
+for bch=0:2
+  bch_sims.(sprintf("bch%d", bch)) = struct(
+                       "frame_size", 100,
+                       "modulation", 'PSK',
+                       "M", 2,
+                       "channel", 0,
+                       "equalization", '',
+                       "bch_code_option", bch,
+                       "snr_bits", [0:1:10]);
+end
+
+simulations.bch_sims = bch_sims;
 
 %%%%%% Simulations for Equalizers and Channels Simulation Part %%%%%%
-%equalizers = {"none", "ZF", "DFE"};
-equalizers = {"none"};
+equalizers = {"none", "ZF", "DFE"};
 modulations = {{"PSK", 2, [0:2:20]}, {"QAM", 8, [0:3:30]}, {"QAM", 16, [0:3:30]}};
 
 for channel=1:1
@@ -53,40 +52,40 @@ end
 end
 simulations.eq_sims = eq_sims;
 
-%%%%%%% Simulations for Extra Part %%%%%%
-%for channel=1:3
-%for bch=1:2
-%for ii=1:length(equalizers)
-%  eq = equalizers{ii};
-%  extra_sims.(sprintf("bch%d-%s-%d", bch, eq, channel)) = struct(
-%                       "frame_size", 100,
-%                       "modulation", 'PSK',
-%                       "M", 2,
-%                       "channel", channel,
-%                       "equalization", eq,
-%                       "bch_code_option", bch,
-%                       "snr_bits", [0:2:20]);
-%end
-%end
-%end
-%
-%for bch=0:2
-%for ii=1:length(equalizers)
-%for jj=1:length(modulations)
-%  eq = equalizers{ii};
-%  eq_sims.(sprintf("bch%d-%d%s-%s-%d", bch, modulations{jj}{2}, modulations{jj}{1}, eq, channel)) = struct(
-%                       "frame_size", 100,
-%                       "modulation", modulations{jj}{1},
-%                       "M", modulations{jj}{2},
-%                       "channel", 0,
-%                       "equalization", eq,
-%                       "bch_code_option", bch,
-%                       "snr_bits", modulations{jj}{3});
-%end
-%end
-%end
-%
-%simulations.extra_sims = extra_sims;
+%%%%%% Simulations for Extra Part %%%%%%
+for channel=1:3
+for bch=1:2
+for ii=1:length(equalizers)
+  eq = equalizers{ii};
+  extra_sims.(sprintf("bch%d-%s-%d", bch, eq, channel)) = struct(
+                       "frame_size", 100,
+                       "modulation", 'PSK',
+                       "M", 2,
+                       "channel", channel,
+                       "equalization", eq,
+                       "bch_code_option", bch,
+                       "snr_bits", [0:2:20]);
+end
+end
+end
+
+for bch=0:2
+for ii=1:length(equalizers)
+for jj=1:length(modulations)
+  eq = equalizers{ii};
+  eq_sims.(sprintf("bch%d-%d%s-%s-%d", bch, modulations{jj}{2}, modulations{jj}{1}, eq, channel)) = struct(
+                       "frame_size", 100,
+                       "modulation", modulations{jj}{1},
+                       "M", modulations{jj}{2},
+                       "channel", 0,
+                       "equalization", eq,
+                       "bch_code_option", bch,
+                       "snr_bits", modulations{jj}{3});
+end
+end
+end
+
+simulations.extra_sims = extra_sims;
 
 for ii=1:numfields(simulations)
   sim_group_name = fieldnames(simulations){ii};
