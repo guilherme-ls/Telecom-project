@@ -1,3 +1,16 @@
+%%%%% Frame Decoding and Comparison %%%%%%
+%%%%% Arguments:
+%%%%% - m_total : Vector with the expected message of the frame sent. If it is a matrix, size(m_total, 2) is executed in parallel. 
+%%%%% - frame_bits : Vector with the coded message of a received frame. If it is a matrix, size(frame_bits, 2) is executed in parallel. 
+%%%%% - g : Vector with the polynomial coeficients of the BCH code . 
+%%%%% - t : Amount of errors that the BCH code can fix. 
+%%%%% - syndrome_table : The syndrome table of the BCH code. 
+%%%%% - n : The size of the coded word. 
+%%%%% - k : The size of the message. 
+%%%%% Return:
+%%%%% - errors_per_frame : Vector with the amount of error for each frame compared. 
+%%%%% - errors_per_bit : Value of the BER of all the compared frames. 
+%%%%% - amount_of_errors : Vales of the amount of bit errors in total. 
 function [errors_per_frame, errors_per_bit, amount_of_errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k)
     %% Symbol Decoding
     number_bits = size(frame_bits, 1); % number of bits in a frame

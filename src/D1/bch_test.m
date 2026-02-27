@@ -1,4 +1,27 @@
 %%%%% BCH Coding Test %%%%%%
+%%%%% Arguments:
+%%%%% - simulation_params : A struct containing the simulation parameters. Check bellow for the struct details. 
+%%%%% - system_params : A struct containing the system parameters. Check bellow for the struct details. 
+%%%%% Return:
+%%%%% - ber_per_snr : A vector with the BER's found for each requested SNR.
+%%%%% - throughput_per_snr : A vector with the Throughputs found for each requested SNR.
+%%%%% Details:
+%%%%% - simulation_params fields:
+%%%%%   - syndrome_table_file_fmt : The string holding the file format of the syndrome table file.
+%%%%%   - min_frame_number : The minimal amount of frames to run in parallel in each simulation iteration.
+%%%%%   - min_error_bits_per_snr : One of the simulations stop conditions, the minimal amount of error bits detected to stop the iterations for a specific SNR. 
+%%%%%   - max_snr_simulation_iterations : One of the simulations stop conditions, the maximal amount of iterations a specific SNR can have.
+%%%%%   - max_simultaneous_frame_simulation : The maximal amount of frames to be simulated in the same simulation iteration.
+%%%%% - system_params fields:
+%%%%%  - frame_size : The size of a single simulated frame.
+%%%%%  - modulation : The modulation type.
+%%%%%  - M : The size of the constellation for the modulation.
+%%%%%  - channel : The channel to be used for the simulation.
+%%%%%  - equalization : The equalizer to be used in the simulation.
+%%%%%  - bch_code_option : The BCH code to be used, "0" means none.
+%%%%%  - Ts : The time interval of each symbol.
+%%%%%  - normalize_symbol_energy : Selects if Es = 1 or Eb = 1.
+%%%%%  - snr_bits : The interval of SNR values for the simulation to run on.
 function [ber_per_snr, throughput_per_snr] = bch_test(simulation_params, system_params)
 
 %%%% Simulation/Configuration Parameters %%%%

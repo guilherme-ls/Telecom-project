@@ -1,9 +1,11 @@
 %%%%% bch_mod_g %%%%%
 %%%%% Arguments:
 %%%%% - m : Column vector representation of the m(x) polynimial
+%%%%%       If m is a matrix, its size(m, 2) will be executed in parallel 
 %%%%% - g : Column vector representation of the g(x) polynomial
 %%%%% Return:
 %%%%% - m_mod : Column vector representation of the result m(x) mod g(x)
+%%%%%       If m is a matrix, m_mod will be a matrix with size(m_mod, 2) = size(m, 2)
 function [m_mod] = bch_mod_g(m, g)
     m(1:end, :) = m(end:-1:1, :); %% Reversing m(x) so it gets correctly shifted into the shift registers
     

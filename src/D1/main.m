@@ -1,3 +1,5 @@
+%%%%% Main Simulation Chain Script %%%%%%
+%% Check all the details on how to operate it in the README %%
 clear all;
 
 %%%% DEBUG VARIABLES %%%%

@@ -1,11 +1,13 @@
 %%%%% bch_decoder %%%%%
 %%%%% Arguments:
 %%%%% - y : Column vector representation of the y(x) received input polynomial
+%%%%%       If y is a matrix, its size(m, 2) will be executed in parallel 
 %%%%% - g : Column vector representation of the g(x) polynomial
 %%%%% - t : Max amount of errors the BCH code can fix 
 %%%%% - syndrome_table : Dictionary associating syndromes to the errors 
 %%%%% Return:
 %%%%% - m_hat : Column vector representation of the closest predicted m(x) 
+%%%%%           If y is a matrix, m_hat will also be a matrix with size(m_hat, 2) = size(y, 2)
 function [m_hat, err] = bch_decoder(y, g, t, syndrome_table)
     %%% Calculate syndrome and turn it into a integer representation
     syndrome = bch_mod_g(y,g);

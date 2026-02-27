@@ -1,3 +1,14 @@
+%%%%% Channel Simulation %%%%%%
+%%%%% Arguments:
+%%%%% - m_c_total : Vector with the coded message in a frame. If it is a matrix, size(m_c_total, 2) is executed in parallel. 
+%%%%% - N0 : Variance^2 of the Guassian noise. 
+%%%%% - modulation : String with the modulation to be used. Check bits2symbols for details on supported modulations. 
+%%%%% - M : Constellation size of the modulation to be used. Check bits2symbols for details on supported modulation sizes. 
+%%%%% - c : The channel to be used. 0 is a channel without IES, meanwhile 1-3 have different responses. Check response_channel for details on the different available channels. 
+%%%%% - N : The amount of symbols in the frame. 
+%%%%% - equalizer : String with the equalizer to be used. Can be either 'ZF', 'DFE', or something else ('none') for no equalization.. 
+%%%%% Return:
+%%%%% - frame_bits : Vector with the received frame after demodulation. It is also a matrix if m_c_total is one, with size(frame_bits, 2) = size(m_c_total, 2). 
 function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, equalizer)
     %% Symbol generation
     s = reshape(bits2symbols(m_c_total(:), modulation, M), N, []);

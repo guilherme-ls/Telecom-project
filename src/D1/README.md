@@ -53,6 +53,8 @@ new simulation or understand the ones in `main.m`.
 | channel | 0 / 1 / 2 / 3 | The channel to be used for the simulation. |
 | equalization | 'none' / 'ZF' / 'DFE' | The equalizer to be used in the simulation. |
 | bch\_code\_option | 0 / 1 / 2 | The BCH code to be used, "0" means none. |
+| Ts | real |  The time interval of each symbol. |
+| normalize\_symbol\_energy | true / false | Selects if Es = 1 or Eb = 1. |
 | snr\_bits | interval | The interval of SNR values for the simulation to run on. |
 
 ### Output Files 

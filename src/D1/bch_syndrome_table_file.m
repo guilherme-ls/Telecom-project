@@ -4,6 +4,7 @@
 %%%%% - n : Size of error word
 %%%%% - g : Column vector representation of the g(x) polynomial
 %%%%% - e_num : Max amount of errors
+%%%%% - file_name : The name of the file the syndrome table is (or should be) located at
 %%%%% Return:
 %%%%% - synd_table: Dictionary associating a syndrome (in integer form) to an error vector
 function [synd_table] = bch_syndrome_table_file(n, g, e_num, file_name)
