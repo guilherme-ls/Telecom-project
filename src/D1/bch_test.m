@@ -1,22 +1,24 @@
 %%%%% BCH Coding Test %%%%%%
-clear all;
+function [ber_per_snr] = bch_test(simulation_params, system_params)
 
 %%%% Simulation/Configuration Parameters %%%%
-syndrome_table_file_fmt = "syndrome-table-%d.mat";
-min_frame_number = 100;
-min_error_bits_per_snr = 3;
-max_snr_simulation_iterations = 20;
-max_simultaneous_frame_simulation = min_frame_number*10e3;
+syndrome_table_file_fmt = simulation_params.syndrome_table_file_fmt;
+min_frame_number = simulation_params.min_frame_number;
+min_error_bits_per_snr = simulation_params.min_error_bits_per_snr;
+max_snr_simulation_iterations = simulation_params.max_snr_simulation_iterations;
+max_simultaneous_frame_simulation = simulation_params.max_simultaneous_frame_simulation;
 
 %%%% General System Parameters (to configure according to preferences) %%%%
-frame_size = 100;
-modulation = 'QAM'; %% 'PAM','PSK','QAM'
-M = 4;
-channel = 1;
-equalization = "DFE";
-bch_code_option = 1;
+frame_size = system_params.frame_size;
+modulation = system_params.modulation;
+M = system_params.M;
+channel = system_params.channel;
+equalization = system_params.equalization;
+bch_code_option = system_params.bch_code_option;
 
-%%%% BCH Code Parameters %%%%
+snr_bits = system_params.snr_bits;
+
+  %%%% BCH Code Parameters %%%%
 if bch_code_option == 0
     n = frame_size * log2(M);
     k = frame_size * log2(M);
@@ -45,7 +47,6 @@ end
 %%%%%% Simulation %%%%%%
 
 %%%% Data input generation %%%%
-snr_bits = [0:2:20];
 snr_length = length(snr_bits);
 ber_per_snr = zeros(snr_length, 1);
 last_snr_iteration = 1;
@@ -71,11 +72,12 @@ for ii = 1:snr_length
         snr_iteration = snr_iteration + 1;
         toc
         disp(sprintf("\t Total amount of errors found = %d | BER = %d\n", 
-                         err_total, err_per_bit_total/snr_iteration));
+                         err_total, err_per_bit_total/(snr_iteration - 1)));
     end
     %% Calculates final BER
     disp(sprintf("\t -- Snr Iterations = %d --", snr_iteration - 1));
-    ber = err_per_bit_total / snr_iteration;
+    err_per_bit_total
+    ber = err_per_bit_total / (snr_iteration - 1)
     ber_per_snr(ii) = ber;
     last_snr_iteration = snr_iteration;
     if ber == 0 
@@ -84,10 +86,4 @@ for ii = 1:snr_length
     end
 end
 
-semilogy(snr_bits,ber_per_snr);
-grid;
-xlabel('Eb/No (in dB)');
-ylabel('BER');
-
-%Example how to save as csv 
-%csvwrite(["bpsk-rayleight.csv"], [SNR_bit.', BER.'])
+end
