@@ -5,7 +5,7 @@ plot_graphs = true;
 
 %%%% SCRIPT OUTPUT VARIABLES %%%%
 output_folder = "out";
-force_generate = true;
+force_generate = false;
 
 %%%% Global Simulation Parameters %%%%
 simulation_params.syndrome_table_file_fmt = "syndrome-table-%d.mat";
@@ -26,7 +26,10 @@ for bch=0:2
                        "channel", 0,
                        "equalization", '',
                        "bch_code_option", bch,
-                       "snr_bits", [0:1:10]);
+                       "snr_bits", [0:1:10],
+                       "normalize_symbol_energy", false,
+                       "output_throughtput", false 
+                       );
 end
 
 simulations.bch_sims = bch_sims;
@@ -46,7 +49,10 @@ for jj=1:length(modulations)
                        "channel", channel,
                        "equalization", eq,
                        "bch_code_option", 0,
-                       "snr_bits", modulations{jj}{3});
+                       "snr_bits", modulations{jj}{3},
+                       "normalize_symbol_energy", false,
+                       "output_throughtput", false
+                       );
 end
 end
 end
@@ -57,35 +63,42 @@ for channel=1:3
 for bch=1:2
 for ii=1:length(equalizers)
   eq = equalizers{ii};
-  extra_sims.(sprintf("bch%d-%s-%d", bch, eq, channel)) = struct(
+  extra_bpks.(sprintf("bch%d-%s-%d", bch, eq, channel)) = struct(
                        "frame_size", 100,
                        "modulation", 'PSK',
                        "M", 2,
                        "channel", channel,
                        "equalization", eq,
                        "bch_code_option", bch,
-                       "snr_bits", [0:2:20]);
+                       "snr_bits", [0:2:20],
+                       "normalize_symbol_energy", false,
+                       "output_throughtput", false
+                       );
 end
 end
 end
+simulations.extra_bpks = extra_bpks;
 
 for bch=0:2
 for ii=1:length(equalizers)
 for jj=1:length(modulations)
   eq = equalizers{ii};
-  eq_sims.(sprintf("bch%d-%d%s-%s-%d", bch, modulations{jj}{2}, modulations{jj}{1}, eq, channel)) = struct(
+  extra_throughput.(sprintf("bch%d-%d%s-%s-%d", bch, modulations{jj}{2}, modulations{jj}{1}, eq, channel)) = struct(
                        "frame_size", 100,
                        "modulation", modulations{jj}{1},
                        "M", modulations{jj}{2},
                        "channel", 0,
                        "equalization", eq,
                        "bch_code_option", bch,
-                       "snr_bits", modulations{jj}{3});
+                       "snr_bits", modulations{jj}{3},
+                       "normalize_symbol_energy", true,
+                       "output_throughtput", true
+                       );
 end
 end
 end
 
-simulations.extra_sims = extra_sims;
+simulations.extra_throughput = extra_throughput;
 
 for ii=1:numfields(simulations)
   sim_group_name = fieldnames(simulations){ii};
@@ -113,11 +126,16 @@ for ii=1:numfields(simulations)
       disp(sprintf("File already exists, skipping %s/%s...", sim_group_name, sim_name));
     else
       disp(sprintf("Running simulation %s/%s...", sim_group_name, sim_name));
-      [ber_per_snr] = bch_test(simulation_params, sim);
-      dlmwrite(file_name, [sim.snr_bits', ber_per_snr]);
+      [ber_per_snr, throughput_per_snr] = bch_test(simulation_params, sim);
+      out_per_snr = ber_per_snr;
+
+      if sim.output_throughtput
+        out_per_snr = throughput_per_snr;
+      end
+      dlmwrite(file_name, [sim.snr_bits', out_per_snr]);
       if plot_graphs 
-         semilogy(sim.snr_bits, ber_per_snr', 'DisplayName', sim_name);
-         legend;
+        semilogy(sim.snr_bits, out_per_snr', 'DisplayName', sim_name);
+        legend;
       end
     end
   end

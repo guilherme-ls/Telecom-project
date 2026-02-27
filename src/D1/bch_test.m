@@ -1,5 +1,5 @@
 %%%%% BCH Coding Test %%%%%%
-function [ber_per_snr] = bch_test(simulation_params, system_params)
+function [ber_per_snr, throughput_per_snr] = bch_test(simulation_params, system_params)
 
 %%%% Simulation/Configuration Parameters %%%%
 syndrome_table_file_fmt = simulation_params.syndrome_table_file_fmt;
@@ -15,6 +15,7 @@ M = system_params.M;
 channel = system_params.channel;
 equalization = system_params.equalization;
 bch_code_option = system_params.bch_code_option;
+normalize_symbol_energy = system_params.normalize_symbol_energy;
 
 snr_bits = system_params.snr_bits;
 
@@ -49,15 +50,20 @@ end
 %%%% Data input generation %%%%
 snr_length = length(snr_bits);
 ber_per_snr = zeros(snr_length, 1);
+throughput_per_snr = zeros(snr_length, 1);
 last_snr_iteration = 1;
 %% Calculates BER for each SNR
 for ii = 1:snr_length
     disp(sprintf("Simulating snr %d dB", snr_bits(ii)));
-    % snr_symbol = snr_bits(ii) + 10*log10(log2(M));
-    % analysing the bits2symbols code provided, it considers Eb=1, not Es=1 as in the TE02 subject
-    N0 = 1./10.^(snr_bits(ii)/10) / r;
+    snr = snr_bits(ii);
+    if normalize_symbol_energy
+      % analysing the bits2symbols code provided, it considers Eb=1, not Es=1 as in the TE02 subject
+      snr = snr + 10*log10(log2(M));
+    end
+    N0 = 1./10.^(snr/10) / r;
     err_per_bit_total = 0;
     err_total = 0;
+    throughput_total = 0;
     %% Sends a given number of frames through the channel and calculates error
     snr_iteration = 1; %last_snr_iteration;
     while err_total < min_error_bits_per_snr && snr_iteration <= max_snr_simulation_iterations
@@ -66,18 +72,27 @@ for ii = 1:snr_length
         tic;
         [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
         frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
-        [errors, err_per_bit] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
-        err_per_bit_total = err_per_bit_total + err_per_bit;
-        err_total = err_total + errors;
+        [errors_per_frame, errors_per_bit, amount_of_errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
+
+        err_per_bit_total = err_per_bit_total + errors_per_bit;
+        err_total = err_total + amount_of_errors;
+        frame_sucess = sum(errors_per_frame == 0);
+        frame_sucess_rate = frame_sucess * k / (frame_size * log2(M));
+        throughput_total = throughput_total + frame_sucess_rate / length(errors_per_frame) ;
         snr_iteration = snr_iteration + 1;
         toc
-        disp(sprintf("\t Total amount of errors found = %d | BER = %d\n", 
-                         err_total, err_per_bit_total/(snr_iteration - 1)));
+        disp(sprintf("\t Total amount of errors found = %d | BER = %d | T = %d\n", 
+                         err_total, err_per_bit_total/(snr_iteration - 1),
+                         throughput_total/(snr_iteration - 1)));
     end
     %% Calculates final BER
     disp(sprintf("\t -- Snr Iterations = %d --", snr_iteration - 1));
     ber = err_per_bit_total / (snr_iteration - 1);
+    throughput_total
+    snr_iteration
+    throughput = throughput_total / (snr_iteration - 1);
     ber_per_snr(ii) = ber;
+    throughput_per_snr(ii) = throughput;
     last_snr_iteration = snr_iteration;
     if ber == 0 
       disp("BER was 0, expecting that this trend will continue. Terminating early...");
