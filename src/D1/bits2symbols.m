@@ -50,11 +50,11 @@ if(mod=='QAM')
     if (floor(sqrt(M))^2-M ==0)
         V=reshape(a,m,floor(length(a)/m))';
         % taking the first bits to code real axis
-        ipDecRe = V(:,[1:m/2]) * powers_of_two(1:m);
+        ipDecRe = V(:,[1:m/2]) * powers_of_two(1:m/2);
         ipGrayDecRe = bitxor(ipDecRe,floor(ipDecRe/2));
         
         % taking the last bits to code imaginary axis
-        ipDecIm = V(:,[m/2+1:m]) * powers_of_two(1:m);
+        ipDecIm = V(:,[m/2+1:m]) * powers_of_two(1:m/2);
         ipGrayDecIm = bitxor(ipDecIm,floor(ipDecIm/2));
         mm=floor(sqrt(M));
         
