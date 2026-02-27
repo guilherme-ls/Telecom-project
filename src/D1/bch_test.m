@@ -59,9 +59,9 @@ for ii = 1:snr_length
     err_per_bit_total = 0;
     err_total = 0;
     %% Sends a given number of frames through the channel and calculates error
-    snr_iteration = last_snr_iteration;
+    snr_iteration = 1; %last_snr_iteration;
     while err_total < min_error_bits_per_snr && snr_iteration <= max_snr_simulation_iterations
-        frame_number = min(min_frame_number*(snr_bits(ii) + 1)*snr_iteration, max_simultaneous_frame_simulation);
+        frame_number = min(min_frame_number*(snr_bits(ii) + last_snr_iteration)*snr_iteration, max_simultaneous_frame_simulation);
         disp(sprintf("\t Simultaneous frames = %d", frame_number));
         tic;
         [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
