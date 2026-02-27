@@ -47,7 +47,3 @@ for ii=1:Npath
 end;
    
 h=h/norm(abs(h));
-
-%% Channel display
-stem(t,abs(h))
-grid
