@@ -6,6 +6,7 @@ syndrome_table_file_fmt = "syndrome-table-%d.mat";
 min_frame_number = 100;
 min_error_bits_per_snr = 3;
 max_snr_simulation_iterations = 20;
+max_simultaneous_frame_simulation = min_frame_number * max_snr_simulation_iterations;
 
 %%%% General System Parameters (to configure according to preferences) %%%%
 frame_size = 100;
@@ -47,6 +48,7 @@ end
 snr_bits = [0:2:20];
 snr_length = length(snr_bits);
 ber_per_snr = zeros(snr_length, 1);
+last_snr_iteration = 1;
 %% Calculates BER for each SNR
 for ii = 1:snr_length
     disp(sprintf("Simulating snr %d dB", snr_bits(ii)));
@@ -55,21 +57,24 @@ for ii = 1:snr_length
     N0 = 1./10.^(snr_bits(ii)/10) / r;
     err_total = 0;
     %% Sends a given number of frames through the channel and calculates error
-    snr_iteration = 1;
+    snr_iteration = last_snr_iteration;
     while err_total < min_error_bits_per_snr && snr_iteration <= max_snr_simulation_iterations
+        frame_number = min(min_frame_number*(snr_bits(ii) + 1)*snr_iteration, max_simultaneous_frame_simulation);
+        disp(sprintf("\t Simultaneous frames = %d", frame_number));
         tic;
-        frame_number = min_frame_number*(snr_bits(ii) + 1)*snr_iteration;
         [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
         frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
         err_bits = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
         err_total = err_total + err_bits;
         snr_iteration = snr_iteration + 1;
         toc
+        disp(sprintf("\t Current Total errors = %d\n", err_total));
     end
     %% Calculates final BER
-    disp(sprintf("\t - Snr Iterations = %d", snr_iteration - 1));
+    disp(sprintf("\t -- Snr Iterations = %d --", snr_iteration - 1));
     ber = err_total / snr_iteration;
     ber_per_snr(ii) = ber;
+    last_snr_iteration = snr_iteration;
     if ber == 0 
       disp("BER was 0, expecting that this trend will continue. Terminating early...");
       break;
