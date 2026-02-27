@@ -22,6 +22,7 @@ if bch_code_option == 0
     syndrome_table = 0;
     g = 0;
     t = 0;
+    r = 1;
 else
     n = 31;
 
@@ -34,6 +35,7 @@ else
     end
 
     k = n - length(g) + 1;
+    r = k / n;
 
     syndrome_table_file = sprintf(syndrome_table_file_fmt, t); %% Syndrome file table based on the amount of corrected errors
     syndrome_table = bch_syndrome_table_file(n, g, t, syndrome_table_file);
@@ -50,7 +52,7 @@ for ii = 1:snr_length
     disp(sprintf("Simulating snr %d dB", snr_bits(ii)));
     % snr_symbol = snr_bits(ii) + 10*log10(log2(M));
     % analysing the bits2symbols code provided, it considers Eb=1, not Es=1 as in the TE02 subject
-    N0 = 1./10.^(snr_bits(ii)/10);
+    N0 = 1./10.^(snr_bits(ii)/10) / r;
     err_total = 0;
     %% Sends a given number of frames through the channel and calculates error
     snr_iteration = 1;
