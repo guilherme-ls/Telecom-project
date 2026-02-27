@@ -1,4 +1,4 @@
-function [errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k)
+function [errors, errors_per_bit] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k)
     %% Symbol Decoding
     number_bits = size(frame_bits, 1); % number of bits in a frame
     n_words = floor(number_bits / n);
@@ -14,5 +14,6 @@ function [errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_tab
     end
 
     %%%% Total amount of error bits
-    errors = sum(mod(m_hat(:) + m_total(:), 2)) / length(m_total);
+    errors = sum(mod(m_hat(:) + m_total(:), 2));
+    errors_per_bit = errors / length(m_total);
 end

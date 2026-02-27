@@ -6,7 +6,7 @@ syndrome_table_file_fmt = "syndrome-table-%d.mat";
 min_frame_number = 100;
 min_error_bits_per_snr = 3;
 max_snr_simulation_iterations = 20;
-max_simultaneous_frame_simulation = min_frame_number * max_snr_simulation_iterations;
+max_simultaneous_frame_simulation = min_frame_number*10e3;
 
 %%%% General System Parameters (to configure according to preferences) %%%%
 frame_size = 100;
@@ -55,6 +55,7 @@ for ii = 1:snr_length
     % snr_symbol = snr_bits(ii) + 10*log10(log2(M));
     % analysing the bits2symbols code provided, it considers Eb=1, not Es=1 as in the TE02 subject
     N0 = 1./10.^(snr_bits(ii)/10) / r;
+    err_per_bit_total = 0;
     err_total = 0;
     %% Sends a given number of frames through the channel and calculates error
     snr_iteration = last_snr_iteration;
@@ -64,15 +65,17 @@ for ii = 1:snr_length
         tic;
         [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
         frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
-        err_bits = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
-        err_total = err_total + err_bits;
+        [errors, err_per_bit] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
+        err_per_bit_total = err_per_bit_total + err_per_bit;
+        err_total = err_total + errors;
         snr_iteration = snr_iteration + 1;
         toc
-        disp(sprintf("\t Current Total errors = %d\n", err_total));
+        disp(sprintf("\t Total amount of errors found = %d | BER = %d\n", 
+                         err_total, err_per_bit_total/snr_iteration));
     end
     %% Calculates final BER
     disp(sprintf("\t -- Snr Iterations = %d --", snr_iteration - 1));
-    ber = err_total / snr_iteration;
+    ber = err_per_bit_total / snr_iteration;
     ber_per_snr(ii) = ber;
     last_snr_iteration = snr_iteration;
     if ber == 0 
