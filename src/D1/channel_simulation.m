@@ -21,6 +21,7 @@ function [frame_bits] = channel_simulation(m_c_total, N0, modulation, M, c, N, e
         [Q,R] = qr(H);
         z = Q' * y;
         s_hat = zeros(N, size(s, 2));
+        %% TODO This is the next bottleneck, might not be solvable
         for ii = N:-1:1
             y_eq = (z(ii, :) - R(ii,ii+1:N) * s_hat(ii+1:N, :)) / R(ii,ii);
             [s_hat(ii, :), ~] = threshold_detector(y_eq, modulation, M); 
