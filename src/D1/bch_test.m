@@ -76,8 +76,7 @@ for ii = 1:snr_length
     end
     %% Calculates final BER
     disp(sprintf("\t -- Snr Iterations = %d --", snr_iteration - 1));
-    err_per_bit_total
-    ber = err_per_bit_total / (snr_iteration - 1)
+    ber = err_per_bit_total / (snr_iteration - 1);
     ber_per_snr(ii) = ber;
     last_snr_iteration = snr_iteration;
     if ber == 0 
