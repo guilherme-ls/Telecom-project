@@ -16,7 +16,7 @@
 function [s]=bits2symbols(a,mod,M)
 
 m=log2(M);
-powers_of_two = (2 * ones(1, m)).^((1:m) - 1);
+powers_of_two = (2 * ones(1, m)).^((1:m) - 1)';
 
 %% Size test
 if ((length(a)-m*floor(length(a)/m))~=0)
