@@ -32,11 +32,34 @@
 #let (bpsk_2_x, bpsk_2_y) = lq.load-txt(read("./graphs/bch_sims/bch2.csv"))
 #let (bpsk_2_x_f, bpsk_2_y_f) = filter-positive(bpsk_2_x, bpsk_2_y)
 
-// Response Channels Coefficients
-#let (resp_chan_1_l, resp_chan_1_h) = lq.load-txt(read("./graphs/response-channel-1.csv"))
-#let (resp_chan_2_l, resp_chan_2_h) = lq.load-txt(read("./graphs/response-channel-2.csv"))
-#let (resp_chan_3_l, resp_chan_3_h) = lq.load-txt(read("./graphs/response-channel-3.csv"))
 
+#let create-resp-channel-fig(ch) = {
+  let (resp_chan_l, resp_chan_h) = lq.load-txt(read("./graphs/response-channel-" + ch + ".csv"))
+  figure(
+    lq.diagram(
+      width: 15cm,
+      height: 10cm,
+
+      lq.stem(
+        resp_chan_l, resp_chan_h,
+        mark: "o",
+        stroke: (thickness: 1pt)
+      ),
+      title: [
+        Coefficients of $h(m)$ for Channel #ch. 
+      ],
+
+      ylabel: [m],
+      xlabel: [$h(m)$],
+      xaxis: (subticks: none),
+      legend: (position: left + bottom)
+    ),
+
+    caption: [
+      Plot of the coefficients of $h(m)$ for Channel #ch from $-L$ to $L$.
+    ],
+  ) 
+}
 
 #set par(
   justify: true,
@@ -345,7 +368,13 @@ Cloud Radio Access Network (C-RAN)",
 
   $ h(m) = tilde(h) (m T_s) = sum_(k=0)^M A_k tilde(g)(m T_s - tau_k) $ <eq:channel_filter>
 
-  This lets us describe the channel through a Toeplitz matrix, as represented in @eq:toeplitz, and lets us conveniently analyze the digital transmission chain following the matrix framework given by @eq:matrix_framework. $bold("w")$ represents the added white gaussian noise, $bold("s")$ the signal sent through the channel and $bold("z")$ the received signal.
+  #create-resp-channel-fig(1) <h_channel_1>
+  #create-resp-channel-fig(2) <h_channel_2>
+  #create-resp-channel-fig(3) <h_channel_3>
+
+  With this, we can arrive at the coefficients of $h(m)$ for each channel, which are plotted in @h_channel_1, @h_channel_2 and @h_channel_3. 
+
+  This lets us describe the channel through a Toeplitz matrix, as represented in @eq:toeplitz, and allow us to conveniently analyze the digital transmission chain following the matrix framework given by @eq:matrix_framework. $bold("w")$ represents the added white gaussian noise, $bold("s")$ the signal sent through the channel and $bold("z")$ the received signal.
 
   $ bold("z") = bold("Hs") + bold("w") $ <eq:matrix_framework>
 
