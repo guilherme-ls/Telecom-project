@@ -106,8 +106,8 @@ for ii = 1:snr_length
         throughput_total = throughput_total + frame_sucess_rate / length(errors_per_frame) ;
         snr_iteration = snr_iteration + 1;
         toc
-        disp(sprintf("\t Total amount of errors found = %d | BER = %d | T = %d\n", 
-                         err_total, err_per_bit_total/(snr_iteration - 1),
+        disp(sprintf("\t Total amount of errors found = %d | BER = %d | T = %d\n", ...
+                         err_total, err_per_bit_total/(snr_iteration - 1), ...
                          throughput_total/(snr_iteration - 1)));
     end
     %% Calculates final BER

@@ -21,10 +21,10 @@ function [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_n
     m = randi([0 1], k, n_words * frame_number);
     %% BCH code encoding
     if bch_code_option ~= 0
-        m_c = resize(bch_coder(m, g), n_words * k, frame_number);
+        m_c = reshape(bch_coder(m, g), n_words * n, frame_number);
     else
-        m_c = resize(m, n_words * k, frame_number);
+        m_c = reshape(m, n_words * k, frame_number);
     end
     m_c_total(1:size(m_c, 1), :) = m_c;
-    m_total = resize(m, n_words * k, frame_number);
+    m_total = reshape(m, n_words * k, frame_number);
 end
