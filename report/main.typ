@@ -404,17 +404,17 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
   We start the analysis by plotting the BER versus SNR curves of a BPSK modulated signal using both of the equalization methods discussed and comparing to a non equalized signal, repeating the analysis for each channel.
 
-  #create-ber-figure("PSK2", 1) <2PSK-channel1>
-  #create-ber-figure("PSK2", 2) <2PSK-channel2>
-  #create-ber-figure("PSK2", 3) <2PSK-channel3>
-  #create-ber-figure("QAM8", 1) <8QAM-channel1>
-  #create-ber-figure("QAM8", 2) <8QAM-channel2>
-  #create-ber-figure("QAM8", 3) <8QAM-channel3>
-  #create-ber-figure("QAM16", 1) <16QAM-channel1>
-  #create-ber-figure("QAM16", 2) <16QAM-channel2>
-  #create-ber-figure("QAM16", 3) <16QAM-channel3>
+  #create-ber-figure("PSK2", 1) <2PSK_channel1>
+  #create-ber-figure("PSK2", 2) <2PSK_channel2>
+  #create-ber-figure("PSK2", 3) <2PSK_channel3>
+  #create-ber-figure("QAM8", 1) <8QAM_channel1>
+  #create-ber-figure("QAM8", 2) <8QAM_channel2>
+  #create-ber-figure("QAM8", 3) <8QAM_channel3>
+  #create-ber-figure("QAM16", 1) <16QAM_channel1>
+  #create-ber-figure("QAM16", 2) <16QAM_channel2>
+  #create-ber-figure("QAM16", 3) <16QAM_channel3>
 
-  From @BPSK-channel1 and @BPSK-channel3 we can conclude that equalization promotes a distinctive performance increase to the system, significantly reducing the BER for a same SNR. Furthermore, the DFE shows a far superior performance when compared to the ZF equalization in high interference channels, being capable of reducing the interference between symbols without increasing the noise.
+  From @2PSK_channel1 and @2PSK_channel3 we can conclude that equalization promotes a distinctive performance increase to the system, significantly reducing the BER for a same SNR. Furthermore, the DFE shows a far superior performance when compared to the ZF equalization in high interference channels, being capable of reducing the interference between symbols without increasing the noise.
 
   Suggested analysis.
 
