@@ -510,8 +510,8 @@ Thankfully, not everything needs to be done in the symbol reception side. The BC
 with, arguably, a lower cost than changing the modulation scheme or adding equalizers, as these can be implemented before the symbol modulation chain in software (for example).
 
 And while the difference in BER shown in the simple AWGN with BPSK example studied isn't as big as the difference from using an equalizer in channels 1 to 3, this gain is added independently 
-of the symbol-side part of the chain, allowing us to reduce constraints imposed to the TX/RX circuit, even if by $2 "dB"$, as every $"dB"$ saved in the SNR is a reduction in the power consumed
-by it, or the possibility or increasing the bit rate.
+of the symbol-side part of the chain, allowing us to reduce constraints imposed to the TX/RX circuit, even if by $2 "dB"$. This is very important because every $"dB"$ saved in the SNR is a reduction 
+in the power consumed by the circuit, or a possibility of increasing the bit rate.
 
 = Appendix
 
