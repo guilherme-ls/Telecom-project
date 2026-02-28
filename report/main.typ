@@ -32,6 +32,11 @@
 #let (bpsk_2_x, bpsk_2_y) = lq.load-txt(read("./graphs/bch_sims/bch2.csv"))
 #let (bpsk_2_x_f, bpsk_2_y_f) = filter-positive(bpsk_2_x, bpsk_2_y)
 
+// Response Channels Coefficients
+#let (resp_chan_1_l, resp_chan_1_h) = lq.load-txt(read("./graphs/response-channel-1.csv"))
+#let (resp_chan_2_l, resp_chan_2_h) = lq.load-txt(read("./graphs/response-channel-2.csv"))
+#let (resp_chan_3_l, resp_chan_3_h) = lq.load-txt(read("./graphs/response-channel-3.csv"))
+
 
 #set par(
   justify: true,
