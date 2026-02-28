@@ -16,7 +16,22 @@ simulation_params.min_error_bits_per_snr = 10;
 simulation_params.max_snr_simulation_iterations = 200;
 simulation_params.max_simultaneous_frame_simulation = 1000;
 
+%%%% Response channels coeficients %%%%
 
+[stats, ~] = mkdir(output_folder);
+if stats == false
+  disp(sprintf("Couldn't create folder %s", output_folder));
+  assert(0);
+end
+
+for ii=1:3
+  file_name = sprintf("%s/response-channel-%d.csv", output_folder, ii);
+  if ~exist(file_name, 'file') || force_generate
+    h = response_channel(ii);
+    L = (length(h) - 1) / 2;
+    dlmwrite(file_name, [(-L:L)', h']);
+  end
+end
 %%%% Simulated simulation types %%%%
 
 %%%%%% Simulations for BCH Simulation Part %%%%%%
@@ -151,5 +166,3 @@ for ii=1:numel(fieldnames(simulations))
     hold on;
   end
 end
-
-disp("Finished! :D");
