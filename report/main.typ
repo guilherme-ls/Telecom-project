@@ -136,7 +136,7 @@ Cloud Radio Access Network (C-RAN)",
   jury: (),
   branch: "Filière Telecom",
   academic-year: "2025-2026",
-  footer-text: "Télécom Paris",
+  footer-text: "PRJ_4TE05_TP",
 )
 
 
@@ -149,9 +149,9 @@ Cloud Radio Access Network (C-RAN)",
     caption: [Transmitter and receiver chain.]
   ) <chanel>
 
-  The channel coding will be done through two distinct BCH codes, correcting $t=1$ and $t=2$ errors respectively. Each implemented code will have a length of $N_c = 31$ and be defined considering the Galois Field extension $"GF"(32)= "GF"(2)[x]"/"1+x^2+x^5$. Both codes will adopt the systematic form to facilitate decoding 
+  The channel coding will be done through two distinct BCH codes, correcting $t=1$ and $t=2$ errors respectively. Each implemented code will have a length of $N_c = 31$ and be defined considering the Galois Field extension $"GF"(32)= "GF"(2)[x]"/"1+x^2+x^5$. Both codes will adopt the systematic form to facilitate decoding. 
 
-  In terms of the transmission channel, we consider that the transmitted symbols $s(n)$ will be linearly modulated according @eq:input_filter, where $g(n)$ is the shaping filter satisfying the square-root Nyquist condition and $T_s$ is the symbol period.
+  In terms of the transmission channel, we consider that the transmitted symbols $s(n)$ will be linearly modulated according to @eq:input_filter, where $g(n)$ is the shaping filter satisfying the square-root Nyquist condition and $T_s$ is the symbol period.
 
   $ x(t) = sum_n s(n) g(t-n T_s) $ <eq:input_filter>
 
@@ -169,7 +169,7 @@ Cloud Radio Access Network (C-RAN)",
 
 === Determining the Generator Polynomials and Code Rates
 
-  To implement the desired BCH codes we must first determine their corresponding generator polynomials. For a given number of errors $t$ that the BCH code must correct, its generator polynomial must have $2t$ consecutive roots $alpha^i$ ($i = 1...t$), powers of the primitive element $alpha$ and also roots of $x^(31)-1$. For each root $alpha^i$ there is a corresponding minimal polynomial $mu_(alpha^i) (x)$, and $g(x)$ will be given by lowest common multiplier between the minimal polynomials of its roots:
+  To implement the desired BCH codes, we must first determine their corresponding generator polynomials. For a given number of errors $t$ that the BCH code must correct, its generator polynomial must have $2t$ consecutive roots $alpha^i$ ($i = 1...t$), powers of the primitive element $alpha$ and also roots of $x^(31)-1$. For each root $alpha^i$ there is a corresponding minimal polynomial $mu_(alpha^i) (x)$, and $g(x)$ will be given by the lowest common multiplier between the minimal polynomials of its roots:
 
   $ g(x) = L C M(mu_(alpha^1)(x), ..., mu_(alpha^(2t))(x) ) $
 
@@ -181,7 +181,7 @@ Cloud Radio Access Network (C-RAN)",
 
   Thus according to the previously stated theory, the LCM of both polynomials gives us $g(x) = 1+x^2+x^5$. Now to calculate the code's efficiency, we must first determine its length $n$ and dimension $k$. The length will be given by $n=2^m-1$, where $m=5$ for $"GF"(32)$, leading to $n=31$. Concerning the dimension, a fundamental property of cyclic codes tells us that for each to be unique the equality $d^o g(x) = n - k$ must hold. Since $d^o g(x) = 5$ for the first BCH code, its dimension must be $k = 26$. Finally, the code rate for the BCH code where $t=1$ will be $R=26"/"31$.
 
-  We now proceed with the second code. It is capable of correcting $t=2$ errors, such that the roots of its generator polynomial will be ${alpha^1, alpha^2, alpha^3, alpha^4}$. From @eq:primitive_poly we conclude that $mu_(alpha^1) (x) = mu_(alpha^2) (x)= mu_(alpha^4) (x) = 1+x^2+x^5$. @eq:primitive_poly3 shows $mu_(alpha^3) (x)$.
+  We now proceed with the second code. It is capable of correcting $t=2$ errors, such that the roots of its generator polynomial will be ${alpha^1, alpha^2, alpha^3, alpha^4}$. From @eq:primitive_poly, we know that $mu_(alpha^1) (x) = mu_(alpha^2) (x)= mu_(alpha^4) (x) = 1+x^2+x^5$. @eq:primitive_poly3 shows $mu_(alpha^3) (x)$.
 
   $ mu_(alpha^3) (x) &= (alpha^3 - 1)(alpha^6 - 1)(alpha^12 - 1)(alpha^24 - 1)(alpha^17 - 1) #<equate:revoke> \
   &= 1 + x + x^2 + x^3 + x^4 + x^5 $ <eq:primitive_poly3>
@@ -279,9 +279,9 @@ Cloud Radio Access Network (C-RAN)",
 
   $ s(x) = c(x)"mod"g(x) + e(x)"mod"g(x) = e(x)"mod"g(x) $ <eq:mod_error>
 
-  Therefore, to each syndrome we can relate an error polynomial of minimal weight that generates it, which can be stored in a look-up table. And for correcting the errors in $r(x)$, one can simply sum the error $e(x)$ corresponding to its syndrome, letting us recuperate $c(x)$ (this is valid because each polynomial coefficient belongs to $"GF"(2)$).
+  Therefore, for each syndrome, we can relate an error polynomial of minimal weight that generates it, which can then be stored in a look-up table. By doing this, for correcting the errors in $r(x)$, one can simply sum the error $e(x)$ corresponding to the calculated syndrome, letting us recuperate $c(x)$ (this is valid as each polynomial coefficient belongs to $"GF"(2)$).
 
-  In the code, we first implement the syndrome look-up table, going through all the error polynomials possible for $t=1$ and $t=2$ errors, depending on the BCH code, and calculating the respective syndrome using the modulo operation previously implemented in the encoder. Each pair error-syndrome is then saved in memory.
+  In the code, we first implement the syndrome look-up table, going through all the error polynomials possible for $t=1$ and $t=2$ errors, depending on the BCH code, and then calculating the respective syndrome using the modulo operation previously implemented in the encoder. Each pair error-syndrome is then saved in memory.
 
   ```matlab
   %% Calculates all error vectors given a max error number
@@ -297,9 +297,13 @@ Cloud Radio Access Network (C-RAN)",
   end
   ```
 
-  One important observation is that for the case of the BCH code where $t=2$ there are more syndromes than error polynomials with 1 and 2 errors, implying that some possible syndromes would lead to polynomials with 3 or more errors. However, since the code is not consistently capable of correcting more than 2 errors, we chose to ignore these syndromes and employ a default case where we do not correct any errors.
+  One important observation is that for the case of the BCH code where $t=2$, there are more syndromes than error polynomials with 1 and 2 errors, implying that some possible syndromes would lead to 
+  polynomials with 3 or more errors. However, since the code is not consistently capable of correcting more than 2 errors, we chose to ignore these syndromes and employ a default case where we do not
+  attempt to correct any errors ($e(x) = 0$).
 
-  The decoder itself is then implemented as a code that first calculates the syndrome of the received message through the previous modulo function and finds the respective error in the syndrome look-up table. Then it sums the error to the received message bit by bit to get the original coded message. To finalize the decoding, since the systematic encoding is being employed, we remove the parity bits at the start of the message to leave only the information bits.
+  The decoder itself is then implemented as a code that first calculates the syndrome of the received message through the previous modulo function, and then finds the respective error in the syndrome 
+  look-up table. After this, it sums the error with the received message bit by bit to get the corrected coded message. To finalize the decoding, since the systematic encoding is being employed, we remove the 
+  parity bits that were previously added to the start of the message, leaving only the information bits.
 
   ```matlab
   %% Calculates syndrome and turn it into a integer representation
@@ -326,7 +330,10 @@ Cloud Radio Access Network (C-RAN)",
   
   Then, considering that the provided codes need the bit energy to be normalized at $E_b = 1$, we calculate instead the noise variance necessary to achieve a desired $E_b"/"N_0$ value as $N_0 = (1/10)^((S N R_b)/10) $. Taking into account the code rate, we must divide the variance by $R$.
 
-  This variance is then used create a complex circular white noise to apply on the symbols as they are passing the transmission channel. The resulting noisy signal then passes through a threshold detector, estimating the symbols received, and is demodulated through the ``` symbols2bits``` function, proceeding through the decoding and finally measuring the Bit Error Rate for plotting. For the simulations, at each SNR step we performed the error averaging over approximately $10^8$ bits at maximum and stopped the simulations at 100 detected errors, since it already gives a good level of precision.
+  This variance is then used to create a complex circular white noise to apply to the symbols as they are passing the transmission channel. The resulting noisy signal then passes through 
+  a threshold detector, estimating the symbols received, and is demodulated through the ``` symbols2bits``` function, proceeding through the decoding and finally measuring the Bit Error Rate for plotting.
+  For the simulations, at each SNR step we performed the error averaging over approximately $10^8$ bits at maximum and stopped the simulations at 100 detected errors, 
+  since it already gives a good level of precision.
 
 #figure(
   lq.diagram(
@@ -348,9 +355,9 @@ Cloud Radio Access Network (C-RAN)",
   caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK constellation and three distinct channel coding schemes: a not coded base case, a BCH code correcting $t=1$ error, and a BCH code correcting $t=2$ errors.],
 ) <BPSK-coded>
 
-  @BPSK-coded shows us the BER versus $E_b"/"N_0$ curve comparison between the not coded case and the two implemented BCH codes, using a BPSK modulation and an AWGN channel on all cases. First, we observe that for low SNR the performance of the coded case is bellow the not coded one, indicating that the decrease in the energy per bit as a result of the reduced code rate outwheighs the increase in performance due to the error correcting. Indeed, for low SNRs the error frequency tends to be so high that the code is rarely capable of correcting all of them.
+  @BPSK-coded shows us the BER versus $E_b"/"N_0$ curve comparison between the not coded case and the two implemented BCH codes, using a BPSK modulation and an AWGN channel on all cases. First, we observe that for low SNR the performance of the coded case is bellow the not coded one, indicating that the decrease in the energy per bit as a result of the reduced code rate outweighs the increase in performance due to the error correction. Indeed, for low SNRs the error frequency tends to be so high that the code is rarely capable of correcting all of them.
 
-  However, from an SNR of $4 "dB"$ onwards the coded cases start performing better than the non-coded one, indicating that the error correcting capacity of the code becomes increasingly relevant in reducing the BER. The coding gain becomes highly perceptible for high SNRs.
+  However, from an SNR of $4 "dB"$ onwards, the coded cases start performing better than the non-coded one, indicating that the error correcting capacity of the code becomes increasingly relevant in reducing the BER. The coding gain becomes highly perceptible for high SNRs.
 
   From this graph we can identify the empirical coding gain of both the implemented BCH codes and compare them to the theory. The theoretical coding gain considering an Additive White Gaussian Noise (AWGN) channel and a hard decision, as is our case, is given by $gamma_(d B) = 10 "log"(R(t+1))$, therefore the first BCH code must have a coding gain of $gamma_(1 d B) = 10 "log"(26/31 times 2) = 2.25 "dB"$ and the second code $gamma_(1 d B) = 10 "log"(21/31 times 3) = 3.08 "dB"$.
   
@@ -362,7 +369,7 @@ Cloud Radio Access Network (C-RAN)",
 
   $ tilde(h) (t) = sum_(k=0)^M A_k tilde(g)(t - tau_k) $ <eq:multipath>
 
-  In our analysis the attenuations $bold(A)$ and delays $tau$ that characterize the channel are given bellow. Observe that channel 0 corresponds to the pure AWGN case. Note that $T_s = 0.05 mu s$.
+  In our analysis the attenuations $bold(A)$ and delays $tau$ that characterize the channel are given bellow. Observe that channel 0 corresponds to the pure AWGN case. Also note that $T_s = 0.05 mu s$.
 
   - Channel 0: $bold(A) = [1], tau = [0] times T_s, (M = 0),$
   - Channel 1: $bold(A) = [1, 0.1, 0.1, 0.1, 0.1], tau = [0, 0.5, 1, 1.5, 2] times T_s, (M = 4),$
@@ -375,13 +382,13 @@ Cloud Radio Access Network (C-RAN)",
 
   With this, we can arrive at the coefficients of $h(m)$ for each channel, which are plotted in @h_channel_1, @h_channel_2 and @h_channel_3.
 
-  Observe that in the first channel, shown by @h_channel_1, most of the power is concentrated in the current symbol, making intersymbol interference (ISI) not very strong. In contrast, channel 2 (@h_channel_2) has half its power in the middle signal and almost half in the following one, which will lead to a strong level of intersymbol interference that will have consequences shown and discussed in next section. Finally, @h_channel_3 shows channel 3's coefficients and how most of the power does not belong to the current symbol and is mostly spread across neighboring symbols, resulting in severe intersymbol interference and poor performance in the absence of equalization.
+  Observe that in the first channel, shown by @h_channel_1, most of the power is concentrated in the current symbol, making intersymbol interference (ISI) not very strong. In contrast, channel 2 (@h_channel_2) has half its power in the middle signal and almost half in the following one, which will lead to a strong level of intersymbol interference that will have consequences shown and discussed in next section. Finally, @h_channel_3 shows channel's 3 coefficients and how most of the power does not belong to the current symbol and is mostly spread across neighboring symbols, resulting in severe intersymbol interference and poor performance in the absence of equalization.
 
   #create_resp_channel_fig(1) <h_channel_1>
   #create_resp_channel_fig(2) <h_channel_2>
   #create_resp_channel_fig(3) <h_channel_3>
 
-  This lets us describe the channel through a Toeplitz matrix, as represented in @eq:toeplitz, and allow us to conveniently analyze the digital transmission chain following the matrix framework given by @eq:matrix_framework. $bold("w")$ represents the added white gaussian noise, $bold("s")$ the signal sent through the channel and $bold("z")$ the received signal.
+  This lets us describe the channel through a Toeplitz matrix, as represented in @eq:toeplitz, which allow us to conveniently analyze the digital transmission chain following the matrix framework given by @eq:matrix_framework. $bold("w")$ represents the added white gaussian noise, $bold("s")$ the signal sent through the channel and $bold("z")$ the received signal.
 
   $ bold("z") = bold("Hs") + bold("w") $ <eq:matrix_framework>
 
@@ -397,19 +404,19 @@ Cloud Radio Access Network (C-RAN)",
 
   To deal with the distortions introduced by the multipath channels we will employ two distinct approaches. The first is the Zero Forcing (ZF) equalizer, which multiplies $bold("z")$ by the pseudoinverse $bold("H")^\#$ of the channel matrix $bold("H")$, eliminating the intersymbol interference on the signal $bold("z")'_(Z F) = bold("s") + bold("H")^\#bold("w")$. After the equalization, a threshold detector is applied.
 
-  Observe that in this equalization scheme the noise is multiplied $bold("H")$. If $bold("H")$ is not a unitary matrix, this will lead to an amplification of the noise power. Thus, even if intersymbol interference is eliminated, the noise increases.
+  Observe that in this equalization scheme the noise is multiplied by $bold("H")$. If $bold("H")$ is not a unitary matrix, this will lead to an amplification of the noise power. Thus, even if intersymbol interference is eliminated, the noise increases.
 
-  The second is given by the Decision-Feedback Equalizer (DFE), which applies QR decomposition on $bold("H")$ so that $bold("H") = bold("VT")$, where $bold("V")$ is a unitary matrix and $bold("T")$ is superior triangular. Multiplying $bold("z")$ by $bold("V")^H$ we get @eq:dfe, where $bold("w")'$ has the same distribution as $bold("w")$. $bold("z")'_(D F E)$ is determined by performing backward substitution on the linear system given by $bold("Ts")$ and applying a threshold detector on newly determined component at each step.
+  The second is given by the Decision-Feedback Equalizer (DFE), which applies QR decomposition on $bold("H")$ so that $bold("H") = bold("VT")$, where $bold("V")$ is a unitary matrix and $bold("T")$ is superior triangular. Multiplying $bold("z")$ by $bold("V")^H$ gives us @eq:dfe, where $bold("w")'$ has the same distribution as $bold("w")$. $bold("z")'_(D F E)$ is determined by performing backwards substitution on the linear system given by $bold("Ts")$ and applying a threshold detector on the newly determined component at each step.
 
 $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
-  Observe that this equalization scheme does not change the power of the noise, since it is only multiplied by a unitary matrix. However, its performance depends on the correctness of past decisions. If an incorrect decision occurs early in the detection process, that error is fed back into the equalizer and propagates to subsequent symbols, which may lead to bursts of errors.
+  Observe that this equalization scheme does not change the power of the noise, since it multiplies the received symbols by a unitary matrix. However, its performance depends on the correctness of past decisions. If an incorrect decision occurs early in the detection process, that error is fed back into the equalizer and propagates to subsequent symbols, which may lead to bursts of errors.
 
 === Implementation
 
   The implementation of these multipath channels started by dividing the data into frames. Since at first we are dealing only with the case where there is no channel coding, it suffices to separate the message bits into groups of size $N"log"_2M$, where $M$ is the size of the constellation employed and $N$ the frame size, and then convert these groups of bits into symbols, which will compose the desired frames.
 
-  Continuing, the multipath channels were implemented by first taking samples from $h(m)$ given by the provided function ``` response_channel``` and then building a Toeplitz matrix of size $N times N$ from these samples. Finally, the AWGN is added.
+  Continuing, the multipath channels were implemented by first taking samples from $h(m)$ (given by the provided function ``` response_channel```) and then building a Toeplitz matrix of size $N times N$ from these samples. Finally, the AWGN is added.
 
 ```matlab
   if c == 0 % c is the channel number
@@ -455,9 +462,9 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
   #create-ber-figure("PSK2", 2) <2PSK_channel2>
 
-  Observe that without equalization, @2PSK_channel2 exhibits a constant BER close to 25%, which agrees with theoretical expectations for channel 2. The impulse response contains two dominant bins of nearly equal magnitude, so the received signal is approximately the sum of the current symbol and the previous one with similar weights. When two consecutive symbols are equal, their contributions add constructively and detection is correct. However, when they have opposite signs, their contributions nearly cancel, producing a received value close to zero. In these cases, the detector effectively makes a random decision because of the added Gaussian noise, resulting in a 50% error probability. Since this situation occurs with probability 1/2, the overall asymptotic BER converges to 0.25.
+  Observe that without equalization, @2PSK_channel2 exhibits a constant BER close to 25%, which agrees with theoretical expectations for channel 2. The impulse response contains two dominant bins of nearly equal magnitude, so the received signal is approximately the sum of the current symbol and the previous one with similar weights. When two consecutive symbols are equal, their contributions add constructively and detection is correct. However, when they have opposite signs, their contributions nearly cancel, producing a received value close to zero. In these cases, the detector effectively makes a random decision because of the added Gaussian noise, resulting in a 50% error probability. Since this situation occurs with probability 1/2, the overall asymptotic BER converges to 0.25 (50% of error 50% of the time).
 
-  This high intersymbol interference makes equalization even more important due to the fact that it eliminates completely ISI, which we can be seen through the performance curves of ZF and DFE. Note, however, that DFE performs significantly better than ZF equalization, which is mostly due to the fact that ZF increases the noise power as discussed in the theoretical section. Even if DFE has its own error propagation problem, it still performs better in our simulations.
+  This high intersymbol interference makes equalization even more important due to the fact that it completely eliminates ISI, which we can see through the performance curves of ZF and DFE. Note, however, that DFE performs significantly better than ZF equalization, which is mostly due to the fact that ZF increases the noise power as discussed in the theoretical section. Even if DFE has its own error propagation problem, it still performs better in our simulations.
 
   Finally, @2PSK_channel3 shows the performance analysis for channel 3. We can once gain note that the non-equalized error rate stabilizes at 25% and that equalization is necessary. However, the higher level of interference in this channel promotes a decrease in the performances of the equalized case, especially for ZF. This means that the noise power is further increased by the new $bold("H")$ matrix in the ZF case, and that the DFE also had its error propagation problem negatively affected.
 
@@ -467,11 +474,11 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
   
   Conducting the analysis now for the 8-QAM modulation, @8QAM_channel1 shows us that its lower coding gain in relation to BPSK enabled us to observe the inflection point where the errors induced by the noise cease to significantly affect performance, leaving only the asymptotic error rate due to ISI. Once again, the equalized cases perform significantly better having removed the channel interference.
   
-  Now, channel 2 (@8QAM_channel2) once again shows a constant error rate, now of 35%. The rate increases because each symbol now assumes 4 distinct values and the constellation geometry attributes distinct error rates for each possible pair of symbols interfering, the full deduction of the rate will not be done here. We again observe that equalization is essential for reducing BER and that ZF shows a slightly lower performance.
+  Now, for channel 2 (@8QAM_channel2) once again shows a constant error rate, now of 35%. The rate increases because each symbol now assumes 4 distinct values and the constellation geometry attributes distinct error rates for each possible pair of symbols interfering, the full deduction of the rate will not be done here. We again observe that equalization is essential for reducing BER and that ZF shows a slightly lower performance.
   
   #create-ber-figure("QAM8", 2) <8QAM_channel2>
 
-  Finally, channel 3 (@8QAM_channel3) shows a continuation in the observed trends, in that the non-equalized case still presents a constant BER and that the performance of the equalized cases is still slightly worse in relation to channel 2. The previously outlined reasons once again apply here.
+  Finally, channel 3 (@8QAM_channel3) shows a continuation of the observed trends, where the non-equalized case still presents a constant BER and that the performance of the equalized cases is still slightly worse in relation to channel 2. The previously outlined reasons once again apply here.
 
   #create-ber-figure("QAM8", 3) <8QAM_channel3>
   
@@ -491,7 +498,7 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
   Something here.
 
-= Annex
+= Appendix
 
 == Notes on Matlab Code Optimizations
 
@@ -634,7 +641,8 @@ This was the main technique used to find the issues in performance problems solv
 
 The first technique of vectorization used was turning for-loops into vector operations. As an example of where this was applied see the following code 
 in `bch_mod_g.m` from commit 
-#link("https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6/-/blob/fe0499233bebcc60f843963c857790ce9d4a5d95/src/D1/bch_mod_g.m")[`fe0499233bebcc60f843963c857790ce9d4a5d95`].
+#link("https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6/-/blob/fe0499233bebcc60f843963c857790ce9d4a5d95/src/D1/bch_mod_g.m")[`fe0499233bebcc60f843963c857790ce9d4a5d95`]
+#footnote[This report simulation files can be found at #link("https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6")[https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6]].
 
 ```matlab 
 function [m_mod] = bch_mod_g(m, g)
@@ -656,19 +664,19 @@ function [m_mod] = bch_mod_g(m, g)
 end
 ```
 
-It implements the $m(x) mod g(x)$ operation for codding and decoding in the BCH code. 
-As can be seen, the block of code inside the loop ```matlab for ii=1:lenght(m)``` is simply encoding,
+It implements the $m(x) mod g(x)$ operation for codding and decoding in the BCH code as shown in @encoder. 
+As can be seen, the block of code inside the loop ```matlab for ii=1:lenght(m)``` is simply encoding @mod-vec-eq1 and @mod-vec-eq2.
 
-$ m\_mod_(i + 1)(1) = m(i) + m\_mod_(i + 1)(g degree) $
-$ m\_mod_(i + 1)(x) = m\_mod_(i)(x - 1) + m\_mod_(i)(g degree) dot g(x) forall x = 2,..,g degree $
+$ m\_mod_(i + 1)(1) = m(i) + m\_mod_(i + 1)(d degree g) $ <mod-vec-eq1>
+$ m\_mod_(i + 1)(x) = m\_mod_(i)(x - 1) + m\_mod_(i)(d degree g) dot g(x) forall x = 2,..,d degree g $ <mod-vec-eq2>
 
-where $g degree$ is the degree of the polynomial $g(x)$, $m(x)$ is the message being modulated, 
+Where $d degree g$ is the degree of the polynomial $g(x)$, $m(x)$ is the message being modulated, 
 and $m\_mod_(i)$ the values of the registers of this modulo operation implementation at iteration $i$.
 
 It is important to note how the value of $m\_mod_(i + 1)(x)$ only depends on previous values of 
 $m\_mod_(i)(x)$, $m(x)$ and $g(x)$, this means that, instead of calculating $m\_mod_(i + 1)(x)$ 
 sequentially, we can determine it in parallel, as there is no data dependency between values of
-$m\_mod_(i + 1)(x)$ in the same iteration.
+$m\_mod_(i + 1)(x)$ from the same iteration.
 
 And thus, we can rewrite the body of the iteration loop as the one found in commit 
 #link("https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6/-/blob/32a04fc05b6ed67d4929f9209b0e89d66d851963/src/D1/bch_mod_g.m")[`32a04fc05b6ed67d4929f9209b0e89d66d851963`].
@@ -696,7 +704,7 @@ end
 ```
 
 Not only this code is vectorized, but it is more compact, and less error-prone, 
-as it is closer to the mathematical definition of the modulo operation.
+as it is closer to the mathematical definition of the modulo operation (as a shift register).
 
 ==== Vectorization of Simulations
 
