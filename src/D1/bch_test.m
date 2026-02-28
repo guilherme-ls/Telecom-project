@@ -102,7 +102,8 @@ for ii = 1:snr_length
         err_per_bit_total = err_per_bit_total + errors_per_bit;
         err_total = err_total + amount_of_errors;
         frame_sucess = sum(errors_per_frame == 0);
-        frame_sucess_rate = frame_sucess * k / (frame_size * Ts);
+        message_bits_per_frame = k * floor(number_bits / n);
+        frame_sucess_rate = frame_sucess * message_bits_per_frame / (frame_size * Ts);
         throughput_total = throughput_total + frame_sucess_rate / length(errors_per_frame) ;
         snr_iteration = snr_iteration + 1;
         toc
