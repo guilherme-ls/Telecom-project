@@ -18,29 +18,73 @@
   )
 }
 
+#let load-eq(mod, eq, ch) = {
+  let file = "./graphs/eq_sims/" + mod + "_" + eq + "_" + str(ch) + ".csv"
+  let (x, y) = lq.load-txt(read(file))
+  filter-positive(x, y)
+}
+
 // Ploting semilog from csv function
-#let (bpsk_0_x, bpsk_0_y) = lq.load-txt(read("./graphs/bpsk-uncoded.csv"))
+#let (bpsk_0_x, bpsk_0_y) = lq.load-txt(read("./graphs/bch_sims/bch0.csv"))
 #let (bpsk_0_x_f, bpsk_0_y_f) = filter-positive(bpsk_0_x, bpsk_0_y)
-#let (bpsk_1_x, bpsk_1_y) = lq.load-txt(read("./graphs/bpsk-coded1.csv"))
+#let (bpsk_1_x, bpsk_1_y) = lq.load-txt(read("./graphs/bch_sims/bch1.csv"))
 #let (bpsk_1_x_f, bpsk_1_y_f) = filter-positive(bpsk_1_x, bpsk_1_y)
-#let (bpsk_2_x, bpsk_2_y) = lq.load-txt(read("./graphs/bpsk-coded2.csv"))
+#let (bpsk_2_x, bpsk_2_y) = lq.load-txt(read("./graphs/bch_sims/bch2.csv"))
 #let (bpsk_2_x_f, bpsk_2_y_f) = filter-positive(bpsk_2_x, bpsk_2_y)
-#let (bpsk_channel1_th_x, bpsk_channel1_th_y) = lq.load-txt(read("./graphs/bpsk-channel1_th.csv"))
-#let (bpsk_channel1_th_x_f, bpsk_channel1_th_y_f) = filter-positive(bpsk_channel1_th_x, bpsk_channel1_th_y)
-#let (bpsk_channel1_zf_x, bpsk_channel1_zf_y) = lq.load-txt(read("./graphs/bpsk-channel1_zf.csv"))
-#let (bpsk_channel1_zf_x_f, bpsk_channel1_zf_y_f) = filter-positive(bpsk_channel1_zf_x, bpsk_channel1_zf_y)
-#let (bpsk_channel1_dfe_x, bpsk_channel1_dfe_y) = lq.load-txt(read("./graphs/bpsk-channel1_dfe.csv"))
-#let (bpsk_channel1_dfe_x_f, bpsk_channel1_dfe_y_f) = filter-positive(bpsk_channel1_dfe_x, bpsk_channel1_dfe_y)
-#let (bpsk_channel3_th_x, bpsk_channel3_th_y) = lq.load-txt(read("./graphs/bpsk-channel3_th.csv"))
-#let (bpsk_channel3_th_x_f, bpsk_channel3_th_y_f) = filter-positive(bpsk_channel3_th_x, bpsk_channel3_th_y)
-#let (bpsk_channel3_zf_x, bpsk_channel3_zf_y) = lq.load-txt(read("./graphs/bpsk-channel3_zf.csv"))
-#let (bpsk_channel3_zf_x_f, bpsk_channel3_zf_y_f) = filter-positive(bpsk_channel3_zf_x, bpsk_channel3_zf_y)
-#let (bpsk_channel3_dfe_x, bpsk_channel3_dfe_y) = lq.load-txt(read("./graphs/bpsk-channel3_dfe.csv"))
-#let (bpsk_channel3_dfe_x_f, bpsk_channel3_dfe_y_f) = filter-positive(bpsk_channel3_dfe_x, bpsk_channel3_dfe_y)
+
+
 #set par(
   justify: true,
   leading: 0.52em,
 )
+
+#let create-ber-figure(mod, ch) = {
+  let (x_none, y_none) = load-eq(mod, "none", ch)
+  let (x_zf,   y_zf)   = load-eq(mod, "ZF", ch)
+  let (x_dfe,  y_dfe)  = load-eq(mod, "DFE", ch)
+
+  figure(
+    lq.diagram(
+      width: 15cm,
+      height: 10cm,
+
+      lq.plot(
+        x_none, y_none,
+        label: [No equalization],
+        mark: "x",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_zf, y_zf,
+        label: [ZF equalization],
+        mark: "o",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_dfe, y_dfe,
+        label: [DFE],
+        mark: "+",
+        stroke: (thickness: 1pt)
+      ),
+
+      title: [
+        BER versus $E_b"/"N_0$ for distinct equalizations with #mod modulation in channel #ch
+      ],
+
+      yscale: "log",
+      ylabel: [BER],
+      xlabel: [$E_b"/"N_0 ("dB")$],
+      xaxis: (subticks: none),
+      legend: (position: left + bottom)
+    ),
+
+    caption: [
+      Plot of the BER versus the SNR per bit in a semilogarithmic scale for a #mod constellation in channel #ch using three distinct equalizations: no equalization, Zero Forcing and Decision Feedback Equalization.
+    ],
+  )
+}
 
 #show: project.with(
   title: "Simulation of system with ideal hardware",
@@ -360,45 +404,15 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
   We start the analysis by plotting the BER versus SNR curves of a BPSK modulated signal using both of the equalization methods discussed and comparing to a non equalized signal, repeating the analysis for each channel.
 
-#figure(
-  lq.diagram(
-    width: 15cm,
-    height: 10cm,
-    lq.plot(bpsk_channel1_th_x_f, bpsk_channel1_th_y_f, label: [BPSK - no equalization],
-            mark: "x", stroke:(thickness: 1pt, dash: "solid")),
-    lq.plot(bpsk_channel1_zf_x_f, bpsk_channel1_zf_y_f, label: [BPSK - ZF equalization],
-            mark: "o", stroke:(thickness: 1pt, dash: "solid")),
-    lq.plot(bpsk_channel1_dfe_x_f, bpsk_channel1_dfe_y_f, label: [BPSK - DFE],
-            mark: "+", stroke:(thickness: 1pt, dash: "solid")),
-    title: [BER versus $E_b"/"N_0$ for distinct equalizations with BPSK modulation in channel 1], 
-    yscale: "log",
-    ylabel: [BER],
-    xlabel: [$E_b"/"N_0 ("dB")$],
-    xaxis: (subticks: none),
-    legend: (position: left + bottom)
-  ),
-  caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK constellation in channel 1 using three distinct equalizations: no equalization, Zero Forcing and DFE.],
-) <BPSK-channel1>
-
-#figure(
-  lq.diagram(
-    width: 15cm,
-    height: 10cm,
-    lq.plot(bpsk_channel3_th_x_f, bpsk_channel3_th_y_f, label: [BPSK - no equalization],
-            mark: "x", stroke:(thickness: 1pt, dash: "solid")),
-    lq.plot(bpsk_channel3_zf_x_f, bpsk_channel3_zf_y_f, label: [BPSK - ZF equalization],
-            mark: "o", stroke:(thickness: 1pt, dash: "solid")),
-    lq.plot(bpsk_channel3_dfe_x_f, bpsk_channel3_dfe_y_f, label: [BPSK - DFE],
-            mark: "+", stroke:(thickness: 1pt, dash: "solid")),
-    title: [BER versus $E_b"/"N_0$ for distinct equalizations with BPSK modulation in channel 3], 
-    yscale: "log",
-    ylabel: [BER],
-    xlabel: [$E_b"/"N_0 ("dB")$],
-    xaxis: (subticks: none),
-    legend: (position: left + bottom)
-  ),
-  caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK constellation in channel 3 using three distinct equalizations: no equalization, Zero Forcing and DFE.],
-) <BPSK-channel3>
+  #create-ber-figure("PSK2", 1) <2PSK-channel1>
+  #create-ber-figure("PSK2", 2) <2PSK-channel2>
+  #create-ber-figure("PSK2", 3) <2PSK-channel3>
+  #create-ber-figure("QAM8", 1) <8QAM-channel1>
+  #create-ber-figure("QAM8", 2) <8QAM-channel2>
+  #create-ber-figure("QAM8", 3) <8QAM-channel3>
+  #create-ber-figure("QAM16", 1) <16QAM-channel1>
+  #create-ber-figure("QAM16", 2) <16QAM-channel2>
+  #create-ber-figure("QAM16", 3) <16QAM-channel3>
 
   From @BPSK-channel1 and @BPSK-channel3 we can conclude that equalization promotes a distinctive performance increase to the system, significantly reducing the BER for a same SNR. Furthermore, the DFE shows a far superior performance when compared to the ZF equalization in high interference channels, being capable of reducing the interference between symbols without increasing the noise.
 
