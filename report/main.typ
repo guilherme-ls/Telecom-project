@@ -34,14 +34,16 @@
 
 
 #let create-resp-channel-fig(ch) = {
-  let (resp_chan_l, resp_chan_h) = lq.load-txt(read("./graphs/response-channel-" + ch + ".csv"))
+  let (resp_chan_l_raw, resp_chan_h_raw) = lq.load-txt(read("./graphs/response-channel-" + str(ch) + ".csv"))
+  //let resp_chan_h_abs = resp_chan_h_raw.map(calc.abs)
+  //let (resp_chan_l, resp_chan_h) = filter-positive(resp_chan_l_raw, resp_chan_h_abs)
   figure(
     lq.diagram(
       width: 15cm,
       height: 10cm,
 
       lq.stem(
-        resp_chan_l, resp_chan_h,
+        resp_chan_l_raw, resp_chan_h_raw,
         mark: "o",
         stroke: (thickness: 1pt)
       ),
@@ -49,8 +51,10 @@
         Coefficients of $h(m)$ for Channel #ch. 
       ],
 
-      ylabel: [m],
-      xlabel: [$h(m)$],
+      //yscale: lq.scale.scale(x => calc.log(calc.abs(x + 0.1)), x => x), //"log",
+      //xscale: "linear",
+      ylabel: [$h(m)$],
+      xlabel: [$m$],
       xaxis: (subticks: none),
       legend: (position: left + bottom)
     ),
