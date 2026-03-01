@@ -254,7 +254,6 @@ Cloud Radio Access Network (C-RAN)",
     end
     m_mod = mod(m_mod, 2);
   end
-
   ```
 
   For the generation of the coded word $c(x)$, we inserted the shifted information word $x^(n-k)m(x)$ in the encoder to get the parity bits, and them built a vector of size $n=31$ by concatenating first the parity bits and them the information word $m(x)$. This finalizes the coding operation.
@@ -500,3 +499,234 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 //  an OFDM with $N_("carriers") = 64$ and $N_("prefix") = 1$.],
 //
 //) <OFDM-not-coded>
+
+= Annex
+
+== Notes on Matlab Code Optimizations
+
+This section will talk about the Matlab code optimization tricks that we learned throughout the process of 
+writing the simulations for this report. While it wasn't mandatory, we placed a lot of effort into it as 
+we quickly noticed that we would need to optimize the code we had written, otherwise we would have to wait 
+upwards of _40 minutes_ for a *single* simulation to finish (with mediocre results).
+
+And thus, this task of executing as *quickly* as possible the *highest amount* of simulation iterations (which correlates 
+to the precision of the simulation results, as they are heavily influenced by the Gaussian noise added) appeared. 
+
+We won't go much into the details of _why_ a technic helped, but we will list _what_ helped, and try to correlate with 
+some specificity of the tools (Matlab and Octave) used.
+
+
+=== Vectorization Basics
+
+Vectorization, as described by the Octave documentation 
+#footnote[https://docs.octave.org/interpreter/Vectorization-and-Faster-Code-Execution.html],
+is "a programming technique that uses vector operations instead of element-by-element loop-based operations".
+This means that, instead of writing a loop with the "for-loop" structure, we write them as a single operation over 
+a vector. 
+
+Take for example this simple loop to add two matrices $bold(A)$ and $bold(B)$ to $bold(C)$.
+
+```matlab 
+for i = 1:n
+  for j = 1:m
+    c(i,j) = a(i,j) + b(i,j);
+  endfor
+endfor
+```
+
+As you may notice, each element of matrix $bold(C)$ only depends on a single element of $bold(A)$ and $bold(B)$.
+This means that we can write this operation as an element-wise one, as showcased by the following code.
+
+```matlab 
+c = a + b;
+```
+
+You will see this idea of "find where the data dependencies are, and separate them" a lot in the following sections
+
+=== Finding Code Bottlenecks
+
+Before we begin talking about the changes, it is important to note that, even if a change might make a part of 
+the simulation code run faster, it doesn't mean that it was the main source of the simulation slowdown.
+
+Vectorization is a way to do code parallelization, as these mathematical tools (Matlab and Octave) were made to 
+be really efficient in handling and managing matrix structures, so the more "matrix-like" the operation is, 
+the better they can optimize.
+
+This means that any speedup#footnote[https://en.wikipedia.org/wiki/Speedup] we might expect from vectorizing/parallelizing
+a piece of code will be limited by Ahmdal's Law#footnote[https://en.wikipedia.org/wiki/Amdahl%27s_law]. In short, Ahmdal's 
+Law says that a program can only go as fast as the serialized sections.
+
+But not all serialized sections of code are the same, some run once per simulation cycle, while others may run for every 
+bit of information. Trying to figure out which is which manually can be cumbersome and is prone to misjudgment of what is 
+really impacting the performance. 
+
+Thus, to find the bottlenecks, we can time the execution of a function, and compare its execution time with the simulation's as 
+a whole. In Octave (and Matlab) this can be done my encompassing a block of code with the keywords ```matlab tic;``` and
+```matlab toc```. They time how long the code was executing from the first ```matlab tic``` call to the last ```matlab toc```.
+
+We used them in a "binary search" fashion, allowing us to quickly track down the slow parts in the simulation code. Take for example 
+the following code in `frame_decode_compare.m` from commit #link("https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6/-/blob/4a7d73722e0b02b6511a6088476d26415758bb35/src/D1/frame_decode_compare.m")[`4a7d73722e0b02b6511a6088476d26415758bb35`].
+
+```matlab 
+function [errors_per_frame, errors_per_bit, amount_of_errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k)
+    %% Symbol Decoding
+    number_bits = size(frame_bits, 1); % number of bits in a frame
+    n_words = floor(number_bits / n);
+
+    %% Separates bits into words and decode them
+    m_c_hat = reshape(frame_bits(1:n_words*n, :), n, []);
+
+    %% BCH code decoding
+    if t ~= 0
+        [m_hat, ~] = bch_decoder(m_c_hat, g, t, syndrome_table);
+    else
+        m_hat = m_c_hat;
+    end
+
+    %%%% Total amount of error bits
+    m_hat = reshape(m_hat, [], size(frame_bits, 2));
+    errors_per_frame = sum(mod(m_hat + m_total, 2), 1);
+    amount_of_errors = sum(errors_per_frame);
+    errors_per_bit = amount_of_errors / length(m_total(:));
+end
+```
+
+This code was already heavily vectorized, but we can still find where the bottlenecks are by placing ```matlab tic;``` and
+```matlab toc``` in the following manner. 
+
+```matlab 
+function [errors_per_frame, errors_per_bit, amount_of_errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k)
+    tic;
+    %% Symbol Decoding
+    number_bits = size(frame_bits, 1); % number of bits in a frame
+    n_words = floor(number_bits / n);
+
+    %% Separates bits into words and decode them
+    m_c_hat = reshape(frame_bits(1:n_words*n, :), n, []);
+    toc
+
+    tic;
+    %% BCH code decoding
+    if t ~= 0
+        [m_hat, ~] = bch_decoder(m_c_hat, g, t, syndrome_table);
+    else
+        m_hat = m_c_hat;
+    end
+    toc
+
+    tic;
+    %%%% Total amount of error bits
+    m_hat = reshape(m_hat, [], size(frame_bits, 2));
+    errors_per_frame = sum(mod(m_hat + m_total, 2), 1);
+    amount_of_errors = sum(errors_per_frame);
+    errors_per_bit = amount_of_errors / length(m_total(:));
+    toc
+end
+```
+
+If we then run this modified code, we get in the output of the simulation the following lines.
+
+```sh
+$ octave main.m
+...
+TODO ADD OUTPUT
+...
+```
+
+Which indicates that the middle section of the code is the one that needs our attention, as it is the one that is taking longer than the others.
+
+This was the main technique used to find the issues in performance problems solved by the changes mentioned in the following section.
+
+=== Code Changes
+
+==== Vectorization of Loops
+
+The first technique of vectorization used was turning for-loops into vector operations. As an example of where this was applied see the following code 
+in `bch_mod_g.m` from commit 
+#link("https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6/-/blob/fe0499233bebcc60f843963c857790ce9d4a5d95/src/D1/bch_mod_g.m")[`fe0499233bebcc60f843963c857790ce9d4a5d95`].
+
+```matlab 
+function [m_mod] = bch_mod_g(m, g)
+    % Reversing m(x) so it gets correctly shifted 
+    % into the shift registers
+    m(1:length(m)) = m(end:-1:1); 
+    
+    g_deg = size(g,1) - 1;
+    m_mod = zeros(g_deg, 1); %% m(x) mod g(x)
+    for ii=1:length(m)
+        m_mod_prev = m_mod;
+        % First element of the shift register
+        m_mod(1) = mod(m(ii) + g(1) * m_mod_prev(g_deg), 2); 
+        for jj=2:g_deg
+            m_mod(jj) = mod(m_mod_prev(jj - 1) ...
+                        + g(jj) * m_mod_prev(g_deg), 2);
+        end
+    end
+end
+```
+
+It implements the $m(x) mod g(x)$ operation for codding and decoding in the BCH code. 
+As can be seen, the block of code inside the loop ```matlab for ii=1:lenght(m)``` is simply encoding,
+
+$ m\_mod_(i + 1)(1) = m(i) + m\_mod_(i + 1)(g degree) $
+$ m\_mod_(i + 1)(x) = m\_mod_(i)(x - 1) + m\_mod_(i)(g degree) dot g(x) forall x = 2,..,g degree $
+
+where $g degree$ is the degree of the polynomial $g(x)$, $m(x)$ is the message being modulated, 
+and $m\_mod_(i)$ the values of the registers of this modulo operation implementation at iteration $i$.
+
+It is important to note how the value of $m\_mod_(i + 1)(x)$ only depends on previous values of 
+$m\_mod_(i)(x)$, $m(x)$ and $g(x)$, this means that, instead of calculating $m\_mod_(i + 1)(x)$ 
+sequentially, we can determine it in parallel, as there is no data dependency between values of
+$m\_mod_(i + 1)(x)$ in the same iteration.
+
+And thus, we can rewrite the body of the iteration loop as the one found in commit 
+#link("https://gitlab.telecom-paris.fr/projet-telecom/2025-2026/prj-4te05-gr6/-/blob/32a04fc05b6ed67d4929f9209b0e89d66d851963/src/D1/bch_mod_g.m")[`32a04fc05b6ed67d4929f9209b0e89d66d851963`].
+
+```matlab 
+function [m_mod] = bch_mod_g(m, g)
+    % Reversing m(x) so it gets correctly shifted 
+    % into the shift registers
+    m(1:end, :) = m(end:-1:1, :); 
+    
+    g_deg = size(g, 1) - 1;
+    m_mod = zeros(g_deg, size(m, 2)); %% m(x) mod g(x)
+    for ii=1:size(m, 1)
+        % Perform the shift in m_mod
+        shifted_temp = circshift(m_mod, 1);
+        
+        % Use the temporary variable to perform 
+        % the feedback step and add new entry
+        m_mod = [m(ii, :); shifted_temp(2:end, :)] ...
+                + m_mod(g_deg, :) .* g(1:g_deg);
+    end
+    m_mod = mod(m_mod, 2);
+end
+
+```
+
+Not only this code is vectorized, but it is more compact, and less error-prone, 
+as it is closer to the mathematical definition of the modulo operation.
+
+==== Vectorization of Simulations
+
+This second technique is a generalization of the first one, and is what allowed us to execute more 
+simulation iterations in less time. 
+
+Instead of limiting ourselves at searching for loops inside the simulation to parallelize, we 
+looked at parallelizing multiple simulation runs. In short, instead of having, for example, 
+a loop of $N$ iterations running over a vector of size $M$, we executed a single iteration 
+with a matrix of size $M times N$.
+
+As simulation iterations are independent of one another data-wise, we are free 
+to execute multiple of them in parallel, taking advantage of the multiple cores modern computers 
+have and the higher amount of RAM.
+
+This meant that all the code had to be rewritten to take into account that it would receive a matrix instead of a vector,
+and that it should treat each column of the matrix (in our simulation, a vector was always a column vector) independently.
+
+But it greatly increased the throughput of our simulation, allowing us to simulate thousands of frames in less than a second.
+
+Again, this is thanks to the fact that Matlab and Octave are already heavily optimized to work with matrices and arrays, 
+meaning that once we got all our data in the correct format, we got this speedup "for free".
+
+
