@@ -33,14 +33,15 @@
 #let (bpsk_2_x_f, bpsk_2_y_f) = filter-positive(bpsk_2_x, bpsk_2_y)
 
 
-#let create-resp-channel-fig(ch) = {
-  let (resp_chan_l_raw, resp_chan_h_raw) = lq.load-txt(read("./graphs/response-channel-" + str(ch) + ".csv"))
+#let create_resp_channel_fig(ch) = {
+  let file = "./graphs/response-channel-" + str(ch) + ".csv"
+  let (resp_chan_l_raw, resp_chan_h_raw) = lq.load-txt(read(file))
   //let resp_chan_h_abs = resp_chan_h_raw.map(calc.abs)
   //let (resp_chan_l, resp_chan_h) = filter-positive(resp_chan_l_raw, resp_chan_h_abs)
   figure(
     lq.diagram(
-      width: 15cm,
-      height: 10cm,
+      width: 12cm,
+      height: 9cm,
 
       lq.stem(
         resp_chan_l_raw, resp_chan_h_raw,
@@ -372,11 +373,13 @@ Cloud Radio Access Network (C-RAN)",
 
   $ h(m) = tilde(h) (m T_s) = sum_(k=0)^M A_k tilde(g)(m T_s - tau_k) $ <eq:channel_filter>
 
-  #create-resp-channel-fig(1) <h_channel_1>
-  #create-resp-channel-fig(2) <h_channel_2>
-  #create-resp-channel-fig(3) <h_channel_3>
+  With this, we can arrive at the coefficients of $h(m)$ for each channel, which are plotted in @h_channel_1, @h_channel_2 and @h_channel_3.
 
-  With this, we can arrive at the coefficients of $h(m)$ for each channel, which are plotted in @h_channel_1, @h_channel_2 and @h_channel_3. 
+  Observe that in the first channel, shown by @h_channel_1, most of the poser is concentrated in the current symbol, making interference not that strong. However, channel 2 (@h_channel_2) has half its power in the middle signal and half distributed among the following ones, which will lead to a considerable level of interference, discussed in next section. At last, @h_channel_3 shows channel 3's coefficients and how most of the power does not belong to the current symbol, leading to extreme inter symbol interference and poor performance without equalization.
+
+  #create_resp_channel_fig(1) <h_channel_1>
+  #create_resp_channel_fig(2) <h_channel_2>
+  #create_resp_channel_fig(3) <h_channel_3>
 
   This lets us describe the channel through a Toeplitz matrix, as represented in @eq:toeplitz, and allow us to conveniently analyze the digital transmission chain following the matrix framework given by @eq:matrix_framework. $bold("w")$ represents the added white gaussian noise, $bold("s")$ the signal sent through the channel and $bold("z")$ the received signal.
 
@@ -443,13 +446,25 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
   We start the analysis by plotting the BER versus SNR curves of a BPSK modulated signal using both of the equalization methods discussed and comparing to a non equalized signal, repeating the analysis for each channel.
 
   #create-ber-figure("PSK2", 1) <2PSK_channel1>
+
   #create-ber-figure("PSK2", 2) <2PSK_channel2>
+  
+  *Should be better explained.*
+
+  Observe that without equalization, @2PSK_channel2 shows a constant BER around 25%, which corresponds to what is theoretically expected of this channel. Since half the power corresponds to the correct symbol and half the power to the following ones, we can say that there is a 50% chance of choosing the current symbol. Additionally, among the interference symbols, there is a 50% chance of it being the correct one. Thus, there is a constant 25% error rate.
+
   #create-ber-figure("PSK2", 3) <2PSK_channel3>
+  
   #create-ber-figure("QAM8", 1) <8QAM_channel1>
+  
   #create-ber-figure("QAM8", 2) <8QAM_channel2>
+  
   #create-ber-figure("QAM8", 3) <8QAM_channel3>
+  
   #create-ber-figure("QAM16", 1) <16QAM_channel1>
+  
   #create-ber-figure("QAM16", 2) <16QAM_channel2>
+  
   #create-ber-figure("QAM16", 3) <16QAM_channel3>
 
   From @2PSK_channel1 and @2PSK_channel3 we can conclude that equalization promotes a distinctive performance increase to the system, significantly reducing the BER for a same SNR. Furthermore, the DFE shows a far superior performance when compared to the ZF equalization in high interference channels, being capable of reducing the interference between symbols without increasing the noise.
