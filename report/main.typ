@@ -240,25 +240,28 @@ Cloud Radio Access Network (C-RAN)",
 
   ```matlab
   function [m_mod] = bch_mod_g(m, g)
-    m(1:length(m)) = m(end:-1:1); % Reversing m(x)
-    g_deg = size(g,1) - 1;
-    m_mod = zeros(g_deg, 1); % m(x) mod g(x)
-    for ii=1:length(m)
-        m_mod_prev = m_mod;
-        m_mod(1) = mod(m(ii) + g(1) * m_mod_prev(g_deg), 2);
-        for jj=2:g_deg
-            m_mod(jj) = mod(m_mod_prev(jj - 1) + g(jj) ...
-              * m_mod_prev(g_deg), 2);
-        end
+    m(1:end, :) = m(end:-1:1, :); % Reversing m(x)
+    g_deg = size(g, 1) - 1;
+    m_mod = zeros(g_deg, size(m, 2)); %% m(x) mod g(x)
+    for ii=1:size(m, 1)
+        % Perform the shift in m_mod
+        shifted_temp = circshift(m_mod, 1);
+        
+        % Use the temporary variable to perform 
+        % the feedback step and add new entry
+        m_mod = [m(ii, :); shifted_temp(2:end, :)] ...
+                + m_mod(g_deg, :) .* g(1:g_deg);
     end
+    m_mod = mod(m_mod, 2);
   end
+
   ```
 
   For the generation of the coded word $c(x)$, we inserted the shifted information word $x^(n-k)m(x)$ in the encoder to get the parity bits, and them built a vector of size $n=31$ by concatenating first the parity bits and them the information word $m(x)$. This finalizes the coding operation.
 
   ```matlab
   g_deg = length(g);
-  shifted_m = [zeros(g_deg - 1, 1); m]; % m(x) shifted by n - k 
+  shifted_m = [zeros(g_deg - 1, size(m, 2)); m]; % m(x) shifted by n - k 
   parity_bits = bch_mod_g(shifted_m, g);
   y = [parity_bits; m];
   ```
