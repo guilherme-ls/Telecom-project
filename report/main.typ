@@ -494,9 +494,24 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
   
   #create-ber-figure("QAM16", 3) <16QAM_channel3>
 
-= Conclusions
+= Conclusion
 
-  Something here.
+As shown throughout this report, there are as many phenomena that needs to be taken into account when designing a TX/RX chain (AWGN, ISI, Multipath Channels) as there are 
+ways to solve it (BCH codes, ZF and DFE equalizers, PSK and M-QAM modulations). 
+
+We saw how in the simpler cases (no to almost no ISI) a simpler (and possibly cheaper) communication chain (no equalization in channels 0 and 1) was able to give "workable" BER values,
+but limited ourselves to use a low rate modulation scheme (BPSK), with performance quickly degrading as the constellation grew, and became completely unusable with higher ISI's (channels 2 and 3).
+
+This shows the importance of knowing how and when to use the equalization techniques shown, as they not only allows us to work in highly ISI affected channels, but adds the possibility
+of using more complex modulations without a significative hit to the BER performance while increasing the bit rate. But, the complexity these equalizers add to the chain are 
+a trade of that needs to be taken into account.
+
+Thankfully, not everything needs to be done in the symbol reception side. The BCH codes studied show how we can increase the reception gain by the addition of parities bits, 
+with, arguably, a lower cost than changing the modulation scheme or adding equalizers, as these can be implemented before the symbol modulation chain in software (for example).
+
+And while the difference in BER shown in the simple AWGN with BPSK example studied isn't as big as the difference from using an equalizer in channels 1 to 3, this gain is added independently 
+of the symbol-side part of the chain, allowing us to reduce constraints imposed to the TX/RX circuit, even if by $2 "dB"$, as every $"dB"$ saved in the SNR is a reduction in the power consumed
+by it, or the possibility or increasing the bit rate.
 
 = Appendix
 
