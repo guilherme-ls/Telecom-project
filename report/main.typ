@@ -520,9 +520,9 @@ by it, or the possibility or increasing the bit rate.
 This section will talk about the Matlab code optimization tricks that we learned throughout the process of 
 writing the simulations for this report. While it wasn't mandatory, we placed a lot of effort into it as 
 we quickly noticed that we would need to optimize the code we had written, otherwise we would have to wait 
-upwards of _40 minutes_ for a *single* simulation to finish (with mediocre results).
+upwards of _40 minutes_ for a single simulation to finish (with mediocre results).
 
-And thus, this task of executing as *quickly* as possible the *highest amount* of simulation iterations (which correlates 
+And thus, this task of executing as quickly as possible the highest amount of simulation iterations (which correlates 
 to the precision of the simulation results, as they are heavily influenced by the Gaussian noise added) appeared. 
 
 We won't go much into the details of _why_ a technic helped, but we will list _what_ helped, and try to correlate with 
