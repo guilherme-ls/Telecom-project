@@ -79,7 +79,7 @@
   figure(
     lq.diagram(
       width: 15cm,
-      height: 10cm,
+      height: 7cm,
 
       lq.plot(
         x_none, y_none,
@@ -326,7 +326,7 @@ Cloud Radio Access Network (C-RAN)",
   
   Then, considering that the provided codes need the bit energy to be normalized at $E_b = 1$, we calculate instead the noise variance necessary to achieve a desired $E_b"/"N_0$ value as $N_0 = (1/10)^((S N R_b)/10) $. Taking into account the code rate, we must divide the variance by $R$.
 
-  This variance is then used create a complex circular white noise to apply on the symbols as they are passing the transmission channel. The resulting noisy signal then passes through a threshold detector, estimating the symbols received, and is demodulated through the ``` symbols2bits``` function, proceeding through the decoding and finally measuring the Bit Error Rate for plotting.
+  This variance is then used create a complex circular white noise to apply on the symbols as they are passing the transmission channel. The resulting noisy signal then passes through a threshold detector, estimating the symbols received, and is demodulated through the ``` symbols2bits``` function, proceeding through the decoding and finally measuring the Bit Error Rate for plotting. For the simulations, at each SNR step we performed the error averaging over approximately $10^8$ bits at maximum and stopped the simulations at 100 detected errors, since it already gives a good level of precision.
 
 #figure(
   lq.diagram(
@@ -350,13 +350,11 @@ Cloud Radio Access Network (C-RAN)",
 
   @BPSK-coded shows us the BER versus $E_b"/"N_0$ curve comparison between the not coded case and the two implemented BCH codes, using a BPSK modulation and an AWGN channel on all cases. First, we observe that for low SNR the performance of the coded case is bellow the not coded one, indicating that the decrease in the energy per bit as a result of the reduced code rate outwheighs the increase in performance due to the error correcting. Indeed, for low SNRs the error frequency tends to be so high that the code is rarely capable of correcting all of them.
 
-  #emph(text(red)[Write here the number of samples used to calculate the BER, if the 100 errors minimum number to estimate the BER was followed. Also alter the emprircal coding gain part accordingly.])
-
   However, from an SNR of $4 "dB"$ onwards the coded cases start performing better than the non-coded one, indicating that the error correcting capacity of the code becomes increasingly relevant in reducing the BER. The coding gain becomes highly perceptible for high SNRs.
 
   From this graph we can identify the empirical coding gain of both the implemented BCH codes and compare them to the theory. The theoretical coding gain considering an Additive White Gaussian Noise (AWGN) channel and a hard decision, as is our case, is given by $gamma_(d B) = 10 "log"(R(t+1))$, therefore the first BCH code must have a coding gain of $gamma_(1 d B) = 10 "log"(26/31 times 2) = 2.25 "dB"$ and the second code $gamma_(1 d B) = 10 "log"(21/31 times 3) = 3.08 "dB"$.
   
-  Note that the graph does not capture the asymptotic coding gains, as that would require an extreme amount of computational resources. However, we can still analyze the gain at the BER of $3 times 10^(-4)$, relatively trustworthy given the simulation parameters, to get empirical gains of approximately $2.14 "dB"$ for the first code and $3.28 "dB"$ for the second one. This is close to the theoretical gains and show that our simulations reasonably approximate theory within our computational limitations.
+  Note that the graph does not capture the asymptotic coding gains, as that would require an extreme amount of computational resources. However, we can still analyze the gain measured at the BER of $times 10^(-5)$ to get empirical gains of approximately $1.6 "dB"$ for the first code and $2.2 "dB"$ for the second one. Even if it is significantly lower than the theoretical gains, we can see that the curves show a tendency in increasing the coding gain and reaching its asymptotic value as they continue.
 
 == Multipath Channels
 
@@ -377,7 +375,7 @@ Cloud Radio Access Network (C-RAN)",
 
   With this, we can arrive at the coefficients of $h(m)$ for each channel, which are plotted in @h_channel_1, @h_channel_2 and @h_channel_3.
 
-  Observe that in the first channel, shown by @h_channel_1, most of the poser is concentrated in the current symbol, making interference not that strong. However, channel 2 (@h_channel_2) has half its power in the middle signal and half distributed among the following ones, which will lead to a considerable level of interference, discussed in next section. At last, @h_channel_3 shows channel 3's coefficients and how most of the power does not belong to the current symbol, leading to extreme inter symbol interference and poor performance without equalization.
+  Observe that in the first channel, shown by @h_channel_1, most of the power is concentrated in the current symbol, making intersymbol interference (ISI) not very strong. In contrast, channel 2 (@h_channel_2) has half its power in the middle signal and almost half in the following one, which will lead to a strong level of intersymbol interference that will have consequences shown and discussed in next section. Finally, @h_channel_3 shows channel 3's coefficients and how most of the power does not belong to the current symbol and is mostly spread across neighboring symbols, resulting in severe intersymbol interference and poor performance in the absence of equalization.
 
   #create_resp_channel_fig(1) <h_channel_1>
   #create_resp_channel_fig(2) <h_channel_2>
@@ -397,11 +395,15 @@ Cloud Radio Access Network (C-RAN)",
 
   For this to work the symbols to be sent were organized in frames of size $N=100$, which is also the size of the matrix $bold("H")$.
 
-  To deal with the distortions introduced by the multipath channels we will employ two distinct approaches. The first is the Zero Forcing (ZF) equalizer, which multiplies $bold("z")$ by the pseudoinverse $bold("H")^\#$ of the channel matrix $bold("H")$, eliminating the interference on the signal $bold("z")'_(Z F) = bold("s") + bold("H")^\#bold("w")$. After the equalization, a threshold detector is applied.
+  To deal with the distortions introduced by the multipath channels we will employ two distinct approaches. The first is the Zero Forcing (ZF) equalizer, which multiplies $bold("z")$ by the pseudoinverse $bold("H")^\#$ of the channel matrix $bold("H")$, eliminating the intersymbol interference on the signal $bold("z")'_(Z F) = bold("s") + bold("H")^\#bold("w")$. After the equalization, a threshold detector is applied.
+
+  Observe that in this equalization scheme the noise is multiplied $bold("H")$. If $bold("H")$ is not a unitary matrix, this will lead to an amplification of the noise power. Thus, even if intersymbol interference is eliminated, the noise increases.
 
   The second is given by the Decision-Feedback Equalizer (DFE), which applies QR decomposition on $bold("H")$ so that $bold("H") = bold("VT")$, where $bold("V")$ is a unitary matrix and $bold("T")$ is superior triangular. Multiplying $bold("z")$ by $bold("V")^H$ we get @eq:dfe, where $bold("w")'$ has the same distribution as $bold("w")$. $bold("z")'_(D F E)$ is determined by performing backward substitution on the linear system given by $bold("Ts")$ and applying a threshold detector on newly determined component at each step.
 
 $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
+
+  Observe that this equalization scheme does not change the power of the noise, since it is only multiplied by a unitary matrix. However, its performance depends on the correctness of past decisions. If an incorrect decision occurs early in the detection process, that error is fed back into the equalizer and propagates to subsequent symbols, which may lead to bursts of errors.
 
 === Implementation
 
@@ -447,58 +449,47 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
 
   We start the analysis by plotting the BER versus SNR curves of a BPSK modulated signal using both of the equalization methods discussed and comparing to a non equalized signal, repeating the analysis for each channel.
 
+  @2PSK_channel1 shows the performance gains that can be obtained through equalization. The application of either ZF equalization or DFE promotes a significant drop in BER for the same SNR when compared to the non-equalized case. This drop in SNR increases as the noise decreases, showing that as noise becomes decreasingly relevant as a source of errors, the relevancy of the intersymbol interference relatively increases. Additionally, we observe that both equalization schemes have almost the same performance in this low interference environment.
+  
   #create-ber-figure("PSK2", 1) <2PSK_channel1>
 
   #create-ber-figure("PSK2", 2) <2PSK_channel2>
-  
-  *Should be better explained.*
 
-  Observe that without equalization, @2PSK_channel2 shows a constant BER around 25%, which corresponds to what is theoretically expected of this channel. Since half the power corresponds to the correct symbol and half the power to the following ones, we can say that there is a 50% chance of choosing the current symbol. Additionally, among the interference symbols, there is a 50% chance of it being the correct one. Thus, there is a constant 25% error rate.
+  Observe that without equalization, @2PSK_channel2 exhibits a constant BER close to 25%, which agrees with theoretical expectations for channel 2. The impulse response contains two dominant bins of nearly equal magnitude, so the received signal is approximately the sum of the current symbol and the previous one with similar weights. When two consecutive symbols are equal, their contributions add constructively and detection is correct. However, when they have opposite signs, their contributions nearly cancel, producing a received value close to zero. In these cases, the detector effectively makes a random decision because of the added Gaussian noise, resulting in a 50% error probability. Since this situation occurs with probability 1/2, the overall asymptotic BER converges to 0.25.
+
+  This high intersymbol interference makes equalization even more important due to the fact that it eliminates completely ISI, which we can be seen through the performance curves of ZF and DFE. Note, however, that DFE performs significantly better than ZF equalization, which is mostly due to the fact that ZF increases the noise power as discussed in the theoretical section. Even if DFE has its own error propagation problem, it still performs better in our simulations.
+
+  Finally, @2PSK_channel3 shows the performance analysis for channel 3. We can once gain note that the non-equalized error rate stabilizes at 25% and that equalization is necessary. However, the higher level of interference in this channel promotes a decrease in the performances of the equalized case, especially for ZF. This means that the noise power is further increased by the new $bold("H")$ matrix in the ZF case, and that the DFE also had its error propagation problem negatively affected.
 
   #create-ber-figure("PSK2", 3) <2PSK_channel3>
   
   #create-ber-figure("QAM8", 1) <8QAM_channel1>
   
-  #create-ber-figure("QAM8", 2) <8QAM_channel2>
+  Conducting the analysis now for the 8-QAM modulation, @8QAM_channel1 shows us that its lower coding gain in relation to BPSK enabled us to observe the inflection point where the errors induced by the noise cease to significantly affect performance, leaving only the asymptotic error rate due to ISI. Once again, the equalized cases perform significantly better having removed the channel interference.
   
+  Now, channel 2 (@8QAM_channel2) once again shows a constant error rate, now of 35%. The rate increases because each symbol now assumes 4 distinct values and the constellation geometry attributes distinct error rates for each possible pair of symbols interfering, the full deduction of the rate will not be done here. We again observe that equalization is essential for reducing BER and that ZF shows a slightly lower performance.
+  
+  #create-ber-figure("QAM8", 2) <8QAM_channel2>
+
+  Finally, channel 3 (@8QAM_channel3) shows a continuation in the observed trends, in that the non-equalized case still presents a constant BER and that the performance of the equalized cases is still slightly worse in relation to channel 2. The previously outlined reasons once again apply here.
+
   #create-ber-figure("QAM8", 3) <8QAM_channel3>
   
   #create-ber-figure("QAM16", 1) <16QAM_channel1>
+
+  Through @16QAM_channel1 we observe that the lower constellation gain of 16-QAM further degrades performance. Now, the non-equalized case BER is almost constant, like for the other channels. However, equalization still shows improvement and ZF does not significantly diverge from DFE.
+
+  Channel 2 (@16QAM_channel2) shows that a new constant BER of 38% is observed, once again attributed to the 16 values the constellation can adopt and to its geometry. Equalization still shows itself essential for the decoding process, presenting good performance in face of the heavy interference. DFE stays better preforming than ZF.
   
+  Finally, @16QAM_channel3 shows that channel3 still experiences the performance degradation in equalized cases seem in other instances. 
+
   #create-ber-figure("QAM16", 2) <16QAM_channel2>
   
   #create-ber-figure("QAM16", 3) <16QAM_channel3>
 
-  From @2PSK_channel1 and @2PSK_channel3 we can conclude that equalization promotes a distinctive performance increase to the system, significantly reducing the BER for a same SNR. Furthermore, the DFE shows a far superior performance when compared to the ZF equalization in high interference channels, being capable of reducing the interference between symbols without increasing the noise.
-
-  Suggested analysis.
-
-  Mention that ZF for non-unitary H matrices increases noise.
-  
-  Mention that DFE does not increase noise, but if you make a bad decision on a symbol at the start the error will be compounded throughout the demodulation.
-
 = Conclusions
 
   Something here.
-
-//#figure(
-//  lq.diagram(
-//    width: 15cm,
-//    height: 10cm,
-//    lq.plot(bpsk_0_x, bpsk_0_y, label: [BPSK $alpha = 0%$],
-//            mark: "x", stroke:(thickness: 1pt, dash: "solid")),
-//      title: [BER / $"SNR"_b$ for not coded OFDM.], 
-//    yscale: "log",
-//    ylabel: [BER],
-//    xlabel: [$E_b / N_0$],
-//    xaxis: (subticks: none),    
-//    legend: (position: right + top)
-//  ),
-//  caption: [Plot of the BER versus the SNR per bit in a semilog scale for a BPSK and a 4-QAM
-//  constellation for different values of $alpha in {0, 0.25, 0.5, 0.75}$ in the studied system using 
-//  an OFDM with $N_("carriers") = 64$ and $N_("prefix") = 1$.],
-//
-//) <OFDM-not-coded>
 
 = Annex
 
