@@ -642,7 +642,9 @@ If we then run this modified code, we get in the output of the simulation the fo
 ```sh
 $ octave main.m
 ...
-TODO ADD OUTPUT
+Elapsed time is 3.31402e-05 seconds.
+Elapsed time is 0.0188391 seconds.
+Elapsed time is 0.000133991 seconds.
 ...
 ```
 
