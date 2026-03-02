@@ -1,5 +1,3 @@
-addpath(genpath('subblocks'))
-
 set(groot,'DefaultLineLinewidth',2)
 set(groot,'DefaultAxesFontSize',16)
 set(groot,'DefaultAxesXGrid','on')
@@ -10,3 +8,5 @@ if isOctave
     pkg load communications
     pkg load miscellaneous
 end
+
+addpath(genpath('../../ref/D1-D4'))

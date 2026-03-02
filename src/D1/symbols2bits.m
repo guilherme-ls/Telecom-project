@@ -14,9 +14,7 @@
 %% Date : 22/07/2021
 
 function [a]=symbols2bits(s,mod,M)
-
 m=log2(M);
-
 %% Demapping PAM
 if (mod=='PAM')
     
@@ -34,10 +32,7 @@ if (mod=='PAM')
     V=dec2bin([opDec,M-1]);
     U=V([1:length(s)] ,:);
     d=reshape(U',1,m*length(s));
-    for ii=1:(m*length(s)) 
-        a(ii)=str2num(d(ii));
-    end
-    
+    a = (d =='1');
 end
 
 %% Demapping PSK
@@ -58,9 +53,7 @@ if (mod=='PSK')
     V=dec2bin([opDec,M-1]);
     U=V([1:length(s)] ,:);
     d=reshape(U',1,m*length(s));
-    for ii=1:(m*length(s)) a(ii)=str2num(d(ii));
-    end
-    
+    a = (d =='1');
 end
 
 %% Demapping QAM
@@ -94,22 +87,15 @@ if(mod=='QAM')
     V=[VRe,VIm];
     
     U=V([1:length(s)] ,:);
-    d=reshape(U',1,m*length(s));
-    for ii=1:(m*length(s)) 
-        a(ii)=str2num(d(ii));
-    end
-    
+    d=reshape(U',m*length(s),1);
+    a = (d =='1');
     elseif(M==8) % assumes cross 8-QAM
         %constellation = [(1+sqrt(3))*1i; 1+1i; 1+sqrt(3); 1-1i; -(1+sqrt(3)); -1+1i;-(1+sqrt(3))*1i; -1-1i];      
         [~,loc] = threshold_detector(s,mod,M) ;
         loc = loc -1;
         U = dec2bin(loc,m);
         b = reshape(U',1,length(loc)*m);
-        for ii=1:(length(b)) 
-            a(ii)=str2num(b(ii));
-        end
-
-
+        a = (b =='1');
     else
         disp ('Error: M has to be square or equal to 8');
         return;
