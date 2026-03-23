@@ -36,13 +36,13 @@
 % Feb. 2020, Apr. 2020, Mar. 2022, Dec. 2023
 %------------- BEGIN CODE --------------
 
-if isOctave 
-  function [val] = physconst(name)
-    if name == "Boltzmann"
-      val = physical_constant("Boltzmann constant");
-    end;
-  end;
-end;
+%if isOctave
+%  function [val] = physconst(name)
+%    if name == "Boltzmann"
+%      val = physical_constant("Boltzmann constant");
+%    end;
+%  end;
+%end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                   Tranmitter                        %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -156,7 +156,7 @@ TXBB_Filt_dev   = [(10^(TXBB_Filt_rp/20)-1)/(10^(TXBB_Filt_rp/20)+1) 10^(-TXBB_F
 % Design the filter
 [TXBB_Filt_n,TXBB_Filt_fo,TXBB_Filt_ao,TXBB_Filt_w] ...
                 = firpmord(TXBB_Filt_f,TXBB_Filt_a,TXBB_Filt_dev,TXBB_Filt_fs);
-TXBB_Filt_n = 6511;
+% TXBB_Filt_n = 6511;
 disp('Designing the TX filter - This takes a while...')
 TXBB_Filt       = firpm(TXBB_Filt_n,TXBB_Filt_fo,TXBB_Filt_ao,TXBB_Filt_w);
 
