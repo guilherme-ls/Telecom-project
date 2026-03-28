@@ -116,8 +116,6 @@ switch test_type
       %%% one tone signal%%%
       basebandSig = exp(1j*2*pi*freqVin1*t);
 end
-    
-
 
 %%% IQ separation for real baseband signals %%%
 [basebandDigital_I_unorm,basebandDigital_Q_unorm] = complx2cart(basebandSig(:));
@@ -137,6 +135,9 @@ basebandDigital_Q   = basebandDigital_Q_unorm/normalize_factor*Vref;
 % Perform conversion
 basebandAnalog_dac_I = DAC(basebandDigital_I,nBitDAC,Vref,dacType,basebandSamplingRate,continuousTimeSamplingRate);
 basebandAnalog_dac_Q = DAC(basebandDigital_Q,nBitDAC,Vref,dacType,basebandSamplingRate,continuousTimeSamplingRate);
+
+P_DAC = 10e-13 * basebandSamplingRate * 2^(nBitDAC);
+P_DAC_total = 2 * P_DAC;
 
 %%% Baseband FAKE Analog filter %%%
 Rin             = 50;    % Input impedance of the filter
@@ -168,11 +169,47 @@ basebandAnalog_filt_Q = basebandAnalogFiltFake(basebandAnalog_dac_Q,TXBB_Filt,TX
 Flo      = 2.4e9; % Local Oscillator Frequency
 rfSignal = upMixer(basebandAnalog_filt_I,basebandAnalog_filt_Q,Flo,continuousTimeSamplingRate);
 
+P_upMixer = 5 * 10e-12 * Flo;
+P_upMixer_total = 2 * P_upMixer;
+
 %%% RF Amplification %%%
-PA_IIP3       = 100;   % PA IIP3 ; in dBm
-PA_NF         = 5;     % PA Noise figure ; in dB
-PA_Gain       = 10;    % PA Gain ; in dB power
+PA_mux = 'none'; 
+
+switch PA_mux
+    case 'ZX60_V63+'
+      PA_IIP3       = 30-19.7;      % OIP3 = 31.2 dBm à 2GHz et 28.8 dBm à 3GHz
+      PA_NF         = 5.1;      % PA Noise figure ; in dB
+      PA_Gain       = 19.7;     % 20.3 dB à 2GHz et 19.2 dB à 3 GHz
+      P_cons_PA = 5*69*10^(-3);
+    case 'ZX60_V62+'
+      PA_IIP3       = 31.9-15.5;      % OIP3 = 33.4 dBm à 2GHz et 30.4 dBm à 3GHz
+      PA_NF         = 5.1;      % PA Noise figure ; in dB
+      PA_Gain       = 15.5;     % 
+      P_cons_PA = 5*82*10^(-3);
+    case 'ZHL42'
+      PA_IIP3       = 44.85-39.46;      % 
+      PA_NF         = 8.07;      % PA Noise figure ; in dB
+      PA_Gain       = 39.46;     %
+      P_cons_PA = 15*1;
+    case 'ADL5606'
+      PA_IIP3       = 44.3-21.45;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
+      PA_NF         = 4.9;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
+      PA_Gain       = 21.45;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
+      P_cons_PA = 380*10^(-3) * 5;
+    case 'RFLUPA05M06G'
+      PA_IIP3       = 43-33;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
+      PA_NF         = 3;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
+      PA_Gain       = 33;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
+      P_cons_PA = 12 * 350 * 10^(-3)
+    case 'none'
+      PA_IIP3       = 150;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
+      PA_NF         = 0;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
+      PA_Gain       = 0;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
+      P_cons_PA = 0
+end
 rfPASignal    = rfPA(rfSignal,PA_Gain,PA_NF,PA_IIP3,Rin,continuousTimeSamplingRate/2);
+
+P_TX_total = P_cons_PA + P_upMixer_total + P_DAC_total;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                      Channel                        %%%
@@ -199,8 +236,13 @@ LNA_IIP3 = 100;  % (dBm)
 LNA_NF   = 0;    % (dB)
 rfLNASignal = rfLNA(rxSignal_WAT,LNA_Gain,LNA_NF,LNA_IIP3,Rin,continuousTimeSamplingRate/2);
 
+P_LNA = 10e-2 / (10^(LNA_NF / 10) - 1);
+
 %%% Mixing down to BB %%%
 [basebandAnalog_raw_I,basebandAnalog_raw_Q] = downMixer(rfLNASignal,Flo,continuousTimeSamplingRate);
+
+P_downMixer = 5 * 10e-12 * Flo;
+P_downMixer_total = 2 * P_downMixer;
 
 %%% Baseband fake Analog filter %%%
 RXBB_Filt_NF    = 0;     %(in dB)
@@ -232,8 +274,8 @@ BBamp_band    = 10e6;% (MHz)
 basebandAnalog_amp_I = BBamp(basebandAnalog_filtrx_I,BBamp_Gain,BBamp_NF,BBamp_IIP3,Rin,BBamp_band,continuousTimeSamplingRate);
 basebandAnalog_amp_Q = BBamp(basebandAnalog_filtrx_Q,BBamp_Gain,BBamp_NF,BBamp_IIP3,Rin,BBamp_band,continuousTimeSamplingRate);
 
-
-
+P_BBamp = 10e-9 * BBamp_band;
+P_BBamp_total = 2 * P_BBamp;
 
 %%% Analog to Digital Conversion %%%
 nBitADC = 18;
@@ -242,6 +284,11 @@ adcSamplingRate = basebandSamplingRate;
 % Perform conversion
 basebandAnalog_adc_I = ADC(basebandAnalog_amp_I,nBitADC,Vref,adcSamplingRate,delay,continuousTimeSamplingRate);
 basebandAnalog_adc_Q = ADC(basebandAnalog_amp_Q,nBitADC,Vref,adcSamplingRate,delay,continuousTimeSamplingRate);
+
+P_ADC = 10e-13 * adcSamplingRate * 2^(nBitADC);
+P_ADC_total = 2 * P_ADC;
+
+P_RX_total = P_LNA + P_downMixer_total + P_BBamp_total + P_ADC_total;
 
 %%% IQ combination for complex baseband signals %%%
 basebandComplexDigital                = complex(basebandAnalog_adc_I,basebandAnalog_adc_Q);
@@ -294,9 +341,6 @@ if strcmp(test_type, 'mod')
    % WARNING : the received constellation has almost no sense until filters
    %           delays have been thoroughly analyzed and compensated
 end
-
-
-
 
 %------------- END OF CODE --------------
     
