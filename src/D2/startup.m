@@ -11,4 +11,5 @@ if isOctave
     pkg load control 
     pkg load communications
     pkg load miscellaneous
+    addpath(genpath('./octave-replacement/'))
 end
