@@ -36,12 +36,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set to true to keep the TX SDR object active after transmission
 addpath("../../../ref/D1-D4/")
+
 num_of_points = 1:10;
 tx_gains = num_of_points * -5;
 dac_scale_factors = ones(1, length(num_of_points)) ./ (2num_of_points * 4 / 3);
+
+SER_per_gain = zeros(1, length(num_of_points));
+BER_per_gain = zeros(1, length(num_of_points));
+
+mode = "tx_gain"; % or dac_scale_factor
+
 for ii = num_of_points
-    tx_gain = -10; %tx_gains(ii);
+
+if mode == "tx_gain"
+    tx_gain = tx_gains(ii);
+    dac_scale_factor = -10;
+else
+    tx_gain = -10;
     dac_scale_factor = dac_scale_factors(ii);
+end
 disable_tx_release = true; 
 % Run the transmitter script to generate and transmit the signal
 ADALM_Pluto_Tx
@@ -145,7 +158,6 @@ end
 release(rx); % Release the SDR object to free the hardware resource
 release(tx); % Release the SDR object to free the hardware resource
 
-
 rx_symbols = threshold_detector(2*basebandComplexDigital_fir(:), 'QAM', modSize);
 tx_symbols = resample(baseband_ref_trunc(1:len), 1, basebandOverSampling, basebandRRC);
 tx_symbols = tx_symbols / sqrt(var(tx_symbols));
@@ -162,5 +174,15 @@ disp(["tx_gain: ", num2str(tx_gain) ]);
 disp(["dac_scale_factor: ", num2str(dac_scale_factor) ]);
 disp(["SER: ", num2str(symbol_errors / length(rx_symbols)) ]);
 disp(["BER: ", num2str(bit_errors / length(rx_bits))]);
+
+SER_per_gain(ii) = symbol_errors / length(rx_symbols);
+BER_per_gain(ii) = bit_errors / length(rx_symbols);
+end
+
+file_name = sprintf("out/cont-phase/%s.csv", group_folder_name, mode);
+if mode == "tx_gain"
+   dlmwrite(file_name, [tx_gains', SER_per_gain', BER_per_gain']);
+else
+   dlmwrite(file_name, [dac_scale_factors', SER_per_gain', BER_per_gain']);
 end
 %------------- END OF CODE --------------
