@@ -115,7 +115,7 @@ function signalPSD = PSD(signal)
   win     = blackman(Nsignal, 'periodic');
   signalPSD = abs(fft(signal(:).*win(:))).^2;
   signalPSD = signalPSD / Nsignal;
-endfunction
+end
 
 %%% Output signal power and SNR 
   if signal_config.test_type == 'mod'
@@ -135,6 +135,6 @@ endfunction
     SNR = signal_power / noise_power;
 
     perf_rx.SNR = SNR;
-  end;
+  end
 
-end;
+end

@@ -45,7 +45,7 @@ basebandSamplingRate          = continuousTimeSamplingRate/round(continuousTimeS
 %%%%%                               'twotone' for a two-tone sine 
 %%%%%                               'mod'     for a modulated QAM 16 signal
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+qamSig = 0;
   switch signal_config.test_type
      case 'onetone'
         %%% one tone signal%%%
@@ -181,10 +181,11 @@ basebandSamplingRate          = continuousTimeSamplingRate/round(continuousTimeS
 
 function signalPSD = PSD(signal)
   Nsignal = length(signal);
-  win     = blackman(Nsignal, 'periodic');
-  signalPSD = abs(fft(signal(:).*win(:))).^2;
-  signalPSD = signalPSD / Nsignal;
-endfunction
+  win     = blackman(Nsignal);
+  U = sum(abs(win).^2);
+  win = sqrt(1/U)*win;
+  signalPSD = (abs(fft(signal(:).*win(:))).^2)/Nsignal;
+end
 
 %%% Output signal power and ACPR
   if signal_config.test_type == 'mod'
@@ -196,7 +197,7 @@ endfunction
     bin_sideband_sup_end = ceil(2.445e9/continuousTimeSamplingRate*NBins);
     bin_sideband_sup_band = bin_signal_start:bin_sideband_sup_end;
  
-    signal_psd = PSD(rfPASignal);
+    signal_psd = PSD(rfPASignal) * 2;
 
     signal_power = sum(signal_psd(bin_signal_band));
     sideband_sup_power = sum(signal_psd(bin_sideband_sup_band)) - signal_power;
@@ -204,6 +205,6 @@ endfunction
 
     perf_tx.acpr = ACPR;
     perf_tx.signal_power = signal_power;
-  end;
+  end
 
-end;
+end

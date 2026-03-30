@@ -17,5 +17,5 @@ rxSignal           = signal_in*sqrt(ChannelAttenuation);
 AntennaNoise       = randn(length(rxSignal),1)*sqrt(K*T*...
                      simulation_config.continuousTimeSamplingRate/2*Rin);
 signal_out       = rxSignal+AntennaNoise;
-end;
+end
 
