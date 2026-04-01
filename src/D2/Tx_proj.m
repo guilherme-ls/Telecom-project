@@ -182,22 +182,24 @@ qamSig = 0;
 function signalPSD = PSD(signal)
   Nsignal = length(signal);
   win     = blackman(Nsignal);
-  U = sum(abs(win).^2);
-  win = sqrt(1/U)*win;
-  signalPSD = (abs(fft(signal(:).*win(:))).^2)/Nsignal;
+  U = (1/length(win))*sum(abs(win).^2);
+  win = sqrt(1/U)*win/length(win);
+  signalPSD = abs(fft(signal(:).*win(:))).^2;
 end
 
 %%% Output signal power and ACPR
   if signal_config.test_type == 'mod'
     NBins = length(rfPASignal);
     bin_signal_start = floor(2.385e9/continuousTimeSamplingRate*NBins); 
-    bin_signal_end = ceil(2.415e9/continuousTimeSamplingRate*NBins); 
+    bin_signal_end = ceil(2.415e9/continuousTimeSamplingRate*NBins);
     bin_signal_band = bin_signal_start:bin_signal_end;
 
     bin_sideband_sup_end = ceil(2.445e9/continuousTimeSamplingRate*NBins);
     bin_sideband_sup_band = bin_signal_start:bin_sideband_sup_end;
  
-    signal_psd = PSD(rfPASignal) * 2;
+    signal_psd = PSD(rfPASignal) * 2 * (continuousTimeSamplingRate/NBins);
+
+    signal_psd(round((bin_signal_start + bin_signal_end)/2))
 
     signal_power = sum(signal_psd(bin_signal_band));
     sideband_sup_power = sum(signal_psd(bin_sideband_sup_band)) - signal_power;
