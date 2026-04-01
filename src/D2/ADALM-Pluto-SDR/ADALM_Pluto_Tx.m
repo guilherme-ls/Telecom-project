@@ -103,7 +103,6 @@ end
 % Mind the avg power of the signal. 
 basebandSig = basebandSig/max(abs(basebandSig));
 
-
 % Instantiate the SDR objects for transmission
 tx = sdrtx('Pluto');
 
