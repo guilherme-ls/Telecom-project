@@ -197,12 +197,10 @@ end
     bin_sideband_sup_end = ceil(2.445e9/continuousTimeSamplingRate*NBins);
     bin_sideband_sup_band = bin_signal_start:bin_sideband_sup_end;
  
-    signal_psd = PSD(rfPASignal) * 2 * (continuousTimeSamplingRate/NBins);
+    signal_psd = PSD(rfPASignal);
 
-    signal_psd(round((bin_signal_start + bin_signal_end)/2))
-
-    signal_power = sum(signal_psd(bin_signal_band));
-    sideband_sup_power = sum(signal_psd(bin_sideband_sup_band)) - signal_power;
+    signal_power = sum(signal_psd(bin_signal_band)) * 2 * (continuousTimeSamplingRate/NBins);
+    sideband_sup_power = sum(signal_psd(bin_sideband_sup_band)) * 2 * (continuousTimeSamplingRate/NBins) - signal_power;
     ACPR = signal_power / sideband_sup_power;
 
     perf_tx.acpr = ACPR;
