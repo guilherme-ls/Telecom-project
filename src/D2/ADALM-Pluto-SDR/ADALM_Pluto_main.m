@@ -266,21 +266,46 @@ if pluto_configs.rx.enable
   %%%% RX Demodulation 
   if pluto_configs.signal.modulated.enable 
     %%%%% Attempts to fix the delay for the symbols
+    distance_metrics = zeros(bb_over_sampling-1, 1);
+    rx_signals_downsampled = zeros(bb_over_sampling-1, round(rx_signal_downsampled/bb_over_sampling));
     for downsamp_begin = 1:bb_over_sampling-1
       %%%% Downsampling with RRC Filter
-      rx_signal_downsampled = resample(rx_signal_truncated(downsamp_begin:end), 1, bb_over_sampling, rx_bb_rrc); 
+      rx_signals_downsampled(downsamp_begin) = resample(rx_signal_truncated(downsamp_begin:end), 1, ...
+                                                        bb_over_sampling, rx_bb_rrc); 
       %%%% Sample normalization after filter
-      rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
-      %%%% Message Demodulation
+      rx_signals_downsampled(downsamp_begin) = rx_signals_downsampled(downsamp_begin) ...
+                                               / sqrt(var(rx_signals_downsampled(downsamp_begin)));
+      %%%% KMeans as a metric of how good the constellation is from the chosen downsamp_begin delay
+      [~, constellation_centroids] = kmeans(rx_signals_downsampled(downsamp_begin), ...
+                                            pluto_configs.signal.modulated.modulation.size);
+
       if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
-        disp("QAM Demodulation...");
-        rx_message = qamdemod(rx_signal_downsampled, ...
-                              pluto_configs.signal.modulated.modulation.size, ...
-                              "UnitAveragePower", true);
-      else
-        disp("What?! How did the modulation become invalid?");
-        assert(0);
+        constellation_points = qammod(1:pluto_configs.signal.modulated.modulation.size, ...
+                                      pluto_configs.signal.modulated.modulation.size, ...
+                                      "UnitAveragePower", true);
       end
+      %%% From the Centroids, find the closest position they are from the constellation points
+      for ii = 1:pluto_configs.signal.modulated.modulation.size
+        centroid_diff = Inf;
+        for jj = 1:pluto_configs.signal.modulated.modulation.size
+          centroid_diff = min(centroid_diff, ...
+                          abs(constellation_centroids(ii) - constellation_points(jj)));
+        end
+        distance_metrics(downsamp_begin) = centroid_diff + distance_metric;
+      end
+    end
+    %%% Get the best delay downsampled signal based on the kmeans metric
+    [~, best_delay] = min(distance_metrics);
+    rx_signal_downsampled = rx_signals_downsampled(best_delay);
+    %%%% Message Demodulation
+    if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
+      disp("QAM Demodulation...");
+      rx_message = qamdemod(rx_signal_downsampled, ...
+                            pluto_configs.signal.modulated.modulation.size, ...
+                            "UnitAveragePower", true);
+    else
+      disp("What?! How did the modulation become invalid?");
+      assert(0);
     end
   end
 end
