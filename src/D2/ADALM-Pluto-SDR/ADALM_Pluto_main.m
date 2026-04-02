@@ -13,9 +13,9 @@ pluto_configs.general.filt_rf_bw = 20e6; % Hz
 
 %%%%% Sync Config %%%%%
 pluto_configs.sync.enable = true;
-pluto_configs.sync.size = 100;
-pluto_configs.sync.preamble.size = 25;
-pluto_configs.sync.epilogue.size = 25;
+pluto_configs.sync.size = 1000;
+pluto_configs.sync.preamble.size = 1000;
+pluto_configs.sync.epilogue.size = 1000;
 
 %%%%% TX Config %%%%% 
 pluto_configs.tx.enable = true;  
@@ -25,7 +25,7 @@ pluto_configs.tx.dac.scale_factor = 0.75; % [0, 1]
 
 %%%%% RX Config %%%%% 
 pluto_configs.rx.enable = true;
-pluto_configs.tx.automatic_reception = true;  
+pluto_configs.rx.automatic_reception = true;  
 pluto_configs.rx.gain.manual = false;
 pluto_configs.rx.gain.value = 10;
 pluto_configs.rx.bb_rrc.roll_off = 0.25;
@@ -34,12 +34,12 @@ pluto_configs.rx.bb_rrc.symbol_span = 25;
 %%%%% Signal Config %%%%% 
 
 % Raw Signal Config
-pluto_configs.signal.raw.enable = true;
+pluto_configs.signal.raw.enable = false;
 pluto_configs.signal.raw.harmonics.frequencies = [7.12e6 6.12e6];
 pluto_configs.signal.raw.harmonics.duration = 1e-3; % Seconds
 
 % Modulated Message Config
-pluto_configs.signal.modulated.enable = false;
+pluto_configs.signal.modulated.enable = true;
 pluto_configs.signal.modulated.symbol_rate = 3e6;
 pluto_configs.signal.modulated.modulation.mod = "QAM";  
 pluto_configs.signal.modulated.modulation.size = 16;  
@@ -48,14 +48,16 @@ pluto_configs.signal.modulated.modulation.size = 16;
 signal_generation_seed = 100;
 signal_length = 100e3;
 
-rand_message_number_of_symbols =  round(signal_length/ pluto_configs.general.bb_sample_rate); 
 rand_message_range = [0 pluto_configs.signal.modulated.modulation.size-1];
 
 rng(signal_generation_seed);
-rand_message = randi(rand_message_range, rand_message_number_of_symbols, 1);
+rand_message = randi(rand_message_range, signal_length, 1);
 
 pluto_configs.signal.modulated.message = rand_message;
 
+
+%%%%% Plot Config %%%%% 
+pluto_configs.plot.spectrum = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                SDR Configuration                    %%%
@@ -67,11 +69,8 @@ if pluto_configs.tx.enable
   tx_sdr.BasebandSampleRate = pluto_configs.general.bb_sample_rate;
   tx_sdr.CenterFrequency = pluto_configs.general.center_freq;
   tx_sdr.filtRFBandwidth = pluto_configs.general.filt_rf_bw;
-  %%%% RX SDR Configuration %%%%
-  if pluto_configs.rx.gain.manual
-    rx_sdr.GainSource = "manual";
-    rx_sdr.Gain = pluto_configs.rx.gain.value;
-  end
+  %%%% TX SDR Configuration %%%%
+  tx_sdr.Gain = pluto_configs.tx.gain;
 end
 
 if pluto_configs.rx.enable 
@@ -80,8 +79,11 @@ if pluto_configs.rx.enable
   rx_sdr.BasebandSampleRate = pluto_configs.general.bb_sample_rate;
   rx_sdr.CenterFrequency = pluto_configs.general.center_freq;
   rx_sdr.filtRFBandwidth = pluto_configs.general.filt_rf_bw;
-  %%%% TX SDR Configuration %%%%
-  tx_sdr.gain = pluto_configs.tx.gain;
+  %%%% RX SDR Configuration %%%%
+  if pluto_configs.rx.gain.manual
+    rx_sdr.GainSource = "manual";
+    rx_sdr.Gain = pluto_configs.rx.gain.value;
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,7 +114,7 @@ if pluto_configs.tx.enable
                                / pluto_configs.signal.modulated.symbol_rate);
       %%% Oversampling with the RRC filter
       bb_rrc = rcosdesign(pluto_configs.rx.bb_rrc.roll_off, ...
-                          pluto_configs.rx.bb_rrc.roll_off, ...
+                          pluto_configs.rx.bb_rrc.symbol_span, ...
                           bb_over_sampling, "sqrt");
 
       tx_signal = resample(qam_symbols, bb_over_sampling, 1, bb_rrc);
@@ -133,11 +135,11 @@ if pluto_configs.tx.enable
   %%%% Clock Synchronization Section
   if pluto_configs.sync.enable 
     disp("Syncing enabled, configuring TX side...");
-    sync_section = [zeros(1, pluto_configs.sync.preamble.size)...
-                     ones(1, pluto_configs.sync.size)...
-                    zeros(1, pluto_configs.sync.epilogue.size)];
+    sync_section = [zeros(pluto_configs.sync.preamble.size, 1);...
+                     ones(pluto_configs.sync.size, 1);...
+                    zeros(pluto_configs.sync.epilogue.size, 1)];
     %%%% Synchronization infront of the tx signal
-    tx_signal = [sync_section tx_signal];
+    tx_signal = [sync_section; tx_signal];
   end
 end
 
@@ -164,8 +166,8 @@ if pluto_configs.rx.enable
 
       disp("Preparing RRC Filter...");
       rx_bb_rrc = rcosdesign(pluto_configs.rx.bb_rrc.roll_off, ...
-                          pluto_configs.rx.bb_rrc.roll_off, ...
-                          bb_over_sampling, "sqrt");
+                             pluto_configs.rx.bb_rrc.symbol_span, ...
+                             bb_over_sampling, "sqrt");
     else
       disp("No valid modulation selected! Releasing rx_sdr early!");
       disp("Make sure you have correctly configured the Signal!");
@@ -230,27 +232,22 @@ if pluto_configs.rx.enable
   rx_signal = double(rx_sdr.capture(rx_n_samples));
   disp("Message received!");
   %% Normalizing the received signal for better treatment
-  rx_signal_rsm_norm =  rx_signal / sqrt(var(rx_signal_rsm_norm));
+  rx_signal_rsm_norm =  rx_signal / sqrt(var(rx_signal));
   %% Truncating so it matches the sent signal in size
   rx_signal_truncated = rx_signal_rsm_norm(1:rx_n_samples/2);
 
   %%%% RX Signal Synchronization
   if pluto_configs.sync.enable
     disp("Synchronizing samples...");
-    sync_section = [zeros(1, pluto_configs.sync.preamble.size)...
-                     ones(1, pluto_configs.sync.size)...
-                    zeros(1, pluto_configs.sync.epilogue.size)];
+    sync_section = [zeros(pluto_configs.sync.preamble.size, 1);...
+                     ones(pluto_configs.sync.size, 1);...
+                    zeros(pluto_configs.sync.epilogue.size, 1)];
     %%%% Alignment based on the synchronization section
-    [~, ~, delay] = alignsignals(sync_section, rx_signal_rsm_norm, Method="risetime");
+    [sync_start, sync_stop, ~] = findsignal(rx_signal_rsm_norm, sync_section);
     
-    rx_signal_synced = rx_signal_rsm_norm;
-    if delay > 0
-      rx_signal_synced = rx_signal_rsm_norm(delay:end);
-    elseif delay < 0
-      rx_signal_synced = [zeros(1, -delay), rx_signal_rsm_norm];
-    end
+    rx_signal_synced = rx_signal_rsm_norm(sync_stop:end);
     %%%% Truncate the aligned version of the rx signal, removing the synchronization section 
-    rx_signal_truncated = rx_signal_synced(length(sync_section):rx_n_samples/2);
+    rx_signal_truncated = rx_signal_synced(1 : rx_n_samples/2 - length(sync_section));
   end
 
   %%%% RX Demodulation 
@@ -275,6 +272,42 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                Data Plots and Performances          %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if pluto_configs.plot.spectrum
+  window_number       = 1;
+  lineSpec_index      = 1;
+  fullband_spectrum   = true;
+
+  if pluto_configs.tx.enable 
+    plot_spectrum(tx_signal, window_number,...
+               pluto_configs.general.bb_sample_rate, lineSpec_index, fullband_spectrum);
+    title('TX Digital Complex recombined signal')
+
+    window_number       = window_number+1;
+  end
+
+  if pluto_configs.rx.enable 
+    plot_spectrum(rx_signal_truncated, window_number,...
+               pluto_configs.general.bb_sample_rate, lineSpec_index, fullband_spectrum);
+    title('Receiver complex recombined output')
+  end
+elseif pluto_configs.tx.enable || pluto_configs.rx.enable 
+  figure();
+  if pluto_configs.tx.enable 
+    subplot(3,1,1);
+    plot(abs(tx_signal));
+  end
+  if pluto_configs.rx.enable
+    subplot(3,1,2);
+    plot(abs(rx_signal_rsm_norm));
+    subplot(3,1,3);
+    plot(abs(rx_signal_truncated));
+  end
+  title('Aligned signals');
+  xlabel('Sample index');
+  ylabel('Signal envelope');
+end
+
 
 if pluto_configs.rx.enable 
   if pluto_configs.signal.modulated.enable
