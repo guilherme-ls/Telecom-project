@@ -243,9 +243,10 @@ if pluto_configs.rx.enable
                      ones(pluto_configs.sync.size, 1);...
                     zeros(pluto_configs.sync.epilogue.size, 1)];
     %%%% Alignment based on the synchronization section
-    [sync_start, sync_stop, ~] = findsignal(rx_signal_rsm_norm, sync_section);
+    [~, sync_start] = findpeaks(abs(rx_signal_rsm_norm), "NPeaks", 1, "MinPeakHeight", max(abs(rx_signal_rsm_norm))*0.9);
+    sync_end = sync_start + pluto_configs.sync.size + pluto_configs.sync.epilogue.size;
     
-    rx_signal_synced = rx_signal_rsm_norm(sync_stop:end);
+    rx_signal_synced = rx_signal_rsm_norm(sync_end:end);
     %%%% Truncate the aligned version of the rx signal, removing the synchronization section 
     rx_signal_truncated = rx_signal_synced(1 : rx_n_samples/2 - length(sync_section));
   end
