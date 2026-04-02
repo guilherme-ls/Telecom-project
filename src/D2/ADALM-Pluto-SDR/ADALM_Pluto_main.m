@@ -14,6 +14,7 @@ pluto_configs.general.filt_rf_bw = 20e6; % Hz
 %%%%% Sync Config %%%%%
 pluto_configs.sync.enable = true;
 pluto_configs.sync.size = 1000;
+pluto_configs.sync.tolerance = 0.5;
 pluto_configs.sync.preamble.size = 1000;
 pluto_configs.sync.epilogue.size = 1000;
 
@@ -243,12 +244,23 @@ if pluto_configs.rx.enable
                      ones(pluto_configs.sync.size, 1);...
                     zeros(pluto_configs.sync.epilogue.size, 1)];
     %%%% Alignment based on the synchronization section
-    [~, sync_start] = findpeaks(abs(rx_signal_rsm_norm), "NPeaks", 1, "MinPeakHeight", max(abs(rx_signal_rsm_norm))*0.9);
-    sync_end = sync_start + pluto_configs.sync.size + pluto_configs.sync.epilogue.size;
-    
+    [sync_start, sync_end, ~] = findsignal(abs(rx_signal_rsm_norm), sync_section, ...
+                                           "TimeAlignment", "dtw", ...
+                                           "Normalization", "power", ...
+                                           "Metric", "symmkl");
+    %%%% Get the first sync_section and use its end as the start of the sent message 
+    sync_start = sync_start(1);
+    sync_end = sync_end(1);    
     rx_signal_synced = rx_signal_rsm_norm(sync_end:end);
+    %%%% From the sync_section, get the part where it is all ones, and see how much of the phase 
+    %%%% has changed
+    phase_sync_section = rx_signal_rsm_norm(sync_start:sync_end);
+    phase_sync_section = phase_sync_section(abs(phase_sync_section) > pluto_configs.sync.tolerance);
+    phase_sync = mean(angle(phase_sync_section));
     %%%% Truncate the aligned version of the rx signal, removing the synchronization section 
-    rx_signal_truncated = rx_signal_synced(1 : rx_n_samples/2 - length(sync_section));
+    %%%% and adjusting the phase based on the sync section
+    samples_in_message = rx_n_samples/2 - length(sync_section);
+    rx_signal_truncated = rx_signal_synced(1:samples_in_message)*exp(-1j*phase_sync);
   end
 
   %%%% RX Demodulation 
