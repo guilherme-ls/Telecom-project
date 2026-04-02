@@ -26,7 +26,7 @@ pluto_configs.tx.dac.scale_factor = 0.75; % [0, 1]
 %%%%% RX Config %%%%% 
 pluto_configs.rx.enable = true;
 pluto_configs.rx.automatic_reception = true;  
-pluto_configs.rx.gain.manual = false;
+pluto_configs.rx.gain.manual = true;
 pluto_configs.rx.gain.value = 10;
 pluto_configs.rx.bb_rrc.roll_off = 0.25;
 pluto_configs.rx.bb_rrc.symbol_span = 25;
@@ -253,19 +253,22 @@ if pluto_configs.rx.enable
 
   %%%% RX Demodulation 
   if pluto_configs.signal.modulated.enable 
-    %%%% Downsampling with RRC Filter
-    rx_signal_downsampled = resample(rx_signal_truncated, 1, bb_over_sampling, rx_bb_rrc); 
-    %%%% Sample normalization after filter
-    rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
-    %%%% Message Demodulation
-    if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
-      disp("QAM Demodulation...");
-      rx_message = qamdemod(rx_signal_downsampled, ...
-                            pluto_configs.signal.modulated.modulation.size, ...
-                            "UnitAveragePower", true);
-    else
-      disp("What?! How did the modulation become invalid?");
-      assert(0);
+    %%%%% Attempts to fix the delay for the symbols
+    for downsamp_begin = 1:bb_over_sampling-1
+      %%%% Downsampling with RRC Filter
+      rx_signal_downsampled = resample(rx_signal_truncated(downsamp_begin:end), 1, bb_over_sampling, rx_bb_rrc); 
+      %%%% Sample normalization after filter
+      rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
+      %%%% Message Demodulation
+      if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
+        disp("QAM Demodulation...");
+        rx_message = qamdemod(rx_signal_downsampled, ...
+                              pluto_configs.signal.modulated.modulation.size, ...
+                              "UnitAveragePower", true);
+      else
+        disp("What?! How did the modulation become invalid?");
+        assert(0);
+      end
     end
   end
 end
