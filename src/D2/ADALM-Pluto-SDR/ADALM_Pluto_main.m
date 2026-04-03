@@ -25,24 +25,24 @@ pluto_configs.tx.gain = -10; % dB
 pluto_configs.tx.dac.scale_factor = 0.75; % [0, 1]
 
 %%%%% RX Config %%%%% 
-pluto_configs.rx.enable = true;
+pluto_configs.rx.enable = false;
 pluto_configs.rx.automatic_reception = true;  
 pluto_configs.rx.gain.manual = true;
-pluto_configs.rx.gain.value = 10;
+pluto_configs.rx.gain.value = 40;
 pluto_configs.rx.bb_rrc.roll_off = 0.25;
 pluto_configs.rx.bb_rrc.symbol_span = 25;
 
 %%%%% Signal Config %%%%% 
 
 % Raw Signal Config
-pluto_configs.signal.raw.enable = false;
+pluto_configs.signal.raw.enable = true;
 pluto_configs.signal.raw.harmonics.frequencies = [6.12e6];
 pluto_configs.signal.raw.harmonics.width = 0.07e6;
 pluto_configs.signal.raw.usable_band = 0.15e6;
 pluto_configs.signal.raw.harmonics.samples = 1e5; % Samples
 
 % Modulated Message Config
-pluto_configs.signal.modulated.enable = true;
+pluto_configs.signal.modulated.enable = false;
 pluto_configs.signal.modulated.symbol_rate = 3e6;
 pluto_configs.signal.modulated.modulation.mod = "QAM";  
 pluto_configs.signal.modulated.modulation.size = 16;  
@@ -60,12 +60,12 @@ pluto_configs.signal.modulated.message = rand_message;
 
 %%%%% Plot Config %%%%% 
 pluto_configs.plot.spectrum = true;
-pluto_configs.plot.sync = true;
+pluto_configs.plot.sync = false;
 
 %%%%% Perfomances Display Config %%%%% 
-pluto_configs.performace.snr = false;
-pluto_configs.performace.ser = true;
-pluto_configs.performace.ber = true;
+pluto_configs.performace.snr = true;
+pluto_configs.performace.ser = false;
+pluto_configs.performace.ber = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                SDR Configuration                    %%%
@@ -392,6 +392,10 @@ end
 
 if pluto_configs.performace.snr && pluto_configs.rx.enable
   if pluto_configs.signal.raw.enable
+    
+    harmonics = pluto_configs.signal.raw.harmonics.frequencies;
+    bined_harmonics = round((harmonics/pluto_configs.general.bb_sample_rate) * pluto_configs.signal.raw.harmonics.samples)...
+                             *pluto_configs.general.bb_sample_rate / pluto_configs.signal.raw.harmonics.samples;
     if length(bined_harmonics) > 1
         disp("SNR for raw signal is only supported for a single harmonic");
         assert(0);
