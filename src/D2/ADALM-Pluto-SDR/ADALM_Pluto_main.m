@@ -13,10 +13,10 @@ pluto_configs.general.filt_rf_bw = 20e6; % Hz
 
 %%%%% Sync Config %%%%%
 pluto_configs.sync.enable = true;
-pluto_configs.sync.size = 1000;
-pluto_configs.sync.tolerance = 0.5;
-pluto_configs.sync.preamble.size = 1000;
-pluto_configs.sync.epilogue.size = 1000;
+pluto_configs.sync.samples = 13; % Samples in the frame
+pluto_configs.sync.length = 13; % length of the barker sequence 
+pluto_configs.sync.coarse.frequency_resolution = 10; 
+pluto_configs.sync.threshold = 0.6; % [0, 1]
 
 %%%%% TX Config %%%%% 
 pluto_configs.tx.enable = true;  
@@ -100,6 +100,19 @@ end
 
 if pluto_configs.tx.enable 
   disp("TX Enabled! Setting up signal to send...");
+
+  if pluto_configs.signal.modulated.enable
+    modulated_message = pluto_configs.signal.modulated.message;
+    if pluto_configs.sync.enable
+      disp("Syncing enabled, adding synchronization sequence...");
+      barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
+                               SamplesPerFrame=pluto_configs.sync.samples);
+      sync_section = (1 + barker()) / 2;
+      %%%% Synchronization infront of the tx signal
+      modulated_message = [sync_section; modulated_message];
+    end
+  end
+
   %%%% Signal Preparation
   if pluto_configs.signal.raw.enable
     disp("Sending Harmonics Signal...");
@@ -113,7 +126,7 @@ if pluto_configs.tx.enable
     disp("Sending Modulated Signal...");
     if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
       disp("QAM Modulation Selected...");
-      qam_symbols = qammod(pluto_configs.signal.modulated.message, ...
+      qam_symbols = qammod(modulated_message, ...
                            pluto_configs.signal.modulated.modulation.size, ...
                            "UnitAveragePower", true);
       bb_over_sampling = round(pluto_configs.general.bb_sample_rate ...
@@ -137,15 +150,6 @@ if pluto_configs.tx.enable
     release(tx_sdr);
     disp("Aborting...");
     assert(0);
-  end
-  %%%% Clock Synchronization Section
-  if pluto_configs.sync.enable 
-    disp("Syncing enabled, configuring TX side...");
-    sync_section = [zeros(pluto_configs.sync.preamble.size, 1);...
-                     ones(pluto_configs.sync.size, 1);...
-                    zeros(pluto_configs.sync.epilogue.size, 1)];
-    %%%% Synchronization infront of the tx signal
-    tx_signal = [sync_section; tx_signal];
   end
 end
 
@@ -242,91 +246,71 @@ if pluto_configs.rx.enable
   rx_signal_truncated = rx_signal_rsm_norm(1:rx_n_samples/2);
 
   %%%% RX Signal Synchronization
-  if pluto_configs.sync.enable
-    disp("Synchronizing samples...");
-    sync_section = [zeros(pluto_configs.sync.preamble.size, 1);...
-                     ones(pluto_configs.sync.size, 1);...
-                    zeros(pluto_configs.sync.epilogue.size, 1)];
-    %%%% Alignment based on the synchronization section
-    [sync_start, sync_end, ~] = findsignal(abs(rx_signal_rsm_norm(1:length(rx_signal_rsm_norm)/2)), ...
-                                             sync_section, ...
-                                             "Normalization", "power", ...
-                                             "Metric", "symmkl");
-    if pluto_configs.plot.sync
-        figure();
-        findsignal(abs(rx_signal_rsm_norm(1:length(rx_signal_rsm_norm)/2)), ...
-                                          sync_section, ...
-                                          "Normalization", "power", ...
-                                          "Metric", "symmkl");
+  if pluto_configs.signal.modulated.enable
+    rx_signal_samples = rx_signal_truncated;
+    if pluto_configs.sync.enable
+      coarse = comm.CoarseFrequencyCompensator( ...
+                SampleRate=pluto_configs.general.bb_sample_rate, ...
+                FrequencyResolution=pluto_configs.sync.coarse.frequency_resolution, ...
+                Modulation=pluto_configs.signal.modulated.modulation.mod);
+      %%%% Preamble Detection
+      disp("Preamble detection...");
+      barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
+                               SamplesPerFrame=pluto_configs.sync.samples);
+      sync_section = (1 + barker()) / 2;
+      sync_section_thr = pluto_configs.sync.threshold*sum(abs(sync_section).^2); 
+      preamble_det = comm.PreambleDetector( ...
+                    Preamble=sync_section, ...
+                    Threshold=sync_section_thr, ...
+                    Detections='First');
+      preamble_idx = preamble_det(rx_signal_rsm_norm);
+      
+      disp("Alignment using sync section...");
+      rx_signal_aligned = rx_signal_rsm_norm(preamble_idx - length(sync_section):end);
+      rx_signal_aligned = rx_signal_aligned(1:rx_n_samples/2);
+      %%%% Coarse Frequency Compensation
+      disp("Coarse frequency compensation...");
+      rx_signal_coarsed_synced = coarse(rx_signal_aligned);
+      rx_signal_samples = rx_signal_coarsed_synced;
     end
-    disp("Found synchronization section, alligning...");
-    %%%% Get the first sync_section and use its end as the start of the sent message 
-    sync_start = sync_start(1);
-    sync_end = sync_end(1);    
-    rx_signal_synced = rx_signal_rsm_norm(sync_end:end);
-    %%%% From the sync_section, get the part where it is all ones, and see how much of the phase 
-    %%%% has changed
-    disp("Getting phase shift in synchronization section for correction...");
-    phase_sync_section = rx_signal_rsm_norm(sync_start:sync_end);
-    phase_sync_section = phase_sync_section(abs(phase_sync_section) > pluto_configs.sync.tolerance);
-    phase_sync = mean(angle(phase_sync_section));
-    %%%% Truncate the aligned version of the rx signal, removing the synchronization section 
-    %%%% and adjusting the phase based on the sync section
-    disp("Truncating and fixing phase shift...");
-    samples_in_message = rx_n_samples/2 - length(sync_section);
-    rx_signal_truncated = rx_signal_synced(1:samples_in_message)*exp(-1j*phase_sync);
+
+    %%%% Downsampling with RRC Filter
+    disp("RRC Filter Downsampling...");
+    rx_signal_downsampled = resample(rx_signal_samples, 1, ...
+                                     bb_over_sampling, rx_bb_rrc); 
+    %%%% Sample normalization after filter
+    rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
+    rx_signal_symbols = rx_signal_downsampled;
+
+    if pluto_configs.sync.enable
+      fine = comm.CarrierSynchronizer( ...
+                DampingFactor=pluto_configs.sync.fine.damping_factor, ...
+                NormalizedLoopBandwidth=pluto_configs.sync.fine.loop_bw, ...
+                SamplesPerSymbol=1, ...
+                Modulation=pluto_configs.signal.modulated.modulation.mod);
+      %%%% Fine Frequency Compensation
+      disp("Fine frequency compensation...");
+      rx_signal_fined_synced = fine(rx_signal_downsampled); 
+      %%%% Preamble Phase Compensation
+      disp("Preamble phase compensation...");
+      rx_signal_phase_offset = angle(sync_section .* ...
+                               conj(rx_signal_fined_synced(1:pluto_configs.sync.length)));
+      rx_signal_phase_offset_est = mean(rx_signal_phase_offset);
+      fprintf("Phase offset of %.2f degrees\n", rad2deg(rx_signal_phase_offset_est));
+      rx_signal_in_phase = exp(1j * rx_signal_phase_offset_est) * rx_signal_fined_synced; 
+      %%%% Removal of preamble from message 
+      disp("Preamble removal...");
+      rx_signal_symbols = rx_signal_in_phase(pluto_configs.sync.length+1:end);
+    end
   end
 
   %%%% RX Demodulation 
   if pluto_configs.signal.modulated.enable 
-    disp("Finding best delay on samples for demodulation...");
-
-    %%%% Generation of the  constellation_points of the modulation for
-    %%%% optimisation metrics
-    if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
-      constellation_points = qammod(0:pluto_configs.signal.modulated.modulation.size-1, ...
-                                    pluto_configs.signal.modulated.modulation.size, ...
-                                    "UnitAveragePower", true)';
-      constellation_points_vec = [real(constellation_points), imag(constellation_points)];
-    end
-    %%%%% Attempts to fix the delay for the symbols
-    distance_metrics = zeros(bb_over_sampling-1, 1);
-    rx_signals_downsampled = zeros(bb_over_sampling-1, round(length(rx_signal_truncated)/bb_over_sampling));
-    %%%%% Create the symbol synchronizer object 
-    symbolSyncer = comm.SymbolSynchronizer( ...
-                   SamplesPerSymbol=bb_over_sampling, ...
-                   NormalizedLoopBandwidth=0.01, ...
-                   DampingFactor=1.0, ...
-                   TimingErrorDetector='Early-Late (non-data-aided)');
-    for downsamp_begin = 1:bb_over_sampling-1
-      
-      %%%% Downsampling with RRC Filter
-      rx_signal_downsampled = resample(rx_signal_truncated(downsamp_begin:end), 1, ...
-                                                        bb_over_sampling, rx_bb_rrc); 
-      %%%% Sample normalization after filter
-      rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
-    
-      %%%% Account for symbol timing clock skewing
-      rx_signal_downsampled_synced = symbolSyncer(rx_signal_downsampled);
-
-      disp("Finding best delay on samples for demodulation...");
-      %%% From the constellation_points, find the closest position of each
-      %%% constellation point, and get the variance of the distances
-      rx_signal_downsampled_vec = [real(rx_signal_downsampled_synced), ...
-                                   imag(rx_signal_downsampled_synced)];
-      [~, distances_from_constellation_point] = knnsearch(constellation_points_vec, ...
-                                                          rx_signal_downsampled_vec);
-      rx_signals_downsampled(downsamp_begin, :) = rx_signal_downsampled_synced;
-      distance_metrics(downsamp_begin) = var(distances_from_constellation_point);      
-    end
-    %%% Get the best delay downsampled signal based on the kmeans metric
-    [~, best_delay] = min(distance_metrics);
-    rx_signal_downsampled = rx_signals_downsampled(best_delay, :);
     %%%% Message Demodulation
     disp("Constelation demodulation...");
     if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
       disp("QAM Demodulation...");
-      rx_message = qamdemod(rx_signal_downsampled, ...
+      rx_message = qamdemod(rx_signal_symbols, ...
                             pluto_configs.signal.modulated.modulation.size, ...
                             "UnitAveragePower", true);
     else
