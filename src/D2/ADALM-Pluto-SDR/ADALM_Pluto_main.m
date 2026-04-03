@@ -35,12 +35,14 @@ pluto_configs.rx.bb_rrc.symbol_span = 25;
 %%%%% Signal Config %%%%% 
 
 % Raw Signal Config
-pluto_configs.signal.raw.enable = false;
-pluto_configs.signal.raw.harmonics.frequencies = [7.12e6 6.12e6];
-pluto_configs.signal.raw.harmonics.duration = 1e-3; % Seconds
+pluto_configs.signal.raw.enable = true;
+pluto_configs.signal.raw.harmonics.frequencies = [6.12e6];
+pluto_configs.signal.raw.harmonics.width = 0.07e6;
+pluto_configs.signal.raw.usable_band = 0.15e6;
+pluto_configs.signal.raw.harmonics.samples = 1e5; % Samples
 
 % Modulated Message Config
-pluto_configs.signal.modulated.enable = true;
+pluto_configs.signal.modulated.enable = false;
 pluto_configs.signal.modulated.symbol_rate = 3e6;
 pluto_configs.signal.modulated.modulation.mod = "QAM";  
 pluto_configs.signal.modulated.modulation.size = 16;  
@@ -58,7 +60,13 @@ pluto_configs.signal.modulated.message = rand_message;
 
 
 %%%%% Plot Config %%%%% 
-pluto_configs.plot.spectrum = false;
+pluto_configs.plot.spectrum = true;
+pluto_configs.plot.sync = true;
+
+%%%%% Perfomances Display Config %%%%% 
+pluto_configs.performace.snr = true;
+pluto_configs.performace.ser = false;
+pluto_configs.performace.ber = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                SDR Configuration                    %%%
@@ -96,13 +104,11 @@ if pluto_configs.tx.enable
   %%%% Signal Preparation
   if pluto_configs.signal.raw.enable
     disp("Sending Harmonics Signal...");
-    samples_for_duration = pluto_configs.general.bb_sample_rate ...
-                           / pluto_configs.signal.raw.harmonics.duration;
-    time_vec = 0:1/pluto_configs.general.bb_sample_rate:samples_for_duration;
+    time_vec = 0:1/pluto_configs.general.bb_sample_rate:(pluto_configs.signal.raw.harmonics.samples-1)/pluto_configs.general.bb_sample_rate;
     harmonics = pluto_configs.signal.raw.harmonics.frequencies;
-    bined_harmonics = round((harmonics/pluto_configs.general.bb_sample_rate) * samples_for_duration)...
-                             *pluto_configs.general.bb_sample_rate / samples_for_duration;
-    tx_signal = sum(exp(1j*2*pi*bined_harmonics.*time_vec(:))); 
+    bined_harmonics = round((harmonics/pluto_configs.general.bb_sample_rate) * pluto_configs.signal.raw.harmonics.samples)...
+                             *pluto_configs.general.bb_sample_rate / pluto_configs.signal.raw.harmonics.samples;
+    tx_signal = sum(exp(1j*2*pi*bined_harmonics.*time_vec(:)), 2); 
 
   elseif pluto_configs.signal.modulated.enable
     disp("Sending Modulated Signal...");
@@ -154,8 +160,7 @@ if pluto_configs.rx.enable
   if pluto_configs.signal.raw.enable
     disp("Harmonic signal...");
     disp("Setting up amount of samples to collect...");
-    rx_n_samples = 2 * pluto_configs.general.bb_sample_rate ...
-                     / pluto_configs.signal.raw.harmonics.duration;
+    rx_n_samples = 2 * pluto_configs.signal.raw.harmonics.samples;
   elseif pluto_configs.signal.modulated.enable
     disp("Sending Modulated Signal...");
     if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
@@ -244,60 +249,70 @@ if pluto_configs.rx.enable
                      ones(pluto_configs.sync.size, 1);...
                     zeros(pluto_configs.sync.epilogue.size, 1)];
     %%%% Alignment based on the synchronization section
-    [sync_start, sync_end, ~] = findsignal(abs(rx_signal_rsm_norm), sync_section, ...
-                                           "TimeAlignment", "dtw", ...
-                                           "Normalization", "power", ...
-                                           "Metric", "symmkl");
+    [sync_start, sync_end, ~] = findsignal(abs(rx_signal_rsm_norm(1:length(rx_signal_rsm_norm)/2)), ...
+                                             sync_section, ...
+                                             "Normalization", "power", ...
+                                             "Metric", "symmkl");
+    if pluto_configs.plot.sync
+        figure();
+        findsignal(abs(rx_signal_rsm_norm(1:length(rx_signal_rsm_norm)/2)), ...
+                                          sync_section, ...
+                                          "Normalization", "power", ...
+                                          "Metric", "symmkl");
+    end
+    disp("Found synchronization section, alligning...");
     %%%% Get the first sync_section and use its end as the start of the sent message 
     sync_start = sync_start(1);
     sync_end = sync_end(1);    
     rx_signal_synced = rx_signal_rsm_norm(sync_end:end);
     %%%% From the sync_section, get the part where it is all ones, and see how much of the phase 
     %%%% has changed
+    disp("Getting phase shift in synchronization section for correction...");
     phase_sync_section = rx_signal_rsm_norm(sync_start:sync_end);
     phase_sync_section = phase_sync_section(abs(phase_sync_section) > pluto_configs.sync.tolerance);
     phase_sync = mean(angle(phase_sync_section));
     %%%% Truncate the aligned version of the rx signal, removing the synchronization section 
     %%%% and adjusting the phase based on the sync section
+    disp("Truncating and fixing phase shift...");
     samples_in_message = rx_n_samples/2 - length(sync_section);
     rx_signal_truncated = rx_signal_synced(1:samples_in_message)*exp(-1j*phase_sync);
   end
 
   %%%% RX Demodulation 
   if pluto_configs.signal.modulated.enable 
+    disp("Finding best delay on samples for demodulation...");
+
+    %%%% Generation of the  constellation_points of the modulation for
+    %%%% optimisation metrics
+    if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
+      constellation_points = qammod(0:pluto_configs.signal.modulated.modulation.size-1, ...
+                                    pluto_configs.signal.modulated.modulation.size, ...
+                                    "UnitAveragePower", true)';
+      constellation_points_vec = [real(constellation_points), imag(constellation_points)];
+    end
     %%%%% Attempts to fix the delay for the symbols
     distance_metrics = zeros(bb_over_sampling-1, 1);
-    rx_signals_downsampled = zeros(bb_over_sampling-1, round(rx_signal_downsampled/bb_over_sampling));
+    rx_signals_downsampled = zeros(bb_over_sampling-1, round(length(rx_signal_truncated)/bb_over_sampling));
     for downsamp_begin = 1:bb_over_sampling-1
+      
       %%%% Downsampling with RRC Filter
-      rx_signals_downsampled(downsamp_begin) = resample(rx_signal_truncated(downsamp_begin:end), 1, ...
+      rx_signal_downsampled = resample(rx_signal_truncated(downsamp_begin:end), 1, ...
                                                         bb_over_sampling, rx_bb_rrc); 
       %%%% Sample normalization after filter
-      rx_signals_downsampled(downsamp_begin) = rx_signals_downsampled(downsamp_begin) ...
-                                               / sqrt(var(rx_signals_downsampled(downsamp_begin)));
-      %%%% KMeans as a metric of how good the constellation is from the chosen downsamp_begin delay
-      [~, constellation_centroids] = kmeans(rx_signals_downsampled(downsamp_begin), ...
-                                            pluto_configs.signal.modulated.modulation.size);
+      rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
 
-      if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
-        constellation_points = qammod(1:pluto_configs.signal.modulated.modulation.size, ...
-                                      pluto_configs.signal.modulated.modulation.size, ...
-                                      "UnitAveragePower", true);
-      end
-      %%% From the Centroids, find the closest position they are from the constellation points
-      for ii = 1:pluto_configs.signal.modulated.modulation.size
-        centroid_diff = Inf;
-        for jj = 1:pluto_configs.signal.modulated.modulation.size
-          centroid_diff = min(centroid_diff, ...
-                          abs(constellation_centroids(ii) - constellation_points(jj)));
-        end
-        distance_metrics(downsamp_begin) = centroid_diff + distance_metric;
-      end
+      %%% From the constellation_points, find the closest position of each
+      %%% constellation point, and get the variance of the distances
+      rx_signal_downsampled_vec = [real(rx_signal_downsampled), imag(rx_signal_downsampled)];
+      [~, distances_from_constellation_point] = knnsearch(constellation_points_vec, rx_signal_downsampled_vec);
+      rx_signals_downsampled(downsamp_begin, :) = rx_signal_downsampled;
+      distance_metrics(downsamp_begin) = var(distances_from_constellation_point);      
     end
     %%% Get the best delay downsampled signal based on the kmeans metric
     [~, best_delay] = min(distance_metrics);
-    rx_signal_downsampled = rx_signals_downsampled(best_delay);
+    rx_signal_downsampled = rx_signals_downsampled(best_delay, :);
     %%%% Message Demodulation
+    disp("Constelation demodulation...");
     if strcmpi(pluto_configs.signal.modulated.modulation.mod, "QAM")
       disp("QAM Demodulation...");
       rx_message = qamdemod(rx_signal_downsampled, ...
@@ -311,7 +326,7 @@ if pluto_configs.rx.enable
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                Data Plots and Performances          %%%
+%%%                Data Plots                           %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if pluto_configs.plot.spectrum
@@ -320,7 +335,11 @@ if pluto_configs.plot.spectrum
   fullband_spectrum   = true;
 
   if pluto_configs.tx.enable 
-    plot_spectrum(tx_signal, window_number,...
+    tx_signal_plot = tx_signal;
+    if pluto_configs.sync.enable
+        tx_signal_plot = tx_signal_plot(length(sync_section):end);
+    end
+    plot_spectrum(tx_signal_plot, window_number,...
                pluto_configs.general.bb_sample_rate, lineSpec_index, fullband_spectrum);
     title('TX Digital Complex recombined signal')
 
@@ -336,7 +355,11 @@ elseif pluto_configs.tx.enable || pluto_configs.rx.enable
   figure();
   if pluto_configs.tx.enable 
     subplot(3,1,1);
-    plot(abs(tx_signal));
+    tx_signal_plot = tx_signal;
+    if pluto_configs.sync.enable
+        tx_signal_plot = tx_signal_plot(length(sync_section):end);
+    end
+    plot(abs(tx_signal_plot));
   end
   if pluto_configs.rx.enable
     subplot(3,1,2);
@@ -365,6 +388,31 @@ if pluto_configs.rx.enable
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                Performances                         %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if pluto_configs.performace.snr
+  if pluto_configs.signal.raw.enable
+    if length(bined_harmonics) > 1
+        disp("SNR for raw signal is only supported for a single harmonic");
+        assert(0);
+    end
+    rx_signal_bin = round((bined_harmonics/pluto_configs.general.bb_sample_rate) * pluto_configs.signal.raw.harmonics.samples);
+    rx_signal_bandwidth = round((pluto_configs.signal.raw.harmonics.width/pluto_configs.general.bb_sample_rate) * pluto_configs.signal.raw.harmonics.samples);
+    rx_usable_bandwidth = round((pluto_configs.signal.raw.usable_band/pluto_configs.general.bb_sample_rate) * pluto_configs.signal.raw.harmonics.samples);
+    
+    rx_signal_band = rx_signal_bin-rx_signal_bandwidth/2:rx_signal_bin+rx_signal_bandwidth/2;
+    rx_usable_band = rx_signal_bin-rx_usable_bandwidth/2:rx_signal_bin+rx_usable_bandwidth/2;
+    rx_signal_psd = PSD(rx_signal_truncated);
+    rx_signal_power = sum(rx_signal_psd(rx_signal_band));
+    rx_noise_power = sum(rx_signal_psd(rx_usable_band)) - rx_signal_power;
+    rx_snr = rx_signal_power / rx_noise_power;
+    rx_snr_db = 10*log10(rx_snr);
+    fprintf("SNR = %.2f (dB)\n", rx_snr_db);
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                     Cleanup                         %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -373,7 +421,7 @@ if pluto_configs.tx.enable
   if ~pluto_configs.rx.enable
     while true
       input_str = input("Stop Transmission? (y/n): ", 's');
-      if strcmpi(input_str, 'y')
+      if strcmpi(input_str, 'y') 
         break;
       end
     end
@@ -389,4 +437,13 @@ end
 if pluto_configs.rx.enable 
   disp("Releasing RX...");
   release(rx_sdr);
+end
+
+
+function signalPSD = PSD(signal)
+  Nsignal = length(signal);
+  win     = blackman(Nsignal);
+  U = (1/length(win))*sum(abs(win).^2);
+  win = sqrt(1/U)*win/length(win);
+  signalPSD = abs(fft(signal(:).*win(:))).^2;
 end
