@@ -292,6 +292,12 @@ if pluto_configs.rx.enable
     %%%%% Attempts to fix the delay for the symbols
     distance_metrics = zeros(bb_over_sampling-1, 1);
     rx_signals_downsampled = zeros(bb_over_sampling-1, round(length(rx_signal_truncated)/bb_over_sampling));
+    %%%%% Create the symbol synchronizer object 
+    symbolSyncer = comm.SymbolSynchronizer( ...
+                   SamplesPerSymbol=bb_over_sampling, ...
+                   NormalizedLoopBandwidth=0.01, ...
+                   DampingFactor=1.0, ...
+                   TimingErrorDetector='Early-Late (non-data-aided)');
     for downsamp_begin = 1:bb_over_sampling-1
       
       %%%% Downsampling with RRC Filter
@@ -299,12 +305,18 @@ if pluto_configs.rx.enable
                                                         bb_over_sampling, rx_bb_rrc); 
       %%%% Sample normalization after filter
       rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
+    
+      %%%% Account for symbol timing clock skewing
+      rx_signal_downsampled_synced = symbolSyncer(rx_signal_downsampled);
 
+      disp("Finding best delay on samples for demodulation...");
       %%% From the constellation_points, find the closest position of each
       %%% constellation point, and get the variance of the distances
-      rx_signal_downsampled_vec = [real(rx_signal_downsampled), imag(rx_signal_downsampled)];
-      [~, distances_from_constellation_point] = knnsearch(constellation_points_vec, rx_signal_downsampled_vec);
-      rx_signals_downsampled(downsamp_begin, :) = rx_signal_downsampled;
+      rx_signal_downsampled_vec = [real(rx_signal_downsampled_synced), ...
+                                   imag(rx_signal_downsampled_synced)];
+      [~, distances_from_constellation_point] = knnsearch(constellation_points_vec, ...
+                                                          rx_signal_downsampled_vec);
+      rx_signals_downsampled(downsamp_begin, :) = rx_signal_downsampled_synced;
       distance_metrics(downsamp_begin) = var(distances_from_constellation_point);      
     end
     %%% Get the best delay downsampled signal based on the kmeans metric
