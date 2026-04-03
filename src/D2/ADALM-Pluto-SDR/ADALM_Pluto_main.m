@@ -35,14 +35,14 @@ pluto_configs.rx.bb_rrc.symbol_span = 25;
 %%%%% Signal Config %%%%% 
 
 % Raw Signal Config
-pluto_configs.signal.raw.enable = true;
+pluto_configs.signal.raw.enable = false;
 pluto_configs.signal.raw.harmonics.frequencies = [6.12e6];
 pluto_configs.signal.raw.harmonics.width = 0.07e6;
 pluto_configs.signal.raw.usable_band = 0.15e6;
 pluto_configs.signal.raw.harmonics.samples = 1e5; % Samples
 
 % Modulated Message Config
-pluto_configs.signal.modulated.enable = false;
+pluto_configs.signal.modulated.enable = true;
 pluto_configs.signal.modulated.symbol_rate = 3e6;
 pluto_configs.signal.modulated.modulation.mod = "QAM";  
 pluto_configs.signal.modulated.modulation.size = 16;  
@@ -58,15 +58,14 @@ rand_message = randi(rand_message_range, signal_length, 1);
 
 pluto_configs.signal.modulated.message = rand_message;
 
-
 %%%%% Plot Config %%%%% 
 pluto_configs.plot.spectrum = true;
 pluto_configs.plot.sync = true;
 
 %%%%% Perfomances Display Config %%%%% 
-pluto_configs.performace.snr = true;
-pluto_configs.performace.ser = false;
-pluto_configs.performace.ber = false;
+pluto_configs.performace.snr = false;
+pluto_configs.performace.ser = true;
+pluto_configs.performace.ber = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                SDR Configuration                    %%%
@@ -391,7 +390,7 @@ end
 %%%                Performances                         %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if pluto_configs.performace.snr
+if pluto_configs.performace.snr && pluto_configs.rx.enable
   if pluto_configs.signal.raw.enable
     if length(bined_harmonics) > 1
         disp("SNR for raw signal is only supported for a single harmonic");
@@ -409,6 +408,27 @@ if pluto_configs.performace.snr
     rx_snr = rx_signal_power / rx_noise_power;
     rx_snr_db = 10*log10(rx_snr);
     fprintf("SNR = %.2f (dB)\n", rx_snr_db);
+  end
+end
+
+if (pluto_configs.performace.ser || pluto_configs.performace.ber) ...
+   && pluto_configs.rx.enable && pluto_configs.tx.enable
+  if pluto_configs.signal.modulated.enable
+      symbol_diff = sum(rx_message ~= pluto_configs.signal.modulated.message');
+      rx_ser = symbol_diff / length(rx_message);
+      if pluto_configs.performace.ser
+        fprintf("SER = %.2f\n", rx_ser);
+      end
+      bits_per_symbol = log2(pluto_configs.signal.modulated.modulation.size);
+      rx_message_bin = dec2bin(rx_message, bits_per_symbol);
+      tx_message_bin = dec2bin(pluto_configs.signal.modulated.message', bits_per_symbol);
+
+      bit_diff = sum(rx_message_bin ~= tx_message_bin, "all");
+      rx_ber = bit_diff / (length(rx_message_bin) * bits_per_symbol);
+      if pluto_configs.performace.ber
+        fprintf("BER = %.2f\n", rx_ber);
+      end
+
   end
 end
 
@@ -438,7 +458,6 @@ if pluto_configs.rx.enable
   disp("Releasing RX...");
   release(rx_sdr);
 end
-
 
 function signalPSD = PSD(signal)
   Nsignal = length(signal);
