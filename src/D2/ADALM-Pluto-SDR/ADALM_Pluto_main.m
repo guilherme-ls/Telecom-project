@@ -16,7 +16,6 @@ pluto_configs.sync.enable = true;
 pluto_configs.sync.samples = 13; % Samples in the frame
 pluto_configs.sync.length = 13; % length of the barker sequence 
 pluto_configs.sync.coarse.frequency_resolution = 10; 
-pluto_configs.sync.threshold = 0.6; % [0, 1]
 
 %%%%% TX Config %%%%% 
 pluto_configs.tx.enable = true;  
@@ -287,22 +286,32 @@ if pluto_configs.rx.enable
       sync_section_thr = pluto_configs.sync.threshold*sum(abs(sync_section_symbols).^2); 
       preamble_det = comm.PreambleDetector( ...
                     Preamble=sync_section_symbols, ...
-                    Threshold=sync_section_thr, ...
-                    Detections='First');
-      %% Find where the preamble is, don't care about phase differences
-      preamble_idx = preamble_det(abs(rx_signal_fined_synced));
+                    Threshold=3, ...
+                    Detections='All');
+
+      %% Only search for the preamble on the first half of the samples
+      [~, detmet] = preamble_det(rx_signal_fined_synced(1:end/2));
+      %% Use the threshold with the highest correlation
+      preamble_det.Threshold = max(detmet);
+      [preamble_idx, ~] = preamble_det(rx_signal_fined_synced);
+      if numbel(preamble_idx) < 1 
+        disp("Couldn't find preamble! Using the start as the preamble index...");
+        preamble_idx = 1;
+      elseif numbel(preamble_idx) > 1
+        disp("Found multiple preambles! Using the first found...");
+        preamble_idx = preamble_idx(1);
+      end
       
       disp("Alignment using sync section...");
       message_length = length(pluto_configs.signal.modulated.message);
-      rx_signal_aligned = rx_signal_fined_synced(preamble_idx - length(sync_section_symbols):end);
+      rx_signal_aligned = rx_signal_fined_synced(preamble_idx - length(sync_section_symbols) + 1:end);
       rx_signal_aligned = rx_signal_aligned(1:length(sync_section_symbols) + message_length);
       %%%% Preamble Phase Compensation
       disp("Preamble phase compensation...");
-      rx_signal_phase_offset = angle(sync_section_symbols .* ...
-                               conj(rx_signal_aligned(1:length(sync_section_symbols))));
-      rx_signal_phase_offset_est = mean(rx_signal_phase_offset);
-      fprintf("Phase offset of %.2f degrees\n", rad2deg(rx_signal_phase_offset_est));
-      rx_signal_in_phase = exp(1j * rx_signal_phase_offset_est) * rx_signal_aligned; 
+      rx_signal_phase_offset = angle(mean(sync_section_symbols .* ...
+                               conj(rx_signal_aligned(1:length(sync_section_symbols)))));
+      fprintf("Phase offset of %.2f degrees\n", rad2deg(rx_signal_phase_offset));
+      rx_signal_in_phase = exp(1j * rx_signal_phase_offset) * rx_signal_aligned; 
       %%%% Removal of preamble from message 
       disp("Preamble removal...");
       rx_signal_symbols = rx_signal_in_phase(pluto_configs.sync.length+1:end);
