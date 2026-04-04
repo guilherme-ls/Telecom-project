@@ -253,24 +253,9 @@ if pluto_configs.rx.enable
                 SampleRate=pluto_configs.general.bb_sample_rate, ...
                 FrequencyResolution=pluto_configs.sync.coarse.frequency_resolution, ...
                 Modulation=pluto_configs.signal.modulated.modulation.mod);
-      %%%% Preamble Detection
-      disp("Preamble detection...");
-      barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
-                               SamplesPerFrame=pluto_configs.sync.samples);
-      sync_section = (1 + barker()) / 2;
-      sync_section_thr = pluto_configs.sync.threshold*sum(abs(sync_section).^2); 
-      preamble_det = comm.PreambleDetector( ...
-                    Preamble=sync_section, ...
-                    Threshold=sync_section_thr, ...
-                    Detections='First');
-      preamble_idx = preamble_det(rx_signal_rsm_norm);
-      
-      disp("Alignment using sync section...");
-      rx_signal_aligned = rx_signal_rsm_norm(preamble_idx - length(sync_section):end);
-      rx_signal_aligned = rx_signal_aligned(1:rx_n_samples/2);
       %%%% Coarse Frequency Compensation
       disp("Coarse frequency compensation...");
-      rx_signal_coarsed_synced = coarse(rx_signal_aligned);
+      rx_signal_coarsed_synced = coarse(rx_signal_rsm_norm);
       rx_signal_samples = rx_signal_coarsed_synced;
     end
 
@@ -291,13 +276,33 @@ if pluto_configs.rx.enable
       %%%% Fine Frequency Compensation
       disp("Fine frequency compensation...");
       rx_signal_fined_synced = fine(rx_signal_downsampled); 
+      %%%% Preamble Detection
+      disp("Preamble detection...");
+      barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
+                               SamplesPerFrame=pluto_configs.sync.samples);
+      sync_section = (1 + barker()) / 2;
+      sync_section_symbols = qammod(sync_section, ...
+                           pluto_configs.signal.modulated.modulation.size, ...
+                           "UnitAveragePower", true);
+      sync_section_thr = pluto_configs.sync.threshold*sum(abs(sync_section_symbols).^2); 
+      preamble_det = comm.PreambleDetector( ...
+                    Preamble=sync_section_symbols, ...
+                    Threshold=sync_section_thr, ...
+                    Detections='First');
+      %% Find where the preamble is, don't care about phase differences
+      preamble_idx = preamble_det(abs(rx_signal_fined_synced));
+      
+      disp("Alignment using sync section...");
+      message_length = length(pluto_configs.signal.modulated.message);
+      rx_signal_aligned = rx_signal_fined_synced(preamble_idx - length(sync_section_symbols):end);
+      rx_signal_aligned = rx_signal_aligned(1:length(sync_section_symbols) + message_length);
       %%%% Preamble Phase Compensation
       disp("Preamble phase compensation...");
-      rx_signal_phase_offset = angle(sync_section .* ...
-                               conj(rx_signal_fined_synced(1:pluto_configs.sync.length)));
+      rx_signal_phase_offset = angle(sync_section_symbols .* ...
+                               conj(rx_signal_aligned(1:length(sync_section_symbols))));
       rx_signal_phase_offset_est = mean(rx_signal_phase_offset);
       fprintf("Phase offset of %.2f degrees\n", rad2deg(rx_signal_phase_offset_est));
-      rx_signal_in_phase = exp(1j * rx_signal_phase_offset_est) * rx_signal_fined_synced; 
+      rx_signal_in_phase = exp(1j * rx_signal_phase_offset_est) * rx_signal_aligned; 
       %%%% Removal of preamble from message 
       disp("Preamble removal...");
       rx_signal_symbols = rx_signal_in_phase(pluto_configs.sync.length+1:end);
