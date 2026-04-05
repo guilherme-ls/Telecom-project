@@ -18,16 +18,16 @@ pluto_configs.sync.length = 13; % length of the barker sequence
 pluto_configs.sync.coarse.frequency_resolution = 10; 
 
 %%%%% TX Config %%%%% 
-pluto_configs.tx.enable = true;  
+pluto_configs.tx.enable = false;  
 pluto_configs.tx.automatic_emmision = true;
 pluto_configs.tx.gain = -10; % dB 
 pluto_configs.tx.dac.scale_factor = 0.75; % [0, 1]
 
 %%%%% RX Config %%%%% 
-pluto_configs.rx.enable = false;
+pluto_configs.rx.enable = true;
 pluto_configs.rx.automatic_reception = true;  
 pluto_configs.rx.gain.manual = true;
-pluto_configs.rx.gain.value = 40;
+pluto_configs.rx.gain.value = 10;
 pluto_configs.rx.bb_rrc.roll_off = 0.25;
 pluto_configs.rx.bb_rrc.symbol_span = 25;
 
@@ -59,7 +59,7 @@ pluto_configs.signal.modulated.message = rand_message;
 
 %%%%% Plot Config %%%%% 
 pluto_configs.plot.spectrum = true;
-pluto_configs.plot.sync = false;
+pluto_configs.plot.sync = true;
 
 %%%%% Perfomances Display Config %%%%% 
 pluto_configs.performace.snr = true;
