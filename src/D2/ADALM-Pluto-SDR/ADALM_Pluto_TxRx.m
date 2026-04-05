@@ -271,7 +271,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if pluto_configs.plot.spectrum
-  window_number       = 1;
+  window_number       = 0;
   lineSpec_index      = 1;
   fullband_spectrum   = true;
 
@@ -293,7 +293,7 @@ if pluto_configs.plot.spectrum
     title('Receiver complex recombined output')
   end
 elseif pluto_configs.tx.enable || pluto_configs.rx.enable 
-  figure();
+  figure(1);
   if pluto_configs.tx.enable 
     subplot(3,1,1);
     tx_signal_plot = tx_signal;
@@ -316,7 +316,7 @@ end
 
 if pluto_configs.rx.enable 
   if pluto_configs.signal.modulated.enable
-    figure();
+    figure(2);
     if pluto_configs.tx.enable
       subplot(1,2,1);
       plot(qam_symbols,'d');
