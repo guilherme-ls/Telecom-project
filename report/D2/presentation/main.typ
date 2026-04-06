@@ -2,8 +2,7 @@
 
 #show: slides.with(
   title: "Radio-frequency system and hardware modeling", // Required
-  subtitle: "Performance Analysis of a realistic
-Cloud Radio Access Network (C-RAN)",
+  subtitle: "Performance Analysis of a realistic Cloud Radio Access Network (C-RAN)",
   date: "2025-2026",
   authors: (
     "LOUROSA RECH Bernardo",
