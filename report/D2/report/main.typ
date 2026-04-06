@@ -163,22 +163,18 @@ Cloud Radio Access Network (C-RAN)",
       stroke: 0.6pt,
 
       table.header(
-        [],
-        [AD9363],
-        [ADALM Pluto],
+        [],[AD9363],[ADALM Pluto],
       ),
 
       table.hline(),
 
       [Transmitters],
-      [$2$],
-      [$1$],
+      [$2$],[$1$],
 
       table.hline(),
 
       [Receivers],
-      [2],
-      [1],
+      [2],[1],
 
       table.hline(),
 
@@ -193,14 +189,12 @@ Cloud Radio Access Network (C-RAN)",
       table.hline(),
 
       [Transmitted Power],
-      [$7.5 "dBm"$],
-      [$7 "dBm"$],
+      [$7.5 "dBm"$],[$7 "dBm"$],
 
       table.hline(),
 
       [Received Power],
-      [?],
-      [?],
+      [?],[?],
 
       table.hline(),
     ),
@@ -213,6 +207,7 @@ Cloud Radio Access Network (C-RAN)",
   #create-pow-figure("data/tinySA/TWO-TONE.csv", [titutol], [algo])
   #create-pow-figure("data/tinySA/TWO-PA.csv", [titutol], [algo])
   #create-pow-figure("data/tinySA/MOD-10.csv", [titutol], [algo])
+  #create-pow-figure("data/tinySA/MOD-20.csv", [titutol], [algo])
 
 == LNA Measurement
 
