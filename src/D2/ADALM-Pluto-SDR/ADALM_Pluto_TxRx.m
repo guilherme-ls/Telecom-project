@@ -128,13 +128,6 @@ if pluto_configs.rx.enable
     disp("Aborting...");
     assert(0);
   end
-  %%%% Clock Synchronization Section
-  if pluto_configs.sync.enable 
-    disp("Syncing enabled, adding the synchronization section samples to collect...");
-    rx_n_samples = rx_n_samples + 2 * (pluto_configs.sync.preamble.size ...
-                                    +  pluto_configs.sync.size ...
-                                    +  pluto_configs.sync.epilogue.size);
-  end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                Transmission and Reception           %%%
@@ -183,10 +176,11 @@ if pluto_configs.rx.enable
       coarse = comm.CoarseFrequencyCompensator( ...
                 SampleRate=pluto_configs.general.bb_sample_rate, ...
                 FrequencyResolution=pluto_configs.sync.coarse.frequency_resolution, ...
+                SamplesPerSymbol=10, ...
                 Modulation=pluto_configs.signal.modulated.modulation.mod);
       %%%% Coarse Frequency Compensation
       disp("Coarse frequency compensation...");
-      rx_signal_coarsed_synced = coarse(rx_signal_rsm_norm);
+      [rx_signal_coarsed_synced, freq_est] = coarse(rx_signal_rsm_norm);
       rx_signal_samples = rx_signal_coarsed_synced;
     end
 
@@ -215,7 +209,6 @@ if pluto_configs.rx.enable
       sync_section_symbols = qammod(sync_section, ...
                            pluto_configs.signal.modulated.modulation.size, ...
                            "UnitAveragePower", true);
-      sync_section_thr = pluto_configs.sync.threshold*sum(abs(sync_section_symbols).^2); 
       preamble_det = comm.PreambleDetector( ...
                     Preamble=sync_section_symbols, ...
                     Threshold=3, ...
@@ -225,11 +218,11 @@ if pluto_configs.rx.enable
       [~, detmet] = preamble_det(rx_signal_fined_synced(1:end/2));
       %% Use the threshold with the highest correlation
       preamble_det.Threshold = max(detmet);
-      [preamble_idx, ~] = preamble_det(rx_signal_fined_synced);
-      if numbel(preamble_idx) < 1 
+      [preamble_idx, ~] = preamble_det(rx_signal_fined_synced(1:end/2));
+      if numel(preamble_idx) < 1 
         disp("Couldn't find preamble! Using the start as the preamble index...");
         preamble_idx = 1;
-      elseif numbel(preamble_idx) > 1
+      elseif numel(preamble_idx) > 1
         disp("Found multiple preambles! Using the first found...");
         preamble_idx = preamble_idx(1);
       end
@@ -270,8 +263,9 @@ end
 %%%                Data Plots                           %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+window_number       = 1;
+
 if pluto_configs.plot.spectrum
-  window_number       = 0;
   lineSpec_index      = 1;
   fullband_spectrum   = true;
 
@@ -284,7 +278,7 @@ if pluto_configs.plot.spectrum
                pluto_configs.general.bb_sample_rate, lineSpec_index, fullband_spectrum);
     title('TX Digital Complex recombined signal')
 
-    window_number       = window_number+1;
+    window_number = window_number+1;
   end
 
   if pluto_configs.rx.enable 
@@ -293,20 +287,21 @@ if pluto_configs.plot.spectrum
     title('Receiver complex recombined output')
   end
 elseif pluto_configs.tx.enable || pluto_configs.rx.enable 
-  figure(1);
+  figure(window_number);
+  window_number = window_number+1;
   if pluto_configs.tx.enable 
     subplot(3,1,1);
     tx_signal_plot = tx_signal;
-    if pluto_configs.sync.enable
-        tx_signal_plot = tx_signal_plot(length(sync_section):end);
-    end
-    plot(abs(tx_signal_plot));
+    %if pluto_configs.sync.enable
+    %    tx_signal_plot = tx_signal_plot(length(sync_section):end);
+    %end
+    plot(abs(qam_symbols));
   end
   if pluto_configs.rx.enable
-    subplot(3,1,2);
-    plot(abs(rx_signal_rsm_norm));
+    %subplot(3,1,2);
+    %plot(abs(rx_signal_rsm_norm(1:end/2)));
     subplot(3,1,3);
-    plot(abs(rx_signal_truncated));
+    plot(abs(rx_signal_in_phase));
   end
   title('Aligned signals');
   xlabel('Sample index');
@@ -315,15 +310,16 @@ end
 
 
 if pluto_configs.rx.enable 
-  if pluto_configs.signal.modulated.enable
-    figure(2);
+  if pluto_configs.signal.modulated.enable 
+    figure(window_number);
+    window_number = window_number+1;
     if pluto_configs.tx.enable
       subplot(1,2,1);
       plot(qam_symbols,'d');
       title("Constellation at TX");
     end
     subplot(1,2,2);
-    plot(rx_signal_downsampled, 'd');
+    plot(rx_signal_symbols, 'd');
     title("Constellation at RX");
   end
 end
