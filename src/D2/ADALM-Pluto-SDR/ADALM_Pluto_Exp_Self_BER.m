@@ -62,6 +62,8 @@ pluto_configs.signal.modulated.message = rand_message;
 %%%%% Plot Config %%%%% 
 pluto_configs.plot.spectrum = false;
 pluto_configs.plot.sync = false;
+pluto_configs.plot.constelation = false;
+pluto_configs.plot.samples = false;
 
 %%%%% Perfomances Display Config %%%%% 
 pluto_configs.performace.snr = false;
@@ -88,9 +90,11 @@ gain_val = zeros(1, length(num_of_points));
 fixed_dac_ser = zeros(1, length(num_of_points));
 fixed_dac_ber = zeros(1, length(num_of_points));
 
+disp("Fixed DAC Scale Factor");
 for ii = num_of_points
   lerp_coef = (ii - num_of_points(1)) / (num_of_points(end) - num_of_points(1));
   pluto_configs.tx.gain = (gain_max - gain_min) * lerp_coef + gain_min; % dB
+  fprintf("Gain %.2f dB\n", pluto_configs.tx.gain);
 
   gain_val(ii) = pluto_configs.tx.gain;
   ADALM_Pluto_TxRx
@@ -133,7 +137,7 @@ title('Fixed DAC Scale Factor - SER');
 xlabel('Gain (dB)');
 ylabel('SER');
 
-subplot(2,2,1);
+subplot(2,1,2);
 plot(gain_val, fixed_dac_ber);
 title('Fixed DAC Scale Factor - BER');
 
@@ -149,7 +153,7 @@ title('Fixed TX Gain - SER');
 xlabel('DAC Scale Factor (dBFS)');
 ylabel('SER');
 
-subplot(2,2,1);
+subplot(2,1,2);
 plot(dac_scale_val, fixed_gain_ber);
 title('Fixed TX Gain - BER');
 

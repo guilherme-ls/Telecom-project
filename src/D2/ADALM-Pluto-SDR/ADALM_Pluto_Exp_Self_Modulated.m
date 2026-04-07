@@ -62,6 +62,8 @@ pluto_configs.signal.modulated.message = rand_message;
 %%%%% Plot Config %%%%% 
 pluto_configs.plot.spectrum = false;
 pluto_configs.plot.sync = true;
+pluto_configs.plot.constelation = true;
+pluto_configs.plot.samples = true;
 
 %%%%% Perfomances Display Config %%%%% 
 pluto_configs.performace.snr = true;

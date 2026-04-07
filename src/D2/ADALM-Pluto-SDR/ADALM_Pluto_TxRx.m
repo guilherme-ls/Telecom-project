@@ -206,6 +206,11 @@ if pluto_configs.rx.enable
       %%%% Symbol Synchronization
       disp("Symbol synchronization...");
       rx_signal_symbol_synced = symbolSync(rx_signal_downsampled);
+      if length(rx_signal_symbol_synced) < length(rx_signal_downsampled)/2
+        disp("Symbol synchronization failed! Too much noise!");
+        disp("Decimating received signal to have something...");
+        rx_signal_symbol_synced = resample(rx_signal_downsampled, 1, 2);
+      end
       %%%% Fine Frequency Compensation
       disp("Fine frequency compensation...");
       [rx_signal_fined_synced, phase_est] = fine(rx_signal_symbol_synced); 
@@ -295,7 +300,8 @@ if pluto_configs.plot.spectrum
                pluto_configs.general.bb_sample_rate, lineSpec_index, fullband_spectrum);
     title('Receiver complex recombined output')
   end
-elseif pluto_configs.tx.enable || pluto_configs.rx.enable 
+end
+if (pluto_configs.tx.enable || pluto_configs.rx.enable) && pluto_configs.plot.samples
   figure(window_number);
   window_number = window_number+1;
   if pluto_configs.tx.enable 
@@ -319,35 +325,36 @@ elseif pluto_configs.tx.enable || pluto_configs.rx.enable
   ylabel('Signal envelope');
 end
 
+if pluto_configs.plot.constelation
+  if pluto_configs.rx.enable 
+    if pluto_configs.signal.modulated.enable 
 
-if pluto_configs.rx.enable 
-  if pluto_configs.signal.modulated.enable 
+      figure(window_number);
+      window_number = window_number+1;
+      subplot(2,2,1);
+      plot(rx_signal_rsm_norm, 'd');
+      title("rx_signal_rsm_norm");
+      subplot(2,2,2);
+      plot(rx_signal_coarsed_synced, 'd');
+      title("rx_signal_coarsed_synced");
+      subplot(2,2,3);
+      plot(rx_signal_fined_synced, 'd');
+      title("rx_signal_fined_synced");      
+      subplot(2,2,4);
+      plot(rx_signal_symbol_synced, 'd');
+      title("rx_signal_symbol_synced");
 
-    figure(window_number);
-    window_number = window_number+1;
-    subplot(2,2,1);
-    plot(rx_signal_rsm_norm, 'd');
-    title("rx_signal_rsm_norm");
-    subplot(2,2,2);
-    plot(rx_signal_coarsed_synced, 'd');
-    title("rx_signal_coarsed_synced");
-    subplot(2,2,3);
-    plot(rx_signal_fined_synced, 'd');
-    title("rx_signal_fined_synced");      
-    subplot(2,2,4);
-    plot(rx_signal_symbol_synced, 'd');
-    title("rx_signal_symbol_synced");
-
-    figure(window_number);
-    window_number = window_number+1;
-    if pluto_configs.tx.enable
-      subplot(2,1,1);
-      plot(qam_symbols,'d');
-      title("Constellation at TX");
+      figure(window_number);
+      window_number = window_number+1;
+      if pluto_configs.tx.enable
+        subplot(2,1,1);
+        plot(qam_symbols,'d');
+        title("Constellation at TX");
+      end
+      subplot(2,1,2);
+      plot(rx_signal_symbols, 'd');
+      title("Constellation at RX");
     end
-    subplot(2,1,2);
-    plot(rx_signal_symbols, 'd');
-    title("Constellation at RX");
   end
 end
 
