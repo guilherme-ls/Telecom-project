@@ -58,6 +58,11 @@
         mark-size: 10pt,
         stroke: (thickness: 1pt)
       ),
+      lq.plot(
+        x, x => -10.1,
+        mark-size: 0pt,
+        stroke: (thickness: 1pt, dash: "dashed")
+      ),
 
       title: tit,
 
@@ -111,6 +116,20 @@
 
 #create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA, with the line loss.], [Input (dB)], [Output (dB)])
 #create-pa-gain-figure("data/ZX60_V62.csv", [ZX60_V62 - Gain/Power], [Curve of the measured Gain/Power for the ZX60_V62 PA, with the line loss.], [Power (dB)], [Gain (dB)])
+
+#table(
+  columns: 3,
+  [*Performances*],[*Value*],[*Unit*],
+  [$P_(1"dB")$],[$-9$],[dB],
+  [$V$],[$5$],[V],
+  [$I$],[$89$],[mA],
+  [$P$],[$0.445$],[W],
+  [$eta_("PAE")$],[$0.5$],[],
+  [$eta_("DE")$],[$0.5$],[],
+)
+
+
+
 / *Term*: Definition
 
 == Pluto Self-Communication
