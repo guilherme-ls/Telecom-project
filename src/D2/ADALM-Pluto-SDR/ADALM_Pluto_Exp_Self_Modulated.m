@@ -23,13 +23,13 @@ pluto_configs.sync.coarse.frequency_resolution = 100;
 pluto_configs.tx.enable = true;  
 pluto_configs.tx.automatic_emmision = true;
 pluto_configs.tx.gain = -10; % dB 
-pluto_configs.tx.dac.scale_factor = 0.75; % [0, 1]
+pluto_configs.tx.dac.scale_factor = 0.01; % [0, 1]
 
 %%%%% RX Config %%%%% 
 pluto_configs.rx.enable = true;
 pluto_configs.rx.automatic_reception = true;  
 pluto_configs.rx.gain.manual = true;
-pluto_configs.rx.gain.value = 10;
+pluto_configs.rx.gain.value = 30;
 pluto_configs.rx.bb_rrc.roll_off = 0.25;
 pluto_configs.rx.bb_rrc.symbol_span = 25;
 

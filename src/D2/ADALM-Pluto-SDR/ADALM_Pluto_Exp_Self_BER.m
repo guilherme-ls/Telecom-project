@@ -74,7 +74,7 @@ pluto_configs.performace.ber = true;
 %%%            Call Experiment Script                   %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-num_of_points = 1:10;
+num_of_points = 1:20;
 gain_max = -10; %dB
 gain_min = -80; %dB
 

@@ -201,20 +201,19 @@ if pluto_configs.rx.enable
       fine = comm.CarrierSynchronizer( ...
                 DampingFactor=pluto_configs.sync.fine.damping_factor, ...
                 NormalizedLoopBandwidth=pluto_configs.sync.fine.loop_bw, ...
-                SamplesPerSymbol=1, ...
+                SamplesPerSymbol=2, ...
                 Modulation=pluto_configs.signal.modulated.modulation.mod);
-      %%%% Symbol Synchronization
-      disp("Symbol synchronization...");
-      rx_signal_symbol_synced = symbolSync(rx_signal_downsampled);
-      if length(rx_signal_symbol_synced) < length(rx_signal_downsampled)/2
-        disp("Symbol synchronization failed! Too much noise!");
-        disp("Decimating received signal to have something...");
-        rx_signal_symbol_synced = resample(rx_signal_downsampled, 1, 2);
-      end
       %%%% Fine Frequency Compensation
       disp("Fine frequency compensation...");
-      [rx_signal_fined_synced, phase_est] = fine(rx_signal_symbol_synced); 
-      rx_signal_fined_synced = rx_signal_symbol_synced;
+      [rx_signal_fined_synced, phase_est] = fine(rx_signal_downsampled); 
+      %%%% Symbol Synchronization
+      disp("Symbol synchronization...");
+      rx_signal_symbol_synced = symbolSync(rx_signal_fined_synced);
+      if length(rx_signal_symbol_synced) < length(rx_signal_fined_synced)/2
+        disp("Symbol synchronization failed! Too much noise!");
+        disp("Decimating received signal to have something...");
+        rx_signal_symbol_synced = resample(rx_signal_fined_synced, 1, 2);
+      end
       %%%% Preamble Detection
       disp("Preamble detection...");
       barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
@@ -229,10 +228,10 @@ if pluto_configs.rx.enable
                     Detections='All');
 
       %% Only search for the preamble on the first half of the samples
-      [~, detmet] = preamble_det(rx_signal_fined_synced(1:end/2));
+      [~, detmet] = preamble_det(rx_signal_symbol_synced(1:end/2));
       %% Use the threshold with the highest correlation
       preamble_det.Threshold = max(detmet);
-      [preamble_idx, ~] = preamble_det(rx_signal_fined_synced(1:end/2));
+      [preamble_idx, ~] = preamble_det(rx_signal_symbol_synced(1:end/2));
       if numel(preamble_idx) < 1 
         disp("Couldn't find preamble! Using the start as the preamble index...");
         preamble_idx = 1;
