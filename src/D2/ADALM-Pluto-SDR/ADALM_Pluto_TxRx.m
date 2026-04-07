@@ -181,26 +181,35 @@ if pluto_configs.rx.enable
       %%%% Coarse Frequency Compensation
       disp("Coarse frequency compensation...");
       [rx_signal_coarsed_synced, freq_est] = coarse(rx_signal_rsm_norm);
+      fprintf("Frequency offset of %.2f Hz\n", freq_est);
       rx_signal_samples = rx_signal_coarsed_synced;
     end
 
     %%%% Downsampling with RRC Filter
     disp("RRC Filter Downsampling...");
     rx_signal_downsampled = resample(rx_signal_samples, 1, ...
-                                     bb_over_sampling, rx_bb_rrc); 
+                                     bb_over_sampling/2, rx_bb_rrc); 
     %%%% Sample normalization after filter
     rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
     rx_signal_symbols = rx_signal_downsampled;
 
     if pluto_configs.sync.enable
+      symbolSync = comm.SymbolSynchronizer( ...
+                   TimingErrorDetector='Early-Late (non-data-aided)', ...
+                   SamplesPerSymbol=2);
+
       fine = comm.CarrierSynchronizer( ...
                 DampingFactor=pluto_configs.sync.fine.damping_factor, ...
                 NormalizedLoopBandwidth=pluto_configs.sync.fine.loop_bw, ...
                 SamplesPerSymbol=1, ...
                 Modulation=pluto_configs.signal.modulated.modulation.mod);
+      %%%% Symbol Synchronization
+      disp("Symbol synchronization...");
+      rx_signal_symbol_synced = symbolSync(rx_signal_downsampled);
       %%%% Fine Frequency Compensation
       disp("Fine frequency compensation...");
-      rx_signal_fined_synced = fine(rx_signal_downsampled); 
+      [rx_signal_fined_synced, phase_est] = fine(rx_signal_symbol_synced); 
+      rx_signal_fined_synced = rx_signal_symbol_synced;
       %%%% Preamble Detection
       disp("Preamble detection...");
       barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
@@ -290,7 +299,7 @@ elseif pluto_configs.tx.enable || pluto_configs.rx.enable
   figure(window_number);
   window_number = window_number+1;
   if pluto_configs.tx.enable 
-    subplot(3,1,1);
+    subplot(4,1,1);
     tx_signal_plot = tx_signal;
     %if pluto_configs.sync.enable
     %    tx_signal_plot = tx_signal_plot(length(sync_section):end);
@@ -298,9 +307,11 @@ elseif pluto_configs.tx.enable || pluto_configs.rx.enable
     plot(abs(qam_symbols));
   end
   if pluto_configs.rx.enable
-    %subplot(3,1,2);
-    %plot(abs(rx_signal_rsm_norm(1:end/2)));
-    subplot(3,1,3);
+    subplot(4,1,2);      
+    plot(abs(rx_signal_coarsed_synced));
+    subplot(4,1,3);
+    plot(abs(rx_signal_fined_synced));
+    subplot(4,1,4);
     plot(abs(rx_signal_in_phase));
   end
   title('Aligned signals');
@@ -311,14 +322,30 @@ end
 
 if pluto_configs.rx.enable 
   if pluto_configs.signal.modulated.enable 
+
+    figure(window_number);
+    window_number = window_number+1;
+    subplot(2,2,1);
+    plot(rx_signal_rsm_norm, 'd');
+    title("rx_signal_rsm_norm");
+    subplot(2,2,2);
+    plot(rx_signal_coarsed_synced, 'd');
+    title("rx_signal_coarsed_synced");
+    subplot(2,2,3);
+    plot(rx_signal_fined_synced, 'd');
+    title("rx_signal_fined_synced");      
+    subplot(2,2,4);
+    plot(rx_signal_symbol_synced, 'd');
+    title("rx_signal_symbol_synced");
+
     figure(window_number);
     window_number = window_number+1;
     if pluto_configs.tx.enable
-      subplot(1,2,1);
+      subplot(2,1,1);
       plot(qam_symbols,'d');
       title("Constellation at TX");
     end
-    subplot(1,2,2);
+    subplot(2,1,2);
     plot(rx_signal_symbols, 'd');
     title("Constellation at RX");
   end
