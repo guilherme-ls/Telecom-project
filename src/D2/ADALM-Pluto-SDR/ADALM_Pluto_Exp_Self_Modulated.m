@@ -65,8 +65,8 @@ pluto_configs.plot.sync = true;
 
 %%%%% Perfomances Display Config %%%%% 
 pluto_configs.performace.snr = true;
-pluto_configs.performace.ser = false;
-pluto_configs.performace.ber = false;
+pluto_configs.performace.ser = true;
+pluto_configs.performace.ber = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%            Call Experiment Script                   %%%

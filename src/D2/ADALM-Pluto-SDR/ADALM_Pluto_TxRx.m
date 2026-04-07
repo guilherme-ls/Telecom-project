@@ -383,7 +383,7 @@ end
 if (pluto_configs.performace.ser || pluto_configs.performace.ber) ...
    && pluto_configs.rx.enable && pluto_configs.tx.enable
   if pluto_configs.signal.modulated.enable
-      symbol_diff = sum(rx_message ~= pluto_configs.signal.modulated.message');
+      symbol_diff = sum(rx_message ~= pluto_configs.signal.modulated.message);
       rx_ser = symbol_diff / length(rx_message);
       if pluto_configs.performace.ser
         fprintf("SER = %.2f\n", rx_ser);

@@ -15,7 +15,9 @@ pluto_configs.general.filt_rf_bw = 20e6; % Hz
 pluto_configs.sync.enable = true;
 pluto_configs.sync.samples = 13; % Samples in the frame
 pluto_configs.sync.length = 13; % length of the barker sequence 
-pluto_configs.sync.coarse.frequency_resolution = 10; 
+pluto_configs.sync.fine.damping_factor = 0.707;
+pluto_configs.sync.fine.loop_bw = 0.01;
+pluto_configs.sync.coarse.frequency_resolution = 100; 
 
 %%%%% TX Config %%%%% 
 pluto_configs.tx.enable = true;  
