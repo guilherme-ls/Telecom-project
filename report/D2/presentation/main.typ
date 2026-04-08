@@ -284,13 +284,44 @@
   - Wireless Pluto to Pluto Communication 
 ])
 
+== TX Pre Processing
+
+1. Preamble addition
+  - Barker Sequence
+    - Sequence with high autocorrelation
+      - Makes it easy to find from random symbols in RX
+  
+2. RRC Filter 
+  - Upsampling of the signal
+  - Ensures the symbols don't "mix" with each other (reduce ISI)
+
 == RX Post Processing
 
-1. A 
-  - Ensures
-2. B
-  - Ensures
-3. C
-  - Ensures
+1. Coarse Frequency Compensation
+  - Operates over the whole symbol stream
+  - Helps with differences in the LO frequencies
+  - Tries to make the symbols fit into the expected constellation type (QAM)
+  - Internal PLL with PID
+  - Does *not* decimate the signal
+2. RRC Filter 
+  - Operates over the whole symbol stream after it is compensated
+  - Helps to shape the symbols back to what they are supposed to be 
+  - Might have bad output from unaligned symbols
+    - Loop over the different possible delays to ensure we use the best one 
+  - Decimates the signal
+3. Carrier Synchronization (Fine Frequency Compensation)
+  - Operates over the RRC decimated signal 
+  - Helps to compensate what the coarse compensation might have missed
+  - Tries to make the symbols fit into the expected constellation type (QAM)
+  - Internal PLL with PID
+  - Does *not* decimate the signal
+4. Symbol Synchronization
+  - Operates over the fine compensated symbols 
+  - Attempts even further to shape the symbols into the constellation 
+  - *Decimates* the signal
+5. Preamble Detection
+  - Helps us find the start of the message
+  - Helps us to align the message in the time domain
+  - The phase offset in the preamble tells us by how much the constellation is "rotated"
 
 
