@@ -76,6 +76,49 @@
   )
 }
 
+#let create-ser-ber-figure(file, tit, cap, ax_x) = {
+  let (x, ser, ber) = lq.load-txt(read(file))
+  figure(
+    grid(      
+      columns: 1,
+      gutter: 6pt,
+      lq.diagram(
+        height: 3cm,
+        width: 6cm,
+        lq.plot(
+          x, ser,
+          mark-size: 5pt,
+          stroke: (thickness: 1pt)
+        ),
+
+        //title: tit,
+
+        ylabel: [SER],
+        //xlabel: ax_x,
+        xaxis: (subticks: none),
+        legend: (position: left + bottom)
+      ),
+      lq.diagram(
+        height: 3cm,
+        width: 6cm,
+        lq.plot(
+          x, ber,
+          mark-size: 5pt,
+          stroke: (thickness: 1pt)
+        ),
+
+        //title: tit,
+
+        ylabel: [BER],
+        xlabel: ax_x,
+        xaxis: (subticks: none),
+        legend: (position: left + bottom)
+      ),
+    ),
+    caption: cap,
+  )
+}
+
 
 #show: slides.with(
   title: "Radio-frequency system and hardware modeling", // Required
@@ -117,17 +160,38 @@
 #create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA, with the line loss.], [Input (dB)], [Output (dB)])
 #create-pa-gain-figure("data/ZX60_V62.csv", [ZX60_V62 - Gain/Power], [Curve of the measured Gain/Power for the ZX60_V62 PA, with the line loss.], [Power (dB)], [Gain (dB)])
 
-#table(
-  columns: 3,
-  [*Performances*],[*Value*],[*Unit*],
-  [$P_(1"dB")$],[$-9$],[dB],
-  [$V$],[$5$],[V],
-  [$I$],[$89$],[mA],
-  [$P$],[$0.445$],[W],
-  [$eta_("PAE")$],[$0.5$],[],
-  [$eta_("DE")$],[$0.5$],[],
+#align(center + top,
+  grid(
+    columns: 2,
+    gutter:10%,
+    figure(
+      table(
+        columns: 3,
+        [*Performances*],[*Value*],[*Unit*],
+        [$P_(1"dB")$],[$-9$],[dB],
+        [$V$],[$5$],[V],
+        [$I$],[$89$],[mA],
+        [$P$],[$0.445$],[W],
+        [$eta_("PAE")$],[$0.5$],[],
+        [$eta_("DE")$],[$0.5$],[],
+      ),
+      caption: "Measured",
+    ),
+    figure(
+      table(
+        columns: 3,
+        [*Performances*],[*Value*],[*Unit*],
+        [$P_(1"dB")$],[$-9$],[dB],
+        [$V$],[$5$],[V],
+        [$I$],[$89$],[mA],
+        [$P$],[$0.445$],[W],
+        [$eta_("PAE")$],[$0.5$],[],
+        [$eta_("DE")$],[$0.5$],[],
+      ),
+      caption: "Datasheet",
+    ),
+  )
 )
-
 
 
 / *Term*: Definition
@@ -137,7 +201,15 @@
 #lorem(20)
 
 / *Term*: Definition
-
+#show figure.caption: set text(size: 8pt)
+#align(center + bottom,
+  grid(      
+    columns: (auto, auto),
+    gutter: 6pt,
+    create-ser-ber-figure("./data/exp_self__fixed-dac.csv", [A], [Full Scale at $-10 "dBFS"$ (and $G_"RX" = -10 "dB"$).], [Gain (dB)]),
+    create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [A], [Fixed Gain at $-10 "dB"$ (and $G_"RX" = -10 "dB"$).], [Full Scale (dBFS)])
+  )
+)
 == Pluto Communication Demo
 
 #lorem(20)
