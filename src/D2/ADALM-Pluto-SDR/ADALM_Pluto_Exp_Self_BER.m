@@ -1,6 +1,9 @@
 close all;
 clear;
 
+SAVE_TO_FILE = true;
+FILE_NAME_PREFIX = "exp_self_";
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%          Transmission Configurations                %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -160,5 +163,11 @@ title('Fixed TX Gain - BER');
 xlabel('DAC Scale Factor (dBFS)');
 ylabel('BER');
 
+if SAVE_TO_FILE
+  dac_file_name = sprintf("%s_%s.csv", FILE_NAME_PREFIX, "fixed-dac");
+  writematrix(dac_file_name, [gain_val', fixed_dac_ser', fixed_dac_ber']);
+  gain_file_name = sprintf("%s_%s.csv", FILE_NAME_PREFIX, "fixed-gain");
+  writematrix(gain_file_name, [dac_scale_val', fixed_gain_ser', fixed_gain_ber']);
+end
 
 
