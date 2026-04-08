@@ -6,9 +6,14 @@
   let (x, y, z) = lq.load-txt(read(file))
 
   let n = 0;
-  let ideal = while n < x.len() {
+  let input = while n < x.len() {
     n = n + 1
-    (x.at(n - 1) - 10.1, )
+    (x.at(n - 1) + 4.3, )
+  }
+  n = 0;
+  let output = while n < y.len() {
+    n = n + 1
+    (y.at(n - 1) + 30, )
   }
 
   figure(
@@ -17,14 +22,14 @@
       height: 6cm,
 
       lq.plot(
-        x, y,
+        input, output,
         mark-size: 5pt,
         mark: lq.marks.at("d"),
         stroke: (thickness: 1pt)
       ),
 
       lq.plot(
-        x, ideal,
+        input, x => x + 15.6,
         mark-size: 0pt,
         stroke: (thickness: 1pt, dash: "dashed")
       ),
@@ -44,9 +49,19 @@
 #let create-pa-gain-figure(file, tit, cap, ax_x, ax_y) = {
   let (x, y, z) = lq.load-txt(read(file))
   let n = 0;
+  let input = while n < x.len() {
+    n = n + 1
+    (x.at(n - 1) + 4.3, )
+  }
+  n = 0;
+  let output = while n < y.len() {
+    n = n + 1
+    (y.at(n - 1) + 30, )
+  }
+  n = 0;
   let gain = while n < x.len() {
     n = n + 1
-    (y.at(n - 1) - x.at(n - 1), )
+    (output.at(n - 1) - input.at(n - 1), )
   }
   figure(
     lq.diagram(
@@ -54,12 +69,12 @@
       height: 6cm,
 
       lq.plot(
-        x, gain,
+        input, gain,
         mark-size: 10pt,
         stroke: (thickness: 1pt)
       ),
       lq.plot(
-        x, x => -10.1,
+        input, x => 15.6, 
         mark-size: 0pt,
         stroke: (thickness: 1pt, dash: "dashed")
       ),
@@ -70,6 +85,67 @@
       xlabel: ax_x,
       xaxis: (subticks: none),
       legend: (position: left + bottom)
+    ),
+
+    caption: cap,
+  )
+}
+
+#let create-pa-efficience-figure(file, tit, cap, ax_x, ax_y, ax_y2) = {
+  let (x, y, z) = lq.load-txt(read(file))
+  let n = 0;
+  let input = while n < x.len() {
+    n = n + 1
+    (x.at(n - 1) + 4.3, )
+  }
+  n = 0;
+  let output = while n < y.len() {
+    n = n + 1
+    (y.at(n - 1) + 30, )
+  }
+  n = 0;
+  let power = while n < z.len() {
+    n = n + 1
+    (z.at(n - 1) * 5, )
+  }
+  n = 0;
+  let efficience-pae = while n < power.len() {
+    n = n + 1
+    ( ((calc.pow(10,output.at(n - 1)/10) - calc.pow(10,input.at(n - 1)/10))) / power.at(n - 1), )
+  }
+  n = 0;
+  let efficience-de = while n < power.len() {
+    n = n + 1
+    ( (calc.pow(10,output.at(n - 1)/10)) / power.at(n - 1), )
+  }
+  figure(
+    lq.diagram(
+      width: 12cm,
+      height: 6cm,      
+
+      lq.plot(
+        input, efficience-de,
+        mark-size: 5pt,
+        stroke: (thickness: 1pt),
+        label: ax_y
+      ),
+      lq.plot(
+        input, efficience-pae,
+        mark-size: 5pt,
+        stroke: (thickness: 1pt, dash: "dashed"),
+        label: ax_y2
+      ),
+      lq.yaxis(
+        position: right,
+        label: ax_y2,
+      ),
+
+      title: tit,
+
+      ylabel: ax_y,
+      xlabel: ax_x,
+      xaxis: (subticks: none),
+      legend: (position: left + top)
     ),
 
     caption: cap,
@@ -155,11 +231,9 @@
 
 == Power Amplifier Measurements
 
-#lorem(20)
-
-#create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA, with the line loss.], [Input (dB)], [Output (dB)])
-#create-pa-gain-figure("data/ZX60_V62.csv", [ZX60_V62 - Gain/Power], [Curve of the measured Gain/Power for the ZX60_V62 PA, with the line loss.], [Power (dB)], [Gain (dB)])
-
+#create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA.], [Input (dBm)], [Output (dBm)])
+#create-pa-gain-figure("data/ZX60_V62.csv", [ZX60_V62 - Gain/Power], [Curve of the measured Gain/Power for the ZX60_V62 PA.], [Power (dBm)], [Gain (dB)])
+#create-pa-efficience-figure("data/ZX60_V62.csv", [ZX60_V62 - $eta_("DE")$ and $eta_("PAE")$], [Curve of the measured $eta_("DE")$ and $eta_("PAE")$ for the ZX60_V62 PA.], [Power (dBm)], [$eta_("DE")$], [$eta_("PAE")$])
 #align(center + top,
   grid(
     columns: 2,
@@ -168,12 +242,11 @@
       table(
         columns: 3,
         [*Performances*],[*Value*],[*Unit*],
-        [$P_(1"dB")$],[$-9$],[dB],
+        [Gain],[$15.6$],[dB],
+        [$P_(1"dB")$],[$12$],[dBm],
         [$V$],[$5$],[V],
         [$I$],[$89$],[mA],
         [$P$],[$0.445$],[W],
-        [$eta_("PAE")$],[$0.5$],[],
-        [$eta_("DE")$],[$0.5$],[],
       ),
       caption: "Measured",
     ),
@@ -181,26 +254,19 @@
       table(
         columns: 3,
         [*Performances*],[*Value*],[*Unit*],
-        [$P_(1"dB")$],[$-9$],[dB],
+        [Gain],[$15.4$],[dB],
+        [$P_(1"dB")$],[$19$],[dBm],
         [$V$],[$5$],[V],
-        [$I$],[$89$],[mA],
-        [$P$],[$0.445$],[W],
-        [$eta_("PAE")$],[$0.5$],[],
-        [$eta_("DE")$],[$0.5$],[],
+        [$I$],[$82$],[mA],
+        [$P$],[$0.41$],[W],
       ),
       caption: "Datasheet",
     ),
   )
 )
 
-
-/ *Term*: Definition
-
 == Pluto Self-Communication
 
-#lorem(20)
-
-/ *Term*: Definition
 #show figure.caption: set text(size: 8pt)
 #align(center + bottom,
   grid(      
@@ -210,12 +276,21 @@
     create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [A], [Fixed Gain at $-10 "dB"$ (and $G_"RX" = -10 "dB"$).], [Full Scale (dBFS)])
   )
 )
-== Pluto Communication Demo
 
-#lorem(20)
+== Pluto Communication Demos
 
-/ *Term*: Definition
+#text(size: 12.5pt, [
+  - Wired Single Pluto Communication Demo
+  - Wireless Pluto to Pluto Communication 
+])
 
+== RX Post Processing
 
+1. A 
+  - Ensures
+2. B
+  - Ensures
+3. C
+  - Ensures
 
 
