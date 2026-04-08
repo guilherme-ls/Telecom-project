@@ -182,77 +182,91 @@ if pluto_configs.rx.enable
       disp("Coarse frequency compensation...");
       [rx_signal_coarsed_synced, freq_est] = coarse(rx_signal_rsm_norm);
       fprintf("Frequency offset of %.2f Hz\n", freq_est);
-      rx_signal_samples = rx_signal_coarsed_synced;
-    end
-
-    %%%% Downsampling with RRC Filter
-    disp("RRC Filter Downsampling...");
-    rx_signal_downsampled = resample(rx_signal_samples, 1, ...
-                                     bb_over_sampling/2, rx_bb_rrc); 
-    %%%% Sample normalization after filter
-    rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
-    rx_signal_symbols = rx_signal_downsampled;
-
-    if pluto_configs.sync.enable
-      symbolSync = comm.SymbolSynchronizer( ...
-                   TimingErrorDetector='Early-Late (non-data-aided)', ...
-                   SamplesPerSymbol=2);
-
-      fine = comm.CarrierSynchronizer( ...
-                DampingFactor=pluto_configs.sync.fine.damping_factor, ...
-                NormalizedLoopBandwidth=pluto_configs.sync.fine.loop_bw, ...
-                SamplesPerSymbol=2, ...
-                Modulation=pluto_configs.signal.modulated.modulation.mod);
-      %%%% Fine Frequency Compensation
-      disp("Fine frequency compensation...");
-      [rx_signal_fined_synced, phase_est] = fine(rx_signal_downsampled); 
-      %%%% Symbol Synchronization
-      disp("Symbol synchronization...");
-      rx_signal_symbol_synced = symbolSync(rx_signal_fined_synced);
-      if length(rx_signal_symbol_synced) < length(rx_signal_fined_synced)/2
-        disp("Symbol synchronization failed! Too much noise!");
-        disp("Decimating received signal to have something...");
-        rx_signal_symbol_synced = resample(rx_signal_fined_synced, 1, 2);
-      end
-      %%%% Preamble Detection
-      disp("Preamble detection...");
-      barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
-                               SamplesPerFrame=pluto_configs.sync.samples);
-      sync_section = (1 + barker()) / 2;
-      sync_section_symbols = qammod(sync_section, ...
-                           pluto_configs.signal.modulated.modulation.size, ...
-                           "UnitAveragePower", true);
-      preamble_det = comm.PreambleDetector( ...
-                    Preamble=sync_section_symbols, ...
-                    Threshold=3, ...
-                    Detections='All');
-
-      %% Only search for the preamble on the first half of the samples
-      [~, detmet] = preamble_det(rx_signal_symbol_synced(1:end/2));
-      %% Use the threshold with the highest correlation
-      preamble_det.Threshold = max(detmet);
-      [preamble_idx, ~] = preamble_det(rx_signal_symbol_synced(1:end/2));
-      if numel(preamble_idx) < 1 
-        disp("Couldn't find preamble! Using the start as the preamble index...");
-        preamble_idx = 1;
-      elseif numel(preamble_idx) > 1
-        disp("Found multiple preambles! Using the first found...");
-        preamble_idx = preamble_idx(1);
-      end
+      rx_signal_samples = rx_signal_coarsed_synced;      
       
-      disp("Alignment using sync section...");
-      message_length = length(pluto_configs.signal.modulated.message);
-      rx_signal_aligned = rx_signal_fined_synced(preamble_idx - length(sync_section_symbols) + 1:end);
-      rx_signal_aligned = rx_signal_aligned(1:length(sync_section_symbols) + message_length);
-      %%%% Preamble Phase Compensation
-      disp("Preamble phase compensation...");
-      rx_signal_phase_offset = angle(mean(sync_section_symbols .* ...
+      preamble_correlations = zeros(1, bb_over_sampling/2);
+      delayed_rx_signal_symbols = cell(1, bb_over_sampling/2);
+      for begin=1:bb_over_sampling/2
+        fprintf("--- Delaying RRC filter by %d samples ---\n", begin);
+        %%%% Downsampling with RRC Filter
+        disp("RRC Filter Downsampling...");
+        rx_signal_downsampled = resample(rx_signal_samples(begin:end), 1, ...
+                                     bb_over_sampling/2, rx_bb_rrc); 
+        %%%% Sample normalization after filter
+        rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
+
+        symbolSync = comm.SymbolSynchronizer( ...
+                     TimingErrorDetector='Early-Late (non-data-aided)', ...
+                     SamplesPerSymbol=2);
+
+        fine = comm.CarrierSynchronizer( ...
+                  DampingFactor=pluto_configs.sync.fine.damping_factor, ...
+                  NormalizedLoopBandwidth=pluto_configs.sync.fine.loop_bw, ...
+                  SamplesPerSymbol=2, ...
+                  Modulation=pluto_configs.signal.modulated.modulation.mod);
+        %%%% Fine Frequency Compensation
+        disp("Fine frequency compensation...");
+        [rx_signal_fined_synced, phase_est] = fine(rx_signal_downsampled); 
+        %%%% Symbol Synchronization
+        disp("Symbol synchronization...");
+        rx_signal_symbol_synced = symbolSync(rx_signal_downsampled);
+        if length(rx_signal_symbol_synced) < length(rx_signal_fined_synced)/2
+          disp("Symbol synchronization failed! Too much noise!");
+          disp("Decimating received signal to have something...");
+          rx_signal_symbol_synced = resample(rx_signal_fined_synced, 1, 2);
+        end
+        %%%% Preamble Detection
+        disp("Preamble detection...");
+        barker = comm.BarkerCode(Length=pluto_configs.sync.length, ...
+                               SamplesPerFrame=pluto_configs.sync.samples);
+        sync_section = (1 + barker()) / 2;
+        sync_section_symbols = qammod(sync_section, ...
+                             pluto_configs.signal.modulated.modulation.size, ...
+                             "UnitAveragePower", true);
+        preamble_det = comm.PreambleDetector( ...
+                      Preamble=sync_section_symbols, ...
+                      Threshold=3, ...
+                      Detections='All');
+
+        %% Only search for the preamble on the first half of the samples
+        [~, detmet] = preamble_det(rx_signal_symbol_synced(1:end/2));
+        %% Use the threshold with the highest correlation
+        preamble_det.Threshold = max(detmet);
+        preamble_correlations(begin) = preamble_det.Threshold;
+        [preamble_idx, ~] = preamble_det(rx_signal_symbol_synced(1:end/2));
+        if numel(preamble_idx) < 1 
+          disp("Couldn't find preamble! Using the start as the preamble index...");
+          preamble_idx = 1;
+        elseif numel(preamble_idx) > 1
+          disp("Found multiple preambles! Using the first found...");
+          preamble_idx = preamble_idx(1);
+        end
+        disp("Alignment using sync section...");
+        message_length = length(pluto_configs.signal.modulated.message);
+        rx_signal_aligned = rx_signal_symbol_synced(preamble_idx - length(sync_section_symbols) + 1:end);
+        rx_signal_aligned = rx_signal_aligned(1:length(sync_section_symbols) + message_length);
+        %%%% Preamble Phase Compensation
+        disp("Preamble phase compensation...");
+        rx_signal_phase_offset = angle(mean(sync_section_symbols .* ...
                                conj(rx_signal_aligned(1:length(sync_section_symbols)))));
-      fprintf("Phase offset of %.2f degrees\n", rad2deg(rx_signal_phase_offset));
-      rx_signal_in_phase = exp(1j * rx_signal_phase_offset) * rx_signal_aligned; 
-      %%%% Removal of preamble from message 
-      disp("Preamble removal...");
-      rx_signal_symbols = rx_signal_in_phase(pluto_configs.sync.length+1:end);
+        fprintf("Phase offset of %.2f degrees\n", rad2deg(rx_signal_phase_offset));
+        rx_signal_in_phase = exp(1j * rx_signal_phase_offset) * rx_signal_aligned; 
+        %%%% Removal of preamble from message 
+        disp("Preamble removal...");
+        rx_signal_symbols = rx_signal_in_phase(pluto_configs.sync.length+1:end);
+
+        delayed_rx_signal_symbols{begin} = rx_signal_symbols;
+      end
+      [~, idx] = max(preamble_correlations);
+      rx_signal_symbols = delayed_rx_signal_symbols{idx};
+    else
+      %%%% Downsampling with RRC Filter
+      disp("RRC Filter Downsampling...");
+      rx_signal_downsampled = resample(rx_signal_samples, 1, ...
+                                     bb_over_sampling, rx_bb_rrc); 
+      %%%% Sample normalization after filter
+      rx_signal_downsampled = rx_signal_downsampled / sqrt(var(rx_signal_downsampled));
+      rx_signal_symbols = rx_signal_downsampled;
     end
   end
 
@@ -298,6 +312,7 @@ if pluto_configs.plot.spectrum
     plot_spectrum(rx_signal_truncated, window_number,...
                pluto_configs.general.bb_sample_rate, lineSpec_index, fullband_spectrum);
     title('Receiver complex recombined output')
+    window_number = window_number+1;
   end
 end
 if (pluto_configs.tx.enable || pluto_configs.rx.enable) && pluto_configs.plot.samples

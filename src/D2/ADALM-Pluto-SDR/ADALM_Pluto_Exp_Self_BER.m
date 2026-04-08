@@ -74,12 +74,12 @@ pluto_configs.performace.ber = true;
 %%%            Call Experiment Script                   %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-num_of_points = 1:20;
+num_of_points = 1:10;
 gain_max = -10; %dB
-gain_min = -80; %dB
+gain_min = -50; %dB
 
 scale_factor_max = -10; %dBFS
-scale_factor_min = -80; %dBFS
+scale_factor_min = -40; %dBFS
 
 %%%% Fixed DAC Scale Factor
 

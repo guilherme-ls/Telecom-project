@@ -29,7 +29,7 @@ pluto_configs.tx.dac.scale_factor = 0.01; % [0, 1]
 pluto_configs.rx.enable = true;
 pluto_configs.rx.automatic_reception = true;  
 pluto_configs.rx.gain.manual = true;
-pluto_configs.rx.gain.value = 30;
+pluto_configs.rx.gain.value = 10;
 pluto_configs.rx.bb_rrc.roll_off = 0.25;
 pluto_configs.rx.bb_rrc.symbol_span = 25;
 
@@ -60,7 +60,7 @@ rand_message = randi(rand_message_range, signal_length, 1);
 pluto_configs.signal.modulated.message = rand_message;
 
 %%%%% Plot Config %%%%% 
-pluto_configs.plot.spectrum = false;
+pluto_configs.plot.spectrum = true;
 pluto_configs.plot.sync = true;
 pluto_configs.plot.constelation = true;
 pluto_configs.plot.samples = true;
