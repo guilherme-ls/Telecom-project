@@ -93,7 +93,7 @@ end
 %%% TX section %%%
 % Generate the signal
 phi_0               = rand()*pi;
-complex_bb_signal   = exp(1i*2*pi*fin(1)*t_BB+phi_0)+exp(1i*2*pi*fin(2)*t_BB+phi_0);
+complex_bb_signal   = exp(1i*2*pi*fin(1)*t_BB);% exp(1i*2*pi*fin(1)*t_BB+phi_0)+exp(1i*2*pi*fin(2)*t_BB+phi_0);
 max_amplitude       = max(max(abs([real(complex_bb_signal(:)) imag(complex_bb_signal(:))])));
 complex_bb_signal   = complex_bb_signal/max_amplitude;
 Ain_I               = 1;
@@ -127,7 +127,7 @@ window_number   = 1;
 lineSpec_index  = 1;
 
 
-plot_spectrum(MixerOutput,window_number,continuousTimeSamplingRate,lineSpec_index);
+plot_spectrum(MixerOutput*sqrt(voltsq2mwatt),window_number,continuousTimeSamplingRate,lineSpec_index);
 xlabel('frequency (Hz)')
 ylabel('PSD (dB/bin)')
 title('Mixer Output')

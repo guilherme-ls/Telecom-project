@@ -32,22 +32,22 @@ BW_rf     = 2*BW;
 % ADC parameters
 Fs_ADC        = 30e6;       % Sampling frequency ADC a.k.a basebandSamplingRate
 Vref          = 1;          % Reference voltage of the ADC
-Nbits_ADC     = 13;         % Number of bits for the ADC
-BB_gain       = 20;         % dB
+Nbits_ADC     = 12;         % Number of bits for the ADC
+BB_gain       = 23.5;         % dB
 BB_gain_lin   = 10^(BB_gain/20); % in linear
 
 % LNA
 LNA_Gain = 15;     % (dB)
-LNA_IIP3 = 100;    % (dBm)
-LNA_NF   = 8.1;    % (dB)
+LNA_IIP3 = 5;    % (dBm)
+LNA_NF   = 5.8;    % (dB)
 
 %%% Baseband fake Analog filter %%%
 RXBB_Filt_NF    = 0;     %(in dB)
 
-RXBB_Filt_rp    = 0.1;         % Passband ripple in dB
+RXBB_Filt_rp    = 0.5;         % Passband ripple in dB
 RXBB_Filt_rs    = 40;          % Stopband ripple in dB
 RXBB_Filt_fs    = continuousTimeSamplingRate; % Sampling frequency (Hz)
-RXBB_Filt_f     = [15 20]*1e6;  % Cutoff frequencies (Hz)
+RXBB_Filt_f     = [10 15]*1e6;  % Cutoff frequencies (Hz)
 RXBB_Filt_a     = [1 0];        % Desired amplitudes
 % Convert the deviations to linear units. 
 RXBB_Filt_dev   = [(10^(RXBB_Filt_rp/20)-1)/(10^(RXBB_Filt_rp/20)+1) 10^(-RXBB_Filt_rs/20)];
@@ -64,11 +64,11 @@ Ts_ADC = 1/Fs_ADC;                                % Sampling period ADC
 t_ADC  = 0:Ts_ADC:(N-1)*Ts_ADC;                   % Time vector Simulation
 
 % Input signal
-fin_or       = 1.1e6;          % Input sine frequency
+fin_or       = 7.12e6;          % Input sine frequency
 Bin_in       = round(fin_or/Fs_ADC*N); % Determining the input bin
 fin          = Bin_in*Fs_ADC/N;        % 
 
-Pin             = -90;  % Pin in dBm
+Pin             = -82.97;  % Pin in dBm
 Ain             = sqrt(10.^((Pin-30)/10)*2*Rin);
 AntennaNoise    = randn(1,N_Cont)*sqrt(K*T*continuousTimeSamplingRate/2*Rin);
 rxSignal        = Ain*sin(2*pi*(Flo+fin)*t_Cont+rand()*2*pi)+AntennaNoise; % Input signal
@@ -140,7 +140,7 @@ ylabel('PSD (dBm/bin)')
 Bin_limits     = N/2+[round(-BW/Fs_ADC*N),round(BW/Fs_ADC*N)];
 % Compute SNR
 Bin_sig_shiftd = N/2+Bin_in;
-bin_width      = 2;
+bin_width      = 4;
 SNR_out        = perf_estim(basebandComplexDigital,Bin_sig_shiftd,bin_width,Bin_limits,fullband);
 
 disp(['The SNR at the output of the ADC is ',num2str(SNR_out), ' dB'])
