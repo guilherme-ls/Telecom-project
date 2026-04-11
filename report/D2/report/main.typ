@@ -39,8 +39,6 @@ Cloud Radio Access Network (C-RAN)",
 - Aux calculs analytiques qui vous ont permis de trouver les principales spécifications
 - A l'approche suivie pour l'optimisation de vos chaines d'émission et de réception
 - Aux résultats de simulation et à leur analyse
-- A une synthèse des résultats de mesure des 2 séances
-- Une conclusion qui s’appuiera sur une comparaison (max 1-2 pages) de la modélisation faite avec le circuit A9363 de la plateforme pluto utilisée lors des séances de mesure 
 
 = Introduction
 
@@ -148,12 +146,16 @@ than the Full Scale when optimizing the chain.
   caption: [SER and BER curves for the transceiver chain emulated by a single ADALM-PLUTO with the reception gain fixed at $G_"RX" = -10 "dB"$ and 
             varying the transmitter Gain or the DAC Full Scale.],
 ) <pluto-self>
+
 = Conclusion
 
-== A9363 and Modeled Chain Differences
+As discussed in this report, a lot goes into modeling and optimizing a communication chain. But it is important to note that there 
+are important differences between the simulated/optimized system and the experimental one. 
+
+For starters, we can look at how the ADALM-PLUTO differs from the AD9363 base circuit, as shown by @tab:code_information.
 
 #figure(
-    caption: [Generator polynomials and code rates of the studied BCH codes.],
+    caption: [Comparison between the ADALM-PLUTO and the base AD9363 circuit.],
     table(
       columns: (1fr, 1fr, 1fr),
       inset: 12pt,
@@ -161,7 +163,7 @@ than the Full Scale when optimizing the chain.
       stroke: 0.6pt,
 
       table.header(
-        [],[AD9363],[ADALM Pluto],
+        [],[AD9363],[ADALM-Pluto],
       ),
 
       table.hline(),
