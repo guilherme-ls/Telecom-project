@@ -12,7 +12,7 @@ signal_config.test_type = 'onetone';
 tx_config.nBitDAC = 4; % Number of bits of the DAC
 tx_config.Vref = 1;    % Voltage reference of the DAC
 %%%%% Filter %%%%
-tx_config.TXBB_Filt_rp = 0.44; % Passband ripple in dB
+tx_config.TXBB_Filt_rp = 0.5; % Passband ripple in dB
 tx_config.TXBB_Filt_rs = 40; % Stopband ripple in dB
 tx_config.TXBB_Filt_f = [10 15]*1e6; % Cutoff frequencies (Hz) 0.5;        
 %%%%% Up Mixer %%%%
@@ -22,12 +22,12 @@ tx_config.PA_mux = 'ADL5606'; % PA Model
 tx_config.attenuation = -10.4; %-7; % (dB) Preattenuation before PA
                                                     
 %%% Channel Params %%%
-channel_config.distance = 1.400;
+channel_config.distance = 1400;
 
 %%% RX Params %%%
 %%%%% LNA  %%%%
 rx_config.LNA_Gain = 15;  % (dB)  
-rx_config.LNA_IIP3 = 100; % (dBm)
+rx_config.LNA_IIP3 = 0; % (dBm)
 rx_config.LNA_NF   = 5.8;   % (dB)
 %%%%% RXBB %%%%
 rx_config.Flo  = 2.4e9;

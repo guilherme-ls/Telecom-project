@@ -10,7 +10,7 @@ signal_config.test_type = 'onetone';
 %%% RX Params %%%                                         
 %%%%% LNA  %%%%
 rx_config.LNA_Gain = 15;  % (dB)  
-rx_config.LNA_IIP3 = 5; % (dBm)
+rx_config.LNA_IIP3 = 0; % (dBm)
 rx_config.LNA_NF   = 5.8;   % (dB)
 %%%%% RXBB %%%%
 rx_config.Flo = 2.4e9;
