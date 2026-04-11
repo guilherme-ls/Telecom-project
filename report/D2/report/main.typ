@@ -50,17 +50,88 @@ The first part will be focused on the modeling, optimization and simulation, in 
 different blocks that compose the receiver and the transmitter have their parameters enumerated, and how they contribute to achieve the desired performance values. 
 Also, the results of the simulated performance are shown and discussed, and the optimization methodology chosen is described and explained.
 
-Meanwhile, the second part has a focus in the experimental side of the project. Two Power Amplifiers were measured, one with a vector analyser, and the other with an ADALM-PLUTO SDR. 
-The resulting curves are shown, and how they differ from the expected values found in the datasheets. 
+Meanwhile, the second part has a focus in the experimental side of the project. A Low Noise Amplifier and a Power Amplifier were measured, the first with a vector analyser,
+and the other with an ADALM-PLUTO SDR. 
+The resulting curves are shown, and how they differ from the expected values found in the datasheets. Again with the same SDR, the transceiver chain was tested, with the needed 
+post-processing on the received symbols, producing some metrics curved.
 
-Also, with the same SDR, the transceiver chain was represented and experimented on, and a discussion going over how the AD9363 chip (found in the ADALM-PLUTO)
-internal blocks differ from the modeled chain can be found in the conclusion section.
+Finally and a discussion going over how the AD9363 chip (found in the ADALM-PLUTO) internal blocks differ from the modeled chain can be found in the conclusion section.
 
 = System Simulation
 
-== Power Amplifier Characterization
+= Hardware Experiments
 
-  #figure(
+== Low Noise Amplifier Measurement
+
+In this part, the LNA TB-432-8A+ from _Miniciruit_ was characterized. By using a vector analyser, the curves in @lna-gain, @lna-s11 and @lna-s21 were measured.
+From them, we can see that, at $f = 900 "MHz"$, the Return Loss is $S_"11" = -15 "dB"$, the gain is $S_"21" = 14.8 "dB"$, and that, the $1 "dB"$ compression point happens at 
+$-11 "dBm"$ with $S_"21" = 13.7 "dB"$.
+
+#create-lna-figure("data/PA-measurements/power_compression.csv", [Gain x Power], [Measured curve of the Gain x Power for the TB-432-8A+ LNA at $900 "MHz"$.],
+                   [Power (dBm)], [Gain (dB)], 0) <lna-gain>
+#create-lna-figure("./data/PA-measurements/s12.csv", [S11], [Measured $S_"11"$ curve for the TB-432-8A+ LNA.],
+                   [Frequency (MHz)], [Power (dBm)], 6) <lna-s11>
+#create-lna-figure("data/PA-measurements/s11.csv", [S21], [Measured $S_"21"$ curve for the TB-432-8A+ LNA.],
+                   [Frequency (MHz)], [Power (dBm)], 6) <lna-s21>
+
+
+== Power Amplifier Measurements
+
+Here, the ZX60_V62 Power Amplifier (given to our group) was measured using the SDR ADALM-PLUTO. 
+
+#create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA.],
+                        [Input (dBm)], [Output (dBm)]) <pa-am-am>
+#create-pa-gain-figure("data/ZX60_V62.csv", [ZX60_V62 - Gain/Power], [Curve of the measured Gain/Power for the ZX60_V62 PA.], 
+                       [Power (dBm)], [Gain (dB)]) <pa-gain>
+#create-pa-efficience-figure("data/ZX60_V62.csv", [ZX60_V62 - $eta_("DE")$ and $eta_("PAE")$], [Curve of the measured $eta_("DE")$ and $eta_("PAE")$ for the ZX60_V62 PA.], 
+                             [Power (dBm)], [$eta_("DE")$], [$eta_("PAE")$]) <pa-eff>
+#align(center + top,
+  grid(
+    columns: 2,
+    gutter:10%,
+    figure(
+      table(
+        columns: 3,
+        [*Performances*],[*Value*],[*Unit*],
+        [Gain],[$15.6$],[dB],
+        [$P_(1"dB")$],[$12$],[dBm],
+        [$V$],[$5$],[V],
+        [$I$],[$89$],[mA],
+        [$P$],[$0.445$],[W],
+      ),
+      caption: "Measured performance values for the ZX60_V62 PA",
+    ),
+    figure(
+      table(
+        columns: 3,
+        [*Performances*],[*Value*],[*Unit*],
+        [Gain],[$15.4$],[dB],
+        [$P_(1"dB")$],[$19$],[dBm],
+        [$V$],[$5$],[V],
+        [$I$],[$82$],[mA],
+        [$P$],[$0.41$],[W],
+      ),
+      caption: "Datasheet performance values for the ZX60_V62 PA",
+    ),
+  )
+) <pa-meas-comp>
+
+== Pluto Self-Communication
+
+#align(center + bottom,
+  grid(      
+    columns: (auto, auto),
+    gutter: 6pt,
+    create-ser-ber-figure("./data/exp_self__fixed-dac.csv", [A], [Full Scale at $-10 "dBFS"$ (and $G_"RX" = -10 "dB"$).], [Gain (dB)]),
+    create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [A], [Fixed Gain at $-10 "dB"$ (and $G_"RX" = -10 "dB"$).], [Full Scale (dBFS)])
+  )
+)
+
+= Conclusion
+
+== A9363 and Modeled Chain Differences
+
+#figure(
     caption: [Generator polynomials and code rates of the studied BCH codes.],
     table(
       columns: (1fr, 1fr, 1fr),
@@ -99,128 +170,6 @@ internal blocks differ from the modeled chain can be found in the conclusion sec
 
       table.hline(),
 
-      [Received Power],
-      [?],[?],
-
-      table.hline(),
     ),
   ) <tab:code_information>
 
-
-
-  #create-pow-figure("data/tinySA/ONE-TONE.csv", [titutol], [algo])
-  #create-pow-figure("data/tinySA/ONE-PA.csv", [titutol], [algo])
-  #create-pow-figure("data/tinySA/TWO-TONE.csv", [titutol], [algo])
-  #create-pow-figure("data/tinySA/TWO-PA.csv", [titutol], [algo])
-  #create-pow-figure("data/tinySA/MOD-10.csv", [titutol], [algo])
-  #create-pow-figure("data/tinySA/MOD-20.csv", [titutol], [algo])
-
-== LNA Measurement
-
-  #create-lna-figure("data/PA-measurements/power_compression.csv", [Power x Power], [algo], [Power (dBm)], [Gain (dB)], 0)
-  #create-lna-figure("data/PA-measurements/s11.csv", [S11], [algo], [Frequency (MHz)], [Power (dBm)], 6)
-  #create-lna-figure("data/PA-measurements/s12.csv", [S12], [algo], [Frequency (MHz)], [Power (dBm)], 6)
-
-
-= Hardware Experiments
-
-This is the more experimental focused part of the project. 
-
-== Power Amplifier Measurements
-
-#create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA.], [Input (dBm)], [Output (dBm)])
-#create-pa-gain-figure("data/ZX60_V62.csv", [ZX60_V62 - Gain/Power], [Curve of the measured Gain/Power for the ZX60_V62 PA.], [Power (dBm)], [Gain (dB)])
-#create-pa-efficience-figure("data/ZX60_V62.csv", [ZX60_V62 - $eta_("DE")$ and $eta_("PAE")$], [Curve of the measured $eta_("DE")$ and $eta_("PAE")$ for the ZX60_V62 PA.], [Power (dBm)], [$eta_("DE")$], [$eta_("PAE")$])
-#align(center + top,
-  grid(
-    columns: 2,
-    gutter:10%,
-    figure(
-      table(
-        columns: 3,
-        [*Performances*],[*Value*],[*Unit*],
-        [Gain],[$15.6$],[dB],
-        [$P_(1"dB")$],[$12$],[dBm],
-        [$V$],[$5$],[V],
-        [$I$],[$89$],[mA],
-        [$P$],[$0.445$],[W],
-      ),
-      caption: "Measured",
-    ),
-    figure(
-      table(
-        columns: 3,
-        [*Performances*],[*Value*],[*Unit*],
-        [Gain],[$15.4$],[dB],
-        [$P_(1"dB")$],[$19$],[dBm],
-        [$V$],[$5$],[V],
-        [$I$],[$82$],[mA],
-        [$P$],[$0.41$],[W],
-      ),
-      caption: "Datasheet",
-    ),
-  )
-)
-
-== Pluto Self-Communication
-
-#show figure.caption: set text(size: 8pt)
-#align(center + bottom,
-  grid(      
-    columns: (auto, auto),
-    gutter: 6pt,
-    create-ser-ber-figure("./data/exp_self__fixed-dac.csv", [A], [Full Scale at $-10 "dBFS"$ (and $G_"RX" = -10 "dB"$).], [Gain (dB)]),
-    create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [A], [Fixed Gain at $-10 "dB"$ (and $G_"RX" = -10 "dB"$).], [Full Scale (dBFS)])
-  )
-)
-
-== Pluto Communication Demos
-
-#text(size: 12.5pt, [
-  - Wired Single Pluto Communication Demo
-  - Wireless Pluto to Pluto Communication 
-])
-
-== TX Pre Processing
-
-1. Preamble addition
-  - Barker Sequence
-    - Sequence with high autocorrelation
-      - Makes it easy to find from random symbols in RX
-  
-2. RRC Filter 
-  - Upsampling of the signal
-  - Ensures the symbols don't "mix" with each other (reduce ISI)
-
-== RX Post Processing
-
-1. Coarse Frequency Compensation
-  - Operates over the whole symbol stream
-  - Helps with differences in the LO frequencies
-  - Tries to make the symbols fit into the expected constellation type (QAM)
-  - Internal PLL with PID
-  - Does *not* decimate the signal
-2. RRC Filter 
-  - Operates over the whole symbol stream after it is compensated
-  - Helps to shape the symbols back to what they are supposed to be 
-  - Might have bad output from unaligned symbols
-    - Loop over the different possible delays to ensure we use the best one 
-  - Decimates the signal
-3. Carrier Synchronization (Fine Frequency Compensation)
-  - Operates over the RRC decimated signal 
-  - Helps to compensate what the coarse compensation might have missed
-  - Tries to make the symbols fit into the expected constellation type (QAM)
-  - Internal PLL with PID
-  - Does *not* decimate the signal
-4. Symbol Synchronization
-  - Operates over the fine compensated symbols 
-  - Attempts even further to shape the symbols into the constellation 
-  - *Decimates* the signal
-5. Preamble Detection
-  - Helps us find the start of the message
-  - Helps us to align the message in the time domain
-  - The phase offset in the preamble tells us by how much the constellation is "rotated"
-
-= Conclusion
-
-== A9363 and Modeled Chain Differences
