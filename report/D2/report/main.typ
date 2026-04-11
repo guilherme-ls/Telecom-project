@@ -77,7 +77,9 @@ $-11 "dBm"$ with $S_"21" = 13.7 "dB"$.
 
 == Power Amplifier Measurements
 
-Here, the ZX60_V62 Power Amplifier (given to our group) was measured using the SDR ADALM-PLUTO. 
+Here, the ZX60_V62 Power Amplifier (given to our group) was measured using the SDR ADALM-PLUTO. The resulting performance curves 
+can be found at @pa-am-am, @pa-gain and @pa-eff. As these values were gathered "manually", the measurement points are more concentraded 
+at the compression point of the PA gain.
 
 #create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA.],
                         [Input (dBm)], [Output (dBm)]) <pa-am-am>
@@ -85,48 +87,61 @@ Here, the ZX60_V62 Power Amplifier (given to our group) was measured using the S
                        [Power (dBm)], [Gain (dB)]) <pa-gain>
 #create-pa-efficience-figure("data/ZX60_V62.csv", [ZX60_V62 - $eta_("DE")$ and $eta_("PAE")$], [Curve of the measured $eta_("DE")$ and $eta_("PAE")$ for the ZX60_V62 PA.], 
                              [Power (dBm)], [$eta_("DE")$], [$eta_("PAE")$]) <pa-eff>
-#align(center + top,
-  grid(
-    columns: 2,
-    gutter:10%,
-    figure(
-      table(
-        columns: 3,
-        [*Performances*],[*Value*],[*Unit*],
-        [Gain],[$15.6$],[dB],
-        [$P_(1"dB")$],[$12$],[dBm],
-        [$V$],[$5$],[V],
-        [$I$],[$89$],[mA],
-        [$P$],[$0.445$],[W],
+
+From these values, more static values were calculated and can be found in the left table @pa-meas. Comparing them with the numbers 
+provided by the datasheet (right table) we can see that they closely match, with the exception of the $P_"1dB"$ point, which happened 
+earlier than expected in our measurements.
+
+#figure(
+  align(center + top,
+    grid(
+      columns: 2,
+      gutter:10%,
+      figure(
+        table(
+          columns: 3,
+          [*Performances*],[*Value*],[*Unit*],
+          [Gain],[$15.6$],[dB],
+          [$P_(1"dB")$],[$12$],[dBm],
+          [$V$],[$5$],[V],
+          [$I$],[$89$],[mA],
+          [$P$],[$0.445$],[W],
+        ),
+        caption: "Measured performance values for the ZX60_V62 PA",
       ),
-      caption: "Measured performance values for the ZX60_V62 PA",
-    ),
-    figure(
-      table(
-        columns: 3,
-        [*Performances*],[*Value*],[*Unit*],
-        [Gain],[$15.4$],[dB],
-        [$P_(1"dB")$],[$19$],[dBm],
-        [$V$],[$5$],[V],
-        [$I$],[$82$],[mA],
-        [$P$],[$0.41$],[W],
+      figure(
+        table(
+          columns: 3,
+          [*Performances*],[*Value*],[*Unit*],
+          [Gain],[$15.4$],[dB],
+          [$P_(1"dB")$],[$19$],[dBm],
+          [$V$],[$5$],[V],
+          [$I$],[$82$],[mA],
+          [$P$],[$0.41$],[W],
+        ),
+        caption: "Datasheet performance values for the ZX60_V62 PA",
       ),
-      caption: "Datasheet performance values for the ZX60_V62 PA",
-    ),
-  )
-) <pa-meas-comp>
+    )
+  ),
+  caption: "Comparison of the measured and expected performance values for the ZX60_V62 PA",
+)<pa-meas> 
 
 == Pluto Self-Communication
 
-#align(center + bottom,
-  grid(      
-    columns: (auto, auto),
-    gutter: 6pt,
-    create-ser-ber-figure("./data/exp_self__fixed-dac.csv", [A], [Full Scale at $-10 "dBFS"$ (and $G_"RX" = -10 "dB"$).], [Gain (dB)]),
-    create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [A], [Fixed Gain at $-10 "dB"$ (and $G_"RX" = -10 "dB"$).], [Full Scale (dBFS)])
-  )
-)
+In this last part
 
+#figure(
+  align(center + bottom,
+    grid(      
+      columns: (auto, auto),
+      gutter: 6pt,
+      create-ser-ber-figure("./data/exp_self__fixed-dac.csv", [A], [Full Scale at $-10 "dBFS"$.], [Gain (dB)]),
+      create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [A], [Fixed Gain at $-10 "dB"$.], [Full Scale (dBFS)])
+    )
+  ),
+  caption: [SER and BER curves for the transceiver chain emulated by a single ADALM-PLUTO with the reception gain fixed at $G_"RX" = -10 "dB"$ and 
+            varying the transmitter Gain or the DAC Full Scale.],
+)
 = Conclusion
 
 == A9363 and Modeled Chain Differences
