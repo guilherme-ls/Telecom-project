@@ -128,20 +128,26 @@ earlier than expected in our measurements.
 
 == Pluto Self-Communication
 
-In this last part
+In this last part we used the ADALM-PLUTO SDR to emulate the transceiver chain, and see how its performance varies with 
+the different ways the transmitter can change its transmission gain.
+
+You can see from @pluto-self the experiment results, which match the expected behaviour of the system quickly dropping in 
+performance as the signal gets too weak, becoming difficult to reconstruct the symbol constellation. We can also see how 
+the system is much more sensitive to a low Full Scale than a low Gain, meaning that it's better to first reduce the gain
+than the Full Scale when optimizing the chain.
 
 #figure(
   align(center + bottom,
     grid(      
       columns: (auto, auto),
       gutter: 6pt,
-      create-ser-ber-figure("./data/exp_self__fixed-dac.csv", [A], [Full Scale at $-10 "dBFS"$.], [Gain (dB)]),
-      create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [A], [Fixed Gain at $-10 "dB"$.], [Full Scale (dBFS)])
+      create-ser-ber-figure("./data/exp_self__fixed-dac.csv", [Full Scale at $-10 "dBFS"$.], [Gain (dB)]),
+      create-ser-ber-figure("./data/exp_self__fixed-gain.csv", [Fixed Gain at $-10 "dB"$.], [Full Scale (dBFS)])
     )
   ),
   caption: [SER and BER curves for the transceiver chain emulated by a single ADALM-PLUTO with the reception gain fixed at $G_"RX" = -10 "dB"$ and 
             varying the transmitter Gain or the DAC Full Scale.],
-)
+) <pluto-self>
 = Conclusion
 
 == A9363 and Modeled Chain Differences

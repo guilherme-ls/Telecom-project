@@ -261,7 +261,7 @@
   )
 }
 
-#let create-ser-ber-figure(file, tit, cap, ax_x) = {
+#let create-ser-ber-figure(file, cap, ax_x) = {
   let (x, ser, ber) = lq.load-txt(read(file))
   figure(
     grid(      
