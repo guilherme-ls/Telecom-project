@@ -36,10 +36,25 @@ Cloud Radio Access Network (C-RAN)",
   footer-text: "PRJ_4TE05_TP",
 )
 
+- Aux calculs analytiques qui vous ont permis de trouver les principales spécifications
+- A l'approche suivie pour l'optimisation de vos chaines d'émission et de réception
+- Aux résultats de simulation et à leur analyse
+- A une synthèse des résultats de mesure des 2 séances
+- Une conclusion qui s’appuiera sur une comparaison (max 1-2 pages) de la modélisation faite avec le circuit A9363 de la plateforme pluto utilisée lors des séances de mesure 
 
 = Introduction
 
-  Something
+In this report, we modeled, optimized, simulated, and tested a transceiver communication chain. 
+
+The first part will be focused on the modeling, optimization and simulation, in it, the 
+different blocks that compose the receiver and the transmitter have their parameters enumerated, and how they contribute to achieve the desired performance values. 
+Also, the results of the simulated performance are shown and discussed, and the optimization methodology chosen is described and explained.
+
+Meanwhile, the second part has a focus in the experimental side of the project. Two Power Amplifiers were measured, one with a vector analyser, and the other with an ADALM-PLUTO SDR. 
+The resulting curves are shown, and how they differ from the expected values found in the datasheets. 
+
+Also, with the same SDR, the transceiver chain was represented and experimented on, and a discussion going over how the AD9363 chip (found in the ADALM-PLUTO)
+internal blocks differ from the modeled chain can be found in the conclusion section.
 
 = System Simulation
 
@@ -106,21 +121,10 @@ Cloud Radio Access Network (C-RAN)",
   #create-lna-figure("data/PA-measurements/s11.csv", [S11], [algo], [Frequency (MHz)], [Power (dBm)], 6)
   #create-lna-figure("data/PA-measurements/s12.csv", [S12], [algo], [Frequency (MHz)], [Power (dBm)], 6)
 
-= System Simulation
-
-== Power Amplifier Characterization
-
-#lorem(20)
-
-/ *Term*: Definition
-
-== LNA Measurement
-
-#lorem(20)
-
-/ *Term*: Definition
 
 = Hardware Experiments
+
+This is the more experimental focused part of the project. 
 
 == Power Amplifier Measurements
 
@@ -217,4 +221,6 @@ Cloud Radio Access Network (C-RAN)",
   - Helps us to align the message in the time domain
   - The phase offset in the preamble tells us by how much the constellation is "rotated"
 
+= Conclusion
 
+== A9363 and Modeled Chain Differences
