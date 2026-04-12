@@ -92,6 +92,113 @@ The RF transmission chain employed in this project is represented in @fig:TX_cha
   ),
 ) <tab:TX_specifications>
 
+Conducting a preliminary analysis of the transmission chain, we can see that the output power of the signal will depend solely on the power amplifier, given that the DAC full scale is fixed. Considering that the DAC produces a sinusoidal signal, its output power is $10 "dBm"$.
+
+$ "P"_("DAC") = 10 times log (((1 "V")^2)/(2 times (50 thin Omega)) times 1/(1 "mW")) = 10 "dBm" $
+
+Therefore, to reach the desired output power we simply need a $10 "dB"$ gain for the chain.
+
+Concerning the ACPR, it will be affected by many elements of the transmission chain. Namely the DAC, the filter and most importantly the power amplifier. 
+
+Given these observations, we start the design process of the TX chain.
+
+=== Digital to Analog Converter
+
+Firstly, the DAC was chosen to be a zero order holder, due mostly to the power requirements of the system.
+
+To obtain a preliminary estimation of the number of bits to choose for the DAC
+
+=== Reconstruction Filter
+
+The reconstruction filter's objective is to filter out the DAC's replicas of the input signal. Therefore, the values present in table @tab:TX_filter_specifications were chosen to design the filter.
+
+#figure(
+  caption: [TX baseband filter specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [$f_1$], [$10 "MHz"$],
+    table.hline(),
+    [$f_2$], [$15 "MHz"$],
+    table.hline(),
+    [$A_"max"$], [$0.5 "dB"$],
+    table.hline(),
+    [$A_"min"$], [$40 "dB"$],
+    table.hline(),
+  ),
+) <tab:TX_filter_specifications>
+
+The frequency $f_1$ was chosen such that the useful band of $20 "MHz"$ is not attenuated, while $f_2$ was chosen such that every replica of the signal created by the DAC is attenuated. $A_"max"$ was chosen to follow the maximum allowed ripple according to the specifications, and $A_"min"$ has a high enough value to attenuate the replicas and to improve the ACPR at the end of the chain.
+
+Its implementation in code is done through a FIR filter to avoid non-constant group delay. It is also considered ideal and does not add noise to the signal.
+
+=== Up Sampling Mixer
+
+The IQ's objective is to reconstruct the full signal, received through the in-phase and in-quadrature components, and shift its frequency to be centered around its own local oscillator frequency $f_"LO"$. To do this, it mixes on one side the in-phase signal with a sinusoidal signal from its local oscillator, and on the other the in-quadrature signal with the same sinusoidal but with its phase delayed in $pi"/"2$. After this initial mixing, it combines both signals effectively as a sum.
+    
+The output of the combiner-mixer is modelled by:
+$ y(t) = x^I(t) cos(2 pi f_"LO" t) - x^Q(t) sin(2 pi f_"LO" t) $
+
+where $x^I(t)$ is the in-phase signal and $x^Q(t)$ is the in-quadrature signal. Developing the equation:
+$
+y(t) &= A_I cos(2 pi f_{1} t) cos(2 pi f_"LO" t) - A_Q sin(2 pi f_{1} t) sin(2 pi f_"LO" t) \
+y(t) &= (A_I - A_Q)/2 cos(2 pi (f_1 - f_"LO") t) + (A_I + A_Q)/2 cos(2 pi (f_1 + f_"LO") t)
+$
+
+Therefore, when the amplitudes are equal ($A_I = A_Q$), the output signal is simply the input signal with its frequency spectrum shifted to be centered around $f_"LO"$, as shown in the following equation:
+
+$ y(t) = A cos(2 pi (f_1 + f_"LO") t) $
+
+This shows that the up sampling mixer does not impact the signal power out of the DAC.
+
+=== Power Amplifier
+
+As the last step in the transmission chain implementation we must choose the power amplifier to use in system among the five choices given in the specifications. @tab:PA_details details all the power amplifiers available.
+
+#figure(
+  caption: [Power Amplifier specs.],
+  table(
+    columns: 6,
+    align: center,
+    table.header(
+        [],[ZX60_V63+],[ZX60_V62+],[ZHL42],[ADL5606],[RFLUPA05M06G]
+    ),
+    [Gain (dB)],[19.7],[15.5],[39.46],[21.45],[33],
+    table.hline(),
+    [Power (W)],[0.345],[0.410],[13.2],[1.9],[4.2],
+    table.hline(),
+    [IIP3],[10.3],[16.4],[5.39],[23.4],[10],
+    table.hline(),
+    [$"P"_"1dB"$ (dBm)],[17.8],[19],[28],[30],[29],
+    table.hline(),
+  ),
+) <tab:PA_details>
+
+From the table, we can immediately see that while the ZX60_V63+ and ZX60_V62+ have the lowest power consumption among the options, operating them at $20 "dBm"$ of output would put them beyond the $1 "dB"$ compression point, leading to heavy non-linearities and a steep decrease in the ACPR. Among the remaining options, the ADL5606 power amplifier offers at the same time the highest IIP3, highest $1 "dB"$ gain compression power, and lowest power consumption, presenting itself as the best choice available.
+
+However, to verify the validity of this choice, we will test them in simulation and calculate the ACPR at $20 "dBm"$ output power for each one. The output spectrum of each one is presented in x, and the ACPR in @tab:PA_ACPR. We must observe that all the power amplifiers have a higher gain than necessary for the desired output level. To each amplifier input signal was added a proportional attenuation to ensure the correct output.
+
+#figure(
+  caption: [Power Amplifier ACPR at $20 "dBm"$ output power.],
+  table(
+    columns: 6,
+    align: center,
+    table.header(
+        [],[ZX60_V63+],[ZX60_V62+],[ZHL42],[ADL5606],[RFLUPA05M06G]
+    ),
+    [ACPR (dB)],[19.7],[15.5],[39.46],[21.45],[33],
+    table.hline(),
+    [Attenuation (dB)],[19.7],[0],[39.46],[21.45],[33],
+    table.hline(),
+  ),
+) <tab:PA_ACPR>
+
+
+
+=== Full TX chain
+
+As e
+
 == Transmission Channel
 
 In this project we will be considering a memoryless channel that can have its attenuation fully characterized by the Friis transmission equation, shown in @eq:Friis_transmission. In this equation $G_r$ is the receiver gain, $G_e$ the transmitter gain, $P_r$ the power received, $P_e$ the power transmitted, $lambda$ the wavelength of the transmitted signal, and $d$ the distance between the transmitter and the receiver.
@@ -158,13 +265,13 @@ $ P_(A D C) = 10 times log (((1 "V")^2)/(2 times (50 thin Omega)) times 1/(1 "mW
 
 Therefore, to prevent saturation of the ADC while still using its full resolution, we need a gain that takes the maximum input power from $-22.97 "dbm"$ to $10 "dBm"$:
 
-$G_("chain") = 10 "dBm" + 22.97 "dBm" = 32.97 "dBm"$
+$ G_("chain") = 10 "dBm" + 22.97 "dBm" = 32.97 "dBm" $
 
 This gain will be affected by the LNA, the mixer and the baseband amplifier.
 
 Similarly, we also desire an output SNR of at least $10 "dB"$. Since the minimum input SNR is of $18.03 "dB"$, we must establish a maximum noise factor for the chain of:
 
-$N F_("chain") = 18.03 "dBm" - 10 "dBm" = 8.03 "dBm"$
+$ "NF"_"chain" = 18.03 "dBm" - 10 "dBm" = 8.03 "dBm" $
 
 This noise factor will be affected by the LNA, the baseband amplifier and the ADC.
 
@@ -180,13 +287,15 @@ We can also see that increasing its gain reduces the noise contribution of subse
 
 $ G_("LNA") = 15 "dB" $
 
-To determine its noise contribution, we must also determine the contributions of the baseband amplifier and the ADC. Thus, this analysis will be conducted later in the report. However, we must advance that the LNA noise figure is inversely proportional to the power it consumes, which must be taken into account when choosing its value.
+To determine its noise contribution, we must also determine the contributions of the baseband amplifier and the ADC. Thus, this analysis will be conducted later in the report. However, we must advance that the LNA noise figure is inversely proportional to the power it consumes (@eq:LNA_power), which must be taken into account when choosing its value.
 
-$ "P"_"LNA" = 10^(-2)/(10^("NF"_"LNA"/10) - 1) $
+$ "P"_"LNA" = 10^(-2)/(10^("NF"_"LNA"/10) - 1) $ <eq:LNA_power>
 
-== Down-Mixer
+At last, the IIP3 value of 0 dBm was adopted, such that the LNA operates in its linear region.
 
-To determine the down-mixer's impact in the system, we consider a modulated signal $v_"in"(t)$ as input of the mixer and analyse its I and Q outputs. Let us consider the following input signal, where $omega_"LO"$ is the frequency of the local oscilator:
+== Down Sampling Mixer
+
+To determine the down sampling mixer's impact in the system, we consider a modulated signal $v_"in"(t)$ as input of the mixer and analyse its I and Q outputs. Let us consider the following input signal, where $omega_"LO"$ is the frequency of the local oscillator:
 
 $ v_"in" (t) = I(t) cos (omega_"LO" t) + Q(t) sin (omega_"LO" t) $
 
@@ -270,20 +379,20 @@ The results are shown in @tab:ADC_calculations.
     columns: 7,
     align: center,
     table.header(
-        [N],[SNR],[$"F"_"rest"$],[$"F"_"LNA"$],[$"P"_"rest"$],[$"P"_"LNA"$],[$"P"_"total"$]
+        [N],[$"SNR"_"dB"$],[$"F"_"rest"$],[$"F"_"LNA"$],[$"P"_"rest"$ (mW)],[$"P"_"LNA"$ (mW)],[$"P"_"total"$ (mW)]
     ),
-    [11],[6.877],[-],[-],[-],[-],[],
+    [11],[6.0275],[-],[-],[-],[-],[-],
     table.hline(),
-    [12],[12.7],[3.412],[3.898],[0.685],[0.003],[0.688],
+    [12],[12.247],[3.787],[3.523],[69],[4],[73],
     table.hline(),
-    [13],[14.4],[2.306],[5.004],[0.932],[0.002],[0.934],
+    [13],[15.524],[1.781],[5.529],[94],[2],[96],
     table.hline(),
   ),
 ) <tab:ADC_calculations>
 
-From the table, we see that the ideal choice consists of an ADC with 12 bits and an LNA with $"NF"_"LNA" = 10 dot log(3.898)= 5.908 "dB"$. Interestingly, we can also observe that reducing the number of bits of the ADC to 11 leads to a $6 "dB"$ loss in the SNR, which indicates that it is the point where quantization noise completely overwhelms the other noise sources, according to @eq:SQNR.
+From the table, we see that the ideal choice consists of an ADC with 12 bits and an LNA with $"NF"_"LNA" = 10 dot log(3.523)= 5.4 "dB"$. Interestingly, we can also observe that reducing the number of bits of the ADC to 11 leads to a $6 "dB"$ loss in the SNR, which indicates that it is the point where quantization noise completely overwhelms the other noise sources, according to @eq:SQNR.
 
-Testing these values in simulation they were mostly correct. The LNA noise factor was slightly decreased to $"NF"_"LNA" = 5.8 "dB"$ in practice to account for small losses in the system.
+Testing these values in simulation they were mostly correct, leading to a final SNR of $10.4 "dB"$.
 
 === Full RX Simulation
 
