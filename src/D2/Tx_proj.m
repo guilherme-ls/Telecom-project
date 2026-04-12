@@ -6,9 +6,6 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
     %%%                   Transmitter                        %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % System properties
-    BW  = 10e6;     % Signal bandwidth
-    K   = 1.38e-23; % Boltzmann Constant
-    T   = 290;      % room temperature
     Rin = 50;       % Matching impedance chosen equal to 50
     
     %%% Signal Generation %%%
@@ -18,7 +15,7 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
     %%% Signal Generation %%%
     symbolRate              = simulation_config.symbolRate;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
     basebandOverSampling    = round(basebandSamplingRate/symbolRate);
-    NSamples_BB             = 2^10;   % Signal length (after RRC filter)
+    NSamples_BB             = 2^13;   % Signal length (after RRC filter)
     
     % Signal frequencies
     freqVin_or1   = 7.12e6;
