@@ -57,7 +57,7 @@ Finally and a discussion going over how the AD9363 chip (found in the ADALM-PLUT
 
 = System Simulation
 
-In this project, we design the uplink modules of a Cloud Radio Access Network, modelling and optimizing all the individual components involved in the transmission and reception chains built using the Inphase/Quadrature (IQ) Homodyne architecture. Each element of the chain and the full transmission and reception chain are simulated and evaluated to ensure they meet the required performance metrics.
+In this project, we design the uplink modules of a Cloud Radio Access Network, modelling and optimizing all the individual components involved in the transmission and reception chains built using the Inphase/Quadrature (IQ) Homodyne architecture. Each element of the chain and the full transmission and reception chain are simulated and evaluated to ensure they meet the required performance metrics. All the elements have their parameters optimized to reduce the system's power consumption.
 
 == Transmitter (TX)
 
@@ -172,6 +172,86 @@ Now this report will go through each element of the reception chain and use the 
 
 === Low Noise Amplifier
 
+The low noise amplifier, as the first amplification stage of the system, must provide a considerable amplification with the lowest possible noise added, as the Friis formula for noise shows that it has the greatest weight in the overall noise:
+
+$ F_("chain") = F_("LNA") + (F_("rest") - 1)/(G_("LNA")) $
+
+We can also see that increasing its gain reduces the noise contribution of subsequent elements of the chain, which is a desired result. Therefore, we decide to adopt the highest gain permitted by the specifications, which gives us:
+
+$ G_("LNA") = 15 "dB" $
+
+To determine its noise contribution, we must also determine the contributions of the baseband amplifier and the ADC. Thus, this analysis will be conducted later in the report.
+
+== Down-Mixer
+
+To determine the down-mixer's impact in the system, we consider a modulated signal $v_"in"(t)$ as input of the mixer and analyse its I and Q outputs. Let us consider the following input signal, where $omega_"LO"$ is the frequency of the local oscilator:
+
+$ v_"in" (t) = I(t) cos (omega_"LO" t) + Q(t) sin (omega_"LO" t) $
+
+The Local Oscillator (LO) generates two unmodulated quadrature carriers with an ideal amplitude of 1:
+$ v_"LO,I" (t) = cos(omega_"LO" t) $
+$ v_"LO,Q" (t) = sin(omega_"LO" t) $
+
+Considering an ideal mixer in our case, the input signal is then split and multiplied by the LO signals to obtain the I and Q components.
+
+$ v_I (t) &= v_"in" (t) cos(omega_"LO" t) \
+&= I(t)/2 [1 + cos(2 omega_"LO" t)] - Q(t)/2 sin(2 omega_"LO" t) $
+
+$ v_Q (t) &= v_"in" (t) sin(omega_"LO" t) \
+&= -I(t)/2 sin(2 omega_"LO" t) + Q(t)/2 [1 + cos(2 omega_"LO" t)] $
+
+A down-conversion mixer is always followed by a low-pass filter to remove the high-frequency mixing products, leaving only the baseband signals:
+
+$ v_"I,filt" (t) &= I(t)/2 \
+  v_"Q,filt" (t) &= Q(t)/2 $
+  
+Thus we conclude that on average, and especially in the case where $v_"in" (t) = sin((omega_"sig" + omega_"LO") t)$ as is the case in the simulations, the signal power in each arm will be one fourth of the input value, which translates into a $6 "dB"$ loss.
+
+Therefore, this $6 "dB"$ loss in each arm must be considered in our chain gain calculations.
+
+== Anti-Alias Filter
+
+After the down-mixer the signal passes through a low-pass filter, which seeks to attenuate the replica of the signal at $2 f_("LO")$ and the noise outside the useful band, preventing both from being aliased into the useful signal when passing through the ADC.
+
+Therefore, for it to execute its function with the highest possible performance and while respecting the system requirements, we adopt the parameters in table @tab:RX_filter_specifications.
+
+#figure(
+  caption: [RX baseband filter specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [$f_1$], [$10 "MHz"$],
+    table.hline(),
+    [$f_2$], [$15 "MHz"$],
+    table.hline(),
+    [$A_"max"$], [$0.5 "dB"$],
+    table.hline(),
+    [$A_"min"$], [$40 "dB"$],
+    table.hline(),
+  ),
+) <tab:RX_filter_specifications>
+
+The useful band of the signal has $20 "MHz"$, which justifies the choice of $f_1$. The choice of $f_2$ seeks to prevent aliasing in the ADC. $A_"max"$ comes from the system specifications. And $A_"min"$ provides a good attenuation for signals outside the useful band.
+
+The filter is again implemented as a FIR filter to avoid non-constant group delay. It is also ideal and should not have a noticeable impact in the power and noise of the useful signal.
+
+== Baseband Amplifier
+
+After the filter, we have the baseband amplifier, which provides a final amplification step to ensure the signal amplitude meets the ADC full scale. We can easily determine its theoretical gain through the following equation which sums all the gains in the chain:
+
+$ G_"chain,dB" = G_"LNA,dB" + G_"mixer,dB" + G_"BBamp,dB" $
+
+Therefore, substituting the values already calculated we can determine $G_"BBamp,dB"$ as:
+
+$ 32.97 = 15 -6 + G_"BBamp,dB" arrow.r.double.long G_"BBamp,dB" = 23.97 "dB" $
+
+In practice, a slightly lower value of $G_"BBamp,dB" = 23.5 "dB"$ was employed in the simulated system to prevent the saturation of the ADC, which always leads to catastrophic results in the output signal.
+
+In terms of noise factor, the system specifications define a fixed value of $N F_"BBamp" = 10 "dB"$, which is employed in the simulations. Since no limitations are outlined in terms of IIP3, we decided to employ the default value in the provided code.
+
+== Analog to Digital Converter
+
+This last step in the reception chain is extremely relevant to the noise calculations, as the choice of the number of bits used 
 
 = Hardware Experiments
 
