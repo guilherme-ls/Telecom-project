@@ -92,7 +92,7 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
     basebandAnalog_dac_Q = DAC(basebandDigital_Q,nBitDAC,Vref,dacType,basebandSamplingRate,continuousTimeSamplingRate);
     
     % Calculate the power used by the DACs
-    P_DAC = 10e-13 * basebandSamplingRate * 2^(nBitDAC);
+    P_DAC = 1e-13 * basebandSamplingRate * 2^(nBitDAC);
     P_DAC_total = 2 * P_DAC;
     
     %%% Baseband FAKE Analog filter %%%
@@ -126,7 +126,7 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
     Flo      = tx_config.Flo; % Local Oscillator Frequency
     rfSignal = upMixer(basebandAnalog_filt_I,basebandAnalog_filt_Q,Flo,continuousTimeSamplingRate);
     
-    P_upMixer = 5 * 10e-12 * Flo;
+    P_upMixer = 5 * 1e-12 * Flo;
     P_upMixer_total = 2 * P_upMixer;
     
     %%% RF Amplification %%%
@@ -147,7 +147,7 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
             PA_IIP3       = 44.85-39.46;      % 
             PA_NF         = 8.07;      % PA Noise figure ; in dB
             PA_Gain       = 39.46;     %
-            P_cons_PA = 15*1;
+            P_cons_PA = 15*0.88;
         case 'ADL5606'
             PA_IIP3       = 44.3-21.45;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
             PA_NF         = 4.9;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz

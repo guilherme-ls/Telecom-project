@@ -27,13 +27,13 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     LNA_NF   = rx_config.LNA_NF;    % (dB)
     rfLNASignal = rfLNA(channel_output,LNA_Gain,LNA_NF,LNA_IIP3,Rin,continuousTimeSamplingRate/2);
     
-    P_LNA = 10e-2 / (10^(LNA_NF / 10) - 1);
+    P_LNA = 1e-2 / (10^(LNA_NF / 10) - 1);
     
     %%% Mixing down to BB %%%
     Flo = rx_config.Flo;
     [basebandAnalog_raw_I,basebandAnalog_raw_Q] = downMixer(rfLNASignal,Flo,continuousTimeSamplingRate);
     
-    P_downMixer = 5 * 10e-12 * Flo;
+    P_downMixer = 5 * 1e-12 * Flo;
     P_downMixer_total = 2 * P_downMixer;
     
     %%% Baseband fake Analog filter %%%
@@ -73,14 +73,14 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     basebandAnalog_amp_I = BBamp(basebandAnalog_filtrx_I,BBamp_Gain,BBamp_NF,BBamp_IIP3,Rin,BBamp_band,continuousTimeSamplingRate);
     basebandAnalog_amp_Q = BBamp(basebandAnalog_filtrx_Q,BBamp_Gain,BBamp_NF,BBamp_IIP3,Rin,BBamp_band,continuousTimeSamplingRate);
     
-    P_BBamp = 10e-9 * BBamp_band;
+    P_BBamp = 1e-9 * BBamp_band;
     P_BBamp_total = 2 * P_BBamp;
     
     %%% Analog to Digital Conversion %%%
     nBitADC = rx_config.nBitADC;
     Vref    = rx_config.Vref;
     total_delay = (rx_config.delayADC + RXBB_Filt_n) / 2; % WARNING : non trivial value !!! to be thoroughly analyzed
-    delay = mod(total_delay, round(continuousTimeSamplingRate/basebandSamplingRate));
+    delay = 0; %mod(total_delay, round(continuousTimeSamplingRate/basebandSamplingRate));
     adcSamplingRate = basebandSamplingRate;
     % Perform conversion
     basebandAnalog_adc_I = ADC(basebandAnalog_amp_I,nBitADC,Vref,adcSamplingRate,delay,continuousTimeSamplingRate);
@@ -93,7 +93,7 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     % figure(6)
     % plot(basebandAnalog_amp_I)
 
-    P_ADC = 10e-13 * adcSamplingRate * 2^(nBitADC);
+    P_ADC = 1e-13 * adcSamplingRate * 2^(nBitADC);
     P_ADC_total = 2 * P_ADC;
     
     % Total power consumed
@@ -105,7 +105,7 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     % RX RRC and downsampling (reverse effect of resample(qamSig...) )
     % WARNING : this downsampling may create unexpected sampling effects due to butterworth filtering and phase distortion
     %           please check signals integrity before and after this step
-    shift = 0;%floor(total_delay/round(continuousTimeSamplingRate/basebandSamplingRate)) + 1;
+    shift = 0; %floor(total_delay/round(continuousTimeSamplingRate/basebandSamplingRate)) + 1;
     basebandComplexDigital_shifted = basebandComplexDigital(shift + 1 : end);
     basebandComplexDigital_fir            = resample(basebandComplexDigital_shifted,1,basebandOverSampling,basebandRRC);
     

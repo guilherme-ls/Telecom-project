@@ -13,7 +13,7 @@ signal_config.test_type = 'onetone';
 %%%%% LNA  %%%%
 rx_config.LNA_Gain = 15;  % (dB)  
 rx_config.LNA_IIP3 = 0; % (dBm)
-rx_config.LNA_NF   = 5.8;   % (dB)
+rx_config.LNA_NF   = 5.4;   % (dB)
 %%%%% RXBB %%%%
 rx_config.Flo = 2.4e9;
 rx_config.RXBB_Filt_rp = 0.5;
@@ -30,9 +30,9 @@ rx_config.delayADC = 0;
 rx_config.Vref = 1;
 
 % Input signal
-Fs_ADC = 30e6;
+Fs_ADC = simulation_config.basebandSamplingRate;
 Rin = 50;
-N_points = 2^13;    % Number of signal points
+N_points = 2^12;    % Number of signal points
 N_Cont = N_points*simulation_config.continuousTimeSamplingRate/Fs_ADC; % Number of signal points
 Ts_Cont = 1/simulation_config.continuousTimeSamplingRate;
 t_Cont = (0:(N_Cont-1))*Ts_Cont; % Time vector

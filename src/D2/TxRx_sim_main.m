@@ -11,7 +11,7 @@ signal_config.test_type = 'mod';
 
 %%% TX Params %%%
 %%%%% DAC %%%%
-tx_config.nBitDAC = 4; % Number of bits of the DAC
+tx_config.nBitDAC = 10; % Number of bits of the DAC
 tx_config.Vref = 1;    % Voltage reference of the DAC
 %%%%% Filter %%%%
 tx_config.TXBB_Filt_rp = 0.5; % Passband ripple in dB
@@ -21,16 +21,16 @@ tx_config.TXBB_Filt_f = [10 15]*1e6; % Cutoff frequencies (Hz) 0.5;
 tx_config.Flo  = 2.4e9;
 %%%%% PA %%%%                                             
 tx_config.PA_mux = 'ADL5606'; % PA Model 
-tx_config.attenuation = -7; % -10.4; % (dB) Preattenuation before PA
+tx_config.attenuation = -6.4; %  -10.4; % (dB) Preattenuation before PA
                                                     
 %%% Channel Params %%%
-channel_config.distance = 1400 * 0.5;
+channel_config.distance = 1400;
 
 %%% RX Params %%%
 %%%%% LNA  %%%%
-rx_config.LNA_Gain = 15;  % (dB)  
+rx_config.LNA_Gain = 15;  % (dB)
 rx_config.LNA_IIP3 = 0; % (dBm)
-rx_config.LNA_NF   = 5.8;   % (dB)
+rx_config.LNA_NF   = 5.4;   % (dB)
 %%%%% RXBB %%%%
 rx_config.Flo  = 2.4e9;
 rx_config.RXBB_Filt_rp = 0.5;
@@ -94,13 +94,6 @@ disp(['SNR: ', num2str(perf_rx.snr), ' dB.'])
 
 if strcmp(signal_config.test_type, 'mod')
     disp(['Signal power (sent): ', num2str(perf_tx.signal_power), ' mW or ', num2str(10*log10(perf_tx.signal_power)), ' dBm.'])
-    figure()
-    subplot(1,2,1)
-    plot(tx_qam_input,'d')
-    title('constellation at TX')
-    subplot(1,2,2)
-    plot(rx_output_truncated,'d')
-    title('constellation at RX')
     % WARNING : the received constellation has almost no sense until filters
     %           delays have been thoroughly analyzed and compensated
 
@@ -153,6 +146,14 @@ if strcmp(signal_config.test_type, 'mod')
     disp(['Bit Error Rate (BER): ', num2str(BER)])
     disp(['Symbol Errors Found: ', num2str(num_sym_errors)])
     disp(['Symbol Error Rate (SER): ', num2str(SER)])
+
+    figure()
+    subplot(1,2,1)
+    plot(tx_qam_input,'d')
+    title('constellation at TX')
+    subplot(1,2,2)
+    plot(rx_output_truncated,'d')
+    title('constellation at RX')
 end
 
 %%% Performances %%%
