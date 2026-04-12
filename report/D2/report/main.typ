@@ -174,13 +174,15 @@ Now this report will go through each element of the reception chain and use the 
 
 The low noise amplifier, as the first amplification stage of the system, must provide a considerable amplification with the lowest possible noise added, as the Friis formula for noise shows that it has the greatest weight in the overall noise:
 
-$ F_("chain") = F_("LNA") + (F_("rest") - 1)/(G_("LNA")) $
+$ F_("chain") = F_("LNA") + (F_("rest") - 1)/(G_("LNA")) $ <eq:Friis_noise>
 
 We can also see that increasing its gain reduces the noise contribution of subsequent elements of the chain, which is a desired result. Therefore, we decide to adopt the highest gain permitted by the specifications, which gives us:
 
 $ G_("LNA") = 15 "dB" $
 
-To determine its noise contribution, we must also determine the contributions of the baseband amplifier and the ADC. Thus, this analysis will be conducted later in the report.
+To determine its noise contribution, we must also determine the contributions of the baseband amplifier and the ADC. Thus, this analysis will be conducted later in the report. However, we must advance that the LNA noise figure is inversely proportional to the power it consumes, which must be taken into account when choosing its value.
+
+$ "P"_"LNA" = 10^(-2)/(10^("NF"_"LNA"/10) - 1) $
 
 == Down-Mixer
 
@@ -251,7 +253,43 @@ In terms of noise factor, the system specifications define a fixed value of $N F
 
 == Analog to Digital Converter
 
-This last step in the reception chain is extremely relevant to the noise calculations, as the choice of the number of bits used 
+This last step in the reception chain is extremely relevant to the noise calculations, as the choice of the number of bits used by the ADC will determine the quantization noise it adds to the signal. Therefore, we must balance how much power it consumes and how much quantization noise it adds to the signal (@eq:SQNR), both controlled by its number of bits (@eq:PADC). Observe that in the provided equations, $N$ represents the number of bits, ENOB the effective number of bits (which we adopt as equal to $N$ for practical purposes), and $C$ a constant that incorporates parameters not immediately relevant to the analysis.
+
+$ "SQNR" = 6.02 dot N + C $ <eq:SQNR>
+$ P_"ADC" = 10^(-13) dot f_s dot 2^("ENOB") $ <eq:PADC>
+
+Based on this fact, we need to share the noise budget of the system between the ADC and the LNA in such a way that the total power consumption is minimized. 
+
+Since there is no easy way to calculate the noise factor of the ADC to determine its number of bits theoretically, we decided to create a simulation of the full RX chain, considering an LNA with $"NF"_"LNA" = 0$ and a sinusoidal input of power $-82.97 "dB"$ summed with thermal noise (the minimum power input). In this way, we vary the number of bits of the ADC, measuring the SNR of the output and the total power consumed (excluding the LNA). Based on the output SNR, we calculate the noise figure of the whole system excluding the LNA and determine its own noise figure using @eq:Friis_noise such that the total reaches $"NF" = 10 "dB"$. Finally, we calculate the power consumed by the LNA and provide a full estimate for the system.
+
+The results are shown in @tab:ADC_calculations.
+
+#figure(
+  caption: [Power consumption and LNA noise figure as a function of N.],
+  table(
+    columns: 7,
+    align: center,
+    table.header(
+        [N],[SNR],[$"F"_"rest"$],[$"F"_"LNA"$],[$"P"_"rest"$],[$"P"_"LNA"$],[$"P"_"total"$]
+    ),
+    [11],[6.877],[-],[-],[-],[-],[],
+    table.hline(),
+    [12],[12.7],[3.412],[3.898],[0.685],[0.003],[0.688],
+    table.hline(),
+    [13],[14.4],[2.306],[5.004],[0.932],[0.002],[0.934],
+    table.hline(),
+  ),
+) <tab:ADC_calculations>
+
+From the table, we see that the ideal choice consists of an ADC with 12 bits and an LNA with $"NF"_"LNA" = 10 dot log(3.898)= 5.908 "dB"$. Interestingly, we can also observe that reducing the number of bits of the ADC to 11 leads to a $6 "dB"$ loss in the SNR, which indicates that it is the point where quantization noise completely overwhelms the other noise sources, according to @eq:SQNR.
+
+Testing these values in simulation they were mostly correct. The LNA noise factor was slightly decreased to $"NF"_"LNA" = 5.8 "dB"$ in practice to account for small losses in the system.
+
+=== Full RX Simulation
+
+To finalize this section after having successfully designed all the individual components, we execute two RX simulations to show the system performance for sinusoidal signals in both power (and SNR) extremes, as described in the channel section.
+
+
 
 = Hardware Experiments
 
