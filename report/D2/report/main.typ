@@ -392,11 +392,40 @@ The results are shown in @tab:ADC_calculations.
 
 From the table, we see that the ideal choice consists of an ADC with 12 bits and an LNA with $"NF"_"LNA" = 10 dot log(3.523)= 5.4 "dB"$. Interestingly, we can also observe that reducing the number of bits of the ADC to 11 leads to a $6 "dB"$ loss in the SNR, which indicates that it is the point where quantization noise completely overwhelms the other noise sources, according to @eq:SQNR.
 
-Testing these values in simulation they were mostly correct, leading to a final SNR of $10.4 "dB"$.
+Testing these values in simulation they were mostly correct, leading to a final SNR of arround $10.4 "dB"$.
 
 === Full RX Simulation
 
 To finalize this section after having successfully designed all the individual components, we execute two RX simulations to show the system performance for sinusoidal signals in both power (and SNR) extremes, as described in the channel section.
+
+#figure(
+  image("./assets/RX_chain_1400.png", width: 95%),
+  caption: [Signal at different points of the RX chain, whith the main peaks highlighted. This considers an input signal corresponding to the distance $d=1.4 "km"$.]
+) <fig:RX_chain_sim_1400>
+
+#figure(
+  image("./assets/RX_chain_14.png", width: 95%),
+  caption: [Signal at different points of the RX chain, whith the main peaks highlighted. This considers an input signal corresponding to the distance $d=1.4 "m"$.]
+) <fig:RX_chain_sim_14>
+
+Observing @fig:RX_chain_sim_1400 and @fig:RX_chain_sim_14 we can see that the simulated chain works exactly as modeled in theory. Starting by the input, the peak is $2.3 "dB"$ below the expected value because of the Blackmann window applied to the PSD, having exactly the expected power when you integrate the side bins into which the power spread. Following the chain, we see that the LNA indeed provides the expected $15 "dB"$ gain and that in the case of $d= 1.4 "m"$ it also generates some distortion at $7.2 "GHz"$.
+
+Now looking at the mixer I output, we see that the useful signal was indeed attenuated in $6 "dB"$ and that an additional copy was created at $4.8 "GHz"$. At last, after the baseband filter the signal gains another $23 "dB"$ and, in the case of the $d= 1.4 "m"$ signal, presents close to the exact power required to cover the full ADC scale (when considering the Blackmann window spread).
+
+#figure(
+  image("./assets/RX_output_1400.png", width: 70%),
+  caption: [Signal output of the chain considering an input signal corresponding to the distance $d=1.4 "km"$.]
+) <fig:RX_output_sim_1400>
+#figure(
+  image("./assets/RX_output_14.png", width: 70%),
+  caption: [Signal output of the chain considering an input signal corresponding to the distance $d=1.4 "m"$.]
+) <fig:RX_output_sim_14>
+
+@fig:RX_output_sim_1400 and @fig:RX_output_sim_14 show the complex signal output of the RX chain, and it confirms the absence of ADC saturation in the high power case. The code informs an SNR of $70.91 "dB"$ for $d=1.4 "m"$ and $10.58 "dB"$ for $d=1.4 "km"$. Therefore, the designed RX chain closely follows the specifications.
+
+At last, the power consumption of the RX chain was of $73.22 "mW"$.
+
+=== Complete TX/Rx Chain
 
 
 
