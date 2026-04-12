@@ -14,7 +14,7 @@ close all;
 clear all;
 
 % Simulation parameters
-continuousTimeSamplingRate = 19.98e9; % Operating Frequency to emulate the behavior of a continuous time system
+continuousTimeSamplingRate = 19.968e9; % Operating Frequency to emulate the behavior of a continuous time system
 Ts_Cont                    = 1/continuousTimeSamplingRate; % Continuous time sampling period
 %N_Cont                     = 2^18;   % Number of signal points 
 N                          = 2^13;       % Number of signal points (@ADC rate)

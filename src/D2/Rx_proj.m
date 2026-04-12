@@ -5,11 +5,10 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     perf_rx.signal_power = 0;
     
     continuousTimeSamplingRate    = simulation_config.continuousTimeSamplingRate;     % A sampling rate which is sufficiently high in order to be close to the continous time
-    basebandSamplingRate_or       = 30e6;     % The sampling rate of the complex baseband signal ; Units : Samples/second
+    basebandSamplingRate       = simulation_config.basebandSamplingRate;     % The sampling rate of the complex baseband signal ; Units : Samples/second
     % in this project it MUST BE a multiple of symbolRate
-    basebandSamplingRate          = continuousTimeSamplingRate/round(continuousTimeSamplingRate/basebandSamplingRate_or);
     
-    symbolRate              = 15e6;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
+    symbolRate              = simulation_config.symbolRate;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
     basebandOverSampling    = round(basebandSamplingRate/symbolRate);
     
     %%% Baseband (digital) shaping filter %%%
@@ -80,7 +79,8 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     %%% Analog to Digital Conversion %%%
     nBitADC = rx_config.nBitADC;
     Vref    = rx_config.Vref;
-    delay   = rx_config.delayADC; % WARNING : non trivial value !!! to be thoroughly analyzed
+    total_delay = (rx_config.delayADC + RXBB_Filt_n) / 2; % WARNING : non trivial value !!! to be thoroughly analyzed
+    delay = mod(total_delay, round(continuousTimeSamplingRate/basebandSamplingRate));
     adcSamplingRate = basebandSamplingRate;
     % Perform conversion
     basebandAnalog_adc_I = ADC(basebandAnalog_amp_I,nBitADC,Vref,adcSamplingRate,delay,continuousTimeSamplingRate);
@@ -105,14 +105,16 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     % RX RRC and downsampling (reverse effect of resample(qamSig...) )
     % WARNING : this downsampling may create unexpected sampling effects due to butterworth filtering and phase distortion
     %           please check signals integrity before and after this step
-    basebandComplexDigital_fir            = resample(basebandComplexDigital,1,basebandOverSampling,basebandRRC);
+    shift = 0;%floor(total_delay/round(continuousTimeSamplingRate/basebandSamplingRate)) + 1;
+    basebandComplexDigital_shifted = basebandComplexDigital(shift + 1 : end);
+    basebandComplexDigital_fir            = resample(basebandComplexDigital_shifted,1,basebandOverSampling,basebandRRC);
     
     % Normalize received symbols to UnitAveragePower (see qammod(inSig)) 
     % Trully effective when noise and distortions are not too large compared to the useful signal
     basebandComplexDigital_fir            = basebandComplexDigital_fir / sqrt(var(basebandComplexDigital_fir));
     
     % Coarse truncation of the transient parts. 
-    % This should be optimized with respect to the filters delays. 
+    % This should be optimized with respect to the filters delays.
     basebandComplexDigital_fir_truncated  = basebandComplexDigital_fir(10:end-10);
     
     rx_output = basebandComplexDigital;

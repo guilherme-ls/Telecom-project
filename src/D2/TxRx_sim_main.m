@@ -2,10 +2,12 @@ clear;
 close all;
 
 %%% Simulation Params %%%
-simulation_config.continuousTimeSamplingRate = 19.98e9; 
+simulation_config.continuousTimeSamplingRate = 19.968e9;
+simulation_config.basebandSamplingRate = 30.72e6;
+simulation_config.symbolRate = 15.36e6;
 
 %%% Signal Params %%%
-signal_config.test_type = 'onetone';
+signal_config.test_type = 'mod';
 
 %%% TX Params %%%
 %%%%% DAC %%%%
@@ -19,10 +21,10 @@ tx_config.TXBB_Filt_f = [10 15]*1e6; % Cutoff frequencies (Hz) 0.5;
 tx_config.Flo  = 2.4e9;
 %%%%% PA %%%%                                             
 tx_config.PA_mux = 'ADL5606'; % PA Model 
-tx_config.attenuation = -10.4; %-7; % (dB) Preattenuation before PA
+tx_config.attenuation = -7; % -10.4; % (dB) Preattenuation before PA
                                                     
 %%% Channel Params %%%
-channel_config.distance = 1400;
+channel_config.distance = 1400 * 0.5;
 
 %%% RX Params %%%
 %%%%% LNA  %%%%
@@ -47,11 +49,11 @@ rx_config.Vref = 1;
 %%% Communication Chain %%%
 
 [tx_output, tx_input, tx_qam_input, perf_tx] = Tx_proj(simulation_config, tx_config, signal_config);
+rx_config.delayADC = perf_tx.TXBB_Filt_n;
 channel_output = Channel_proj(simulation_config, tx_config, tx_output, channel_config.distance);
 [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, rx_config, signal_config, channel_output);
-
-basebandSamplingRate_or       = 30e6;     
-basebandSamplingRate          = simulation_config.continuousTimeSamplingRate/round(simulation_config.continuousTimeSamplingRate/basebandSamplingRate_or);
+    
+basebandSamplingRate          = simulation_config.basebandSamplingRate;
 
 %%% Plotting %%%
 Rin = 50;
@@ -87,21 +89,70 @@ title('Receiver complex recombined output')
 xlabel('frequency (Hz)')
 ylabel('PSD (dBm/bin)')
 
-
-%disp(['Signal power (sent): ', num2str(perf_tx.signal_power), ' mW or ', num2str(10*log10(perf_tx.signal_power)), ' dBm.'])
 disp(['Signal power (digital out): ', num2str(perf_rx.signal_power), ' mW or ', num2str(10*log10(perf_rx.signal_power)), ' dBm.'])
 disp(['SNR: ', num2str(perf_rx.snr), ' dB.'])
 
 if strcmp(signal_config.test_type, 'mod')
-   figure()
-   subplot(1,2,1)
-   plot(tx_qam_input,'d')
-   title('constellation at TX')
-   subplot(1,2,2)
-   plot(rx_output_truncated,'d')
-   title('constellation at RX')
-   % WARNING : the received constellation has almost no sense until filters
-   %           delays have been thoroughly analyzed and compensated
+    disp(['Signal power (sent): ', num2str(perf_tx.signal_power), ' mW or ', num2str(10*log10(perf_tx.signal_power)), ' dBm.'])
+    figure()
+    subplot(1,2,1)
+    plot(tx_qam_input,'d')
+    title('constellation at TX')
+    subplot(1,2,2)
+    plot(rx_output_truncated,'d')
+    title('constellation at RX')
+    % WARNING : the received constellation has almost no sense until filters
+    %           delays have been thoroughly analyzed and compensated
+
+    sync_offset = finddelay(tx_qam_input, rx_output_truncated);
+    
+    % 2. Shift the arrays to align their starting points
+    if sync_offset > 0
+        % RX is delayed. Skip the leading samples of RX.
+        rx_aligned = rx_output_truncated(sync_offset + 1 : end);
+        tx_aligned = tx_qam_input;
+    elseif sync_offset < 0
+        % RX was over-truncated. Skip the leading samples of TX.
+        tx_aligned = tx_qam_input(abs(sync_offset) + 1 : end);
+        rx_aligned = rx_output_truncated;
+    else
+        % Start points are perfectly aligned
+        tx_aligned = tx_qam_input;
+        rx_aligned = rx_output_truncated;
+    end
+    
+    % 3. Trim the tails so both arrays are exactly the same length
+    num_symbols = min(length(tx_aligned), length(rx_aligned));
+    tx_aligned  = tx_aligned(1:num_symbols);
+    rx_aligned  = rx_aligned(1:num_symbols);
+    
+    % Demodulate 16-QAM symbols
+    if exist('OCTAVE_VERSION', 'builtin') ~= 0
+        % Octave: scale back up by the variance before demodulating
+        scale_factor = sqrt(mean(abs(tx_qam_input).^2));
+        tx_ints = qamdemod(tx_aligned * scale_factor, 16);
+        rx_ints = qamdemod(rx_aligned * scale_factor, 16);
+    else
+        % MATLAB: Use the UnitAveragePower flag to match the TX modulation
+        tx_ints = qamdemod(tx_aligned, 16, 'UnitAveragePower', true);
+        rx_ints = qamdemod(rx_aligned, 16, 'UnitAveragePower', true);
+    end
+    
+    % Calculates SER
+    [num_sym_errors, SER] = symerr(tx_ints, rx_ints);
+    
+    % de2bi converts column vectors of integers into a matrix of bits
+    tx_bits = de2bi(tx_ints, 4);
+    rx_bits = de2bi(rx_ints, 4);
+    
+    % 4. Compare the bit matrices to find errors
+    [num_errors, BER] = biterr(tx_bits, rx_bits);
+    
+    disp(['Total Bits Analyzed: ', num2str(numel(tx_bits))])
+    disp(['Bit Errors Found: ', num2str(num_errors)])
+    disp(['Bit Error Rate (BER): ', num2str(BER)])
+    disp(['Symbol Errors Found: ', num2str(num_sym_errors)])
+    disp(['Symbol Error Rate (SER): ', num2str(SER)])
 end
 
 %%% Performances %%%

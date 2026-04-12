@@ -12,14 +12,13 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
     Rin = 50;       % Matching impedance chosen equal to 50
     
     %%% Signal Generation %%%
-    continuousTimeSamplingRate    = simulation_config.continuousTimeSamplingRate; % A sampling rate which is sufficiently high in order to be close to the continous time
-    basebandSamplingRate_or       = 30e6;     % The sampling rate of the complex baseband signal. In this project it MUST BE a multiple of symbolRate
-    basebandSamplingRate          = basebandSamplingRate_or; % continuousTimeSamplingRate/round(continuousTimeSamplingRate/basebandSamplingRate_or);
+    continuousTimeSamplingRate      = simulation_config.continuousTimeSamplingRate; % A sampling rate which is sufficiently high in order to be close to the continous time
+    basebandSamplingRate            = simulation_config.basebandSamplingRate;     % The sampling rate of the complex baseband signal. In this project it MUST BE a multiple of symbolRate
     
     %%% Signal Generation %%%
-    symbolRate              = 15e6;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
+    symbolRate              = simulation_config.symbolRate;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
     basebandOverSampling    = round(basebandSamplingRate/symbolRate);
-    NSamples_BB             = 2^12;   % Signal length (after RRC filter)
+    NSamples_BB             = 2^10;   % Signal length (after RRC filter)
     
     % Signal frequencies
     freqVin_or1   = 7.12e6;
@@ -117,7 +116,9 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
         TXBB_Filt_n = 6511;
     end
     disp('Designing the TX filter - This takes a while...')
+    % disp(['Filter order: ', num2str(TXBB_Filt_n)])
     TXBB_Filt       = firpm(TXBB_Filt_n,TXBB_Filt_fo,TXBB_Filt_ao,TXBB_Filt_w);
+    perf_tx.TXBB_Filt_n = TXBB_Filt_n;
     
     % Perform filtering
     disp('Filtering with the TX filter - This takes a while...')

@@ -2,7 +2,9 @@ clear;
 close all;
 
 %%% Simulation Params %%%
-simulation_config.continuousTimeSamplingRate = 19.98e9; 
+simulation_config.continuousTimeSamplingRate = 19.968e9; 
+simulation_config.basebandSamplingRate = 30.72e6;
+simulation_config.symbolRate = 15.36e6;
 
 %%% Signal Params %%%
 signal_config.test_type = 'mod';
@@ -26,8 +28,7 @@ tx_config.attenuation = -6.2; % (dB) pre-attenuation
 
 [tx_output, tx_input, tx_qam_input, perf_tx] = Tx_proj(simulation_config, tx_config, signal_config);
 
-basebandSamplingRate_or       = 30e6;   
-basebandSamplingRate          = simulation_config.continuousTimeSamplingRate/round(simulation_config.continuousTimeSamplingRate/basebandSamplingRate_or);
+basebandSamplingRate  = simulation_config.basebandSamplingRate;
 
 %%% Plotting %%%
 Rin = 50;
