@@ -57,11 +57,127 @@ Finally and a discussion going over how the AD9363 chip (found in the ADALM-PLUT
 
 = System Simulation
 
+In this project, we design the uplink modules of a Cloud Radio Access Network, modelling and optimizing all the individual components involved in the transmission and reception chains built using the Inphase/Quadrature (IQ) Homodyne architecture. Each element of the chain and the full transmission and reception chain are simulated and evaluated to ensure they meet the required performance metrics.
+
+== Transmitter (TX)
+
+The RF transmission chain employed in this project is represented in @fig:TX_chain. The general specifications that will guide its design can equally be found in @tab:TX_specifications.
+
+#figure(
+  image("./assets/TX_fig.png", width: 80%),
+  caption: [TX transmission chain with all its individual components.]
+) <fig:TX_chain>
+
+#figure(
+  caption: [TX specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [Pout Average], [$20 "dBm"$],
+    table.hline(),
+    [ACPR], [$45 "dBm"$],
+    table.hline(),
+    [RF Bandwidth], [$30 "MHz"$],
+    table.hline(),
+    [Useful Bandwidth], [$20 "MHz"$],
+    table.hline(),
+    [Central Frequency], [$2.4 "GHz"$],
+    table.hline(),
+    [Matching Resistance], [$50 thin Omega$],
+    table.hline(),
+    [Temperature], [$290 "K"$],
+    table.hline(),
+    [DAC Full Scale], [$plus.minus 1 "V"$],
+    table.hline(),
+  ),
+) <tab:TX_specifications>
+
+== Transmission Channel
+
+In this project we will be considering a memoryless channel that can have its attenuation fully characterized by the Friis transmission equation, shown in @eq:Friis_transmission. In this equation $G_r$ is the receiver gain, $G_e$ the transmitter gain, $P_r$ the power received, $P_e$ the power transmitted, $lambda$ the wavelength of the transmitted signal, and $d$ the distance between the transmitter and the receiver.
+
+$ P_r = G_r G_e P_e ((lambda)/(4 pi d)) $ <eq:Friis_transmission>
+
+In this project, the distance between the receiver and the transmitter covers a range from $d=1.4 thin "m"$ to $d=1.4 thin "km"$. We also shall consider that the transmitting and receiving antennas provide no gain ($G_r = G_e = 1$). Therefore, we can write the channel attenuation in dB as in equation @eq:Friis_att.
+
+$ "Att" = 20 times log ((lambda)/(4 pi d)) $ <eq:Friis_att>
+
+Solving the equation considering for both limits of $d$ and considering $lambda$ for the case of our $2.4 "GHz"$ signal, we get:
+
+$ "Att" = [-42.97, -102.97] "dB" $
+
+Therefore, knowing that the output of the transmission chain will always have $20 "dBm"$ of power, we can calculate the input power of the receiver as the range:
+
+$ P_r = 20 "dBm" + "Att" = [-22.97, -82.97] "dBm" $
+
+Besides that, we must also consider the antenna noise added to the signal through the transmission process, which corresponds to the thermal noise given in equation @eq:thermal_noise.
+
+$ N_r = 10 times log ((k T B)/(1 "mW")) = -101 "dBm" $ <eq:thermal_noise>
+
+Thus, subtracting the noise power from the input power we can calculate the input SNR range as:
+
+$ "SNR"_r = [78.03, 18.03] $
+
+Having characterized the input signal of the receiver, we can proceed in designing its individual components.
+
+== Receiver (RX)
+
+The RF reception chain implemented in this project is described by @fig:RX_chain. The general specifications that will guide its design can equally be found in @tab:RX_specifications.
+#figure(
+  image("./assets/RX_fig.png", width: 80%),
+  caption: [RX reception chain with all its individual components.]
+) <fig:RX_chain>
+
+#figure(
+  caption: [RX specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [SNR Receiver Out], [$>10 "dB"$],
+    table.hline(),
+    [In-band ripple], [$<1 "dB"$],
+    table.hline(),
+    [RF Bandwidth], [$30 "MHz"$],
+    table.hline(),
+    [Useful Bandwidth], [$20 "MHz"$],
+    table.hline(),
+    [Central Frequency], [$2.4 "GHz"$],
+    table.hline(),
+    [Matching Resistance], [$50 thin Omega$],
+    table.hline(),
+    [Temperature], [$290 "K"$],
+    table.hline(),
+    [ADC Full Scale], [$plus.minus 1 "V"$],
+    table.hline(),
+  ),
+) <tab:RX_specifications>
+
+From the channel analysis and the given specifications, we can start by determining the full chain gain needed for the input signal based on the ADC full range. Considering that a sinusoidal is being transmitted, and that we desire it to cover the ADC full scale when at its maximum input power, we can determine that the desired signal power at the ADC input is:
+
+$ P_(A D C) = 10 times log (((1 "V")^2)/(2 times (50 thin Omega)) times 1/(1 "mW")) = 10 "dBm" $
+
+Therefore, to prevent saturation of the ADC while still using its full resolution, we need a gain that takes the maximum input power from $-22.97 "dbm"$ to $10 "dBm"$:
+
+$G_("chain") = 10 "dBm" + 22.97 "dBm" = 32.97 "dBm"$
+
+This gain will be affected by the LNA, the mixer and the baseband amplifier.
+
+Similarly, we also desire an output SNR of at least $10 "dB"$. Since the minimum input SNR is of $18.03 "dB"$, we must establish a maximum noise factor for the chain of:
+
+$N F_("chain") = 18.03 "dBm" - 10 "dBm" = 8.03 "dBm"$
+
+This noise factor will be affected by the LNA, the baseband amplifier and the ADC.
+
+Now this report will go through each element of the reception chain and use the given specifications to model the desired parameters.
+
+=== Low Noise Amplifier
+
+
 = Hardware Experiments
 
 == Low Noise Amplifier Measurement
 
-In this part, the LNA TB-432-8A+ from _Miniciruit_ was characterized. By using a vector analyser, the curves in @lna-gain, @lna-s11 and @lna-s21 were measured.
+In this part, the LNA TB-432-8A+ from _Minicircuit_ was characterized. By using a vector analyser, the curves in @lna-gain, @lna-s11 and @lna-s21 were measured.
 From them, we can see that, at $f = 900 "MHz"$, the Return Loss is $S_"11" = -15 "dB"$, the gain is $S_"21" = 14.8 "dB"$, and that, the $1 "dB"$ compression point happens at 
 $-11 "dBm"$ with $S_"21" = 13.7 "dB"$.
 
@@ -76,13 +192,12 @@ $-11 "dBm"$ with $S_"21" = 13.7 "dB"$.
 == Power Amplifier Measurements
 
 Here, the ZX60_V62 Power Amplifier (given to our group) was measured using the SDR ADALM-PLUTO. The resulting performance curves 
-can be found at @pa-am-am, @pa-gain and @pa-eff. As these values were gathered "manually", the measurement points are more concentraded 
-at the compression point of the PA gain.
+can be found at @pa-am-am, @pa-gain and @pa-eff. As these values were gathered "manually", the measurement points are more concentraded at the compression point of the PA gain.
 
 #create-pa-am-am-figure("data/ZX60_V62.csv", [ZX60_V62 - AM/AM], [Curve of the measured AM/AM for the ZX60_V62 PA.],
                         [Input (dBm)], [Output (dBm)]) <pa-am-am>
 #create-pa-gain-figure("data/ZX60_V62.csv", [ZX60_V62 - Gain/Power], [Curve of the measured Gain/Power for the ZX60_V62 PA.], 
-                       [Power (dBm)], [Gain (dB)]) <pa-gain>
+                       [Input Power (dBm)], [Gain (dB)]) <pa-gain>
 #create-pa-efficience-figure("data/ZX60_V62.csv", [ZX60_V62 - $eta_("DE")$ and $eta_("PAE")$], [Curve of the measured $eta_("DE")$ and $eta_("PAE")$ for the ZX60_V62 PA.], 
                              [Power (dBm)], [$eta_("DE")$], [$eta_("PAE")$]) <pa-eff>
 
@@ -102,8 +217,8 @@ earlier than expected in our measurements.
           [Gain],[$15.6$],[dB],
           [$P_(1"dB")$],[$12$],[dBm],
           [$V$],[$5$],[V],
-          [$I$],[$89$],[mA],
-          [$P$],[$0.445$],[W],
+          [$I$],[$79$],[mA],
+          [$P$],[$0.395$],[W],
         ),
         caption: "Measured performance values for the ZX60_V62 PA",
       ),
