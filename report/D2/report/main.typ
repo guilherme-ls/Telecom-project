@@ -49,11 +49,11 @@ and the other with an ADALM-PLUTO SDR.
 The resulting curves are shown, and how they differ from the expected values found in the datasheets. Again with the same SDR, the transceiver chain was tested, with the needed 
 post-processing on the received symbols, producing some metrics curved.
 
-Finally and a discussion going over how the AD9363 chip (found in the ADALM-PLUTO) internal blocks differ from the modeled chain can be found in the conclusion section.
+Finally a discussion going over how the AD9363 chip (found in the ADALM-PLUTO) internal blocks differ from the modeled chain can be found in the conclusion section.
 
 = System Simulation
 
-In this project, we design the uplink modules of a Cloud Radio Access Network, modelling and optimizing all the individual components involved in the transmission and reception chains built using the Inphase/Quadrature (IQ) Homodyne architecture. Each element of the chain and the full transmission and reception chain are simulated and evaluated to ensure they meet the required performance metrics. All the elements have their parameters optimized to reduce the system's power consumption.
+We designed the uplink modules of a Cloud Radio Access Network, modelling and optimizing all the individual components involved in the transmission and reception chains built using the Inphase/Quadrature (IQ) Homodyne architecture. Each element of the chain and the full transmission and reception chain are simulated and evaluated to ensure they meet the required performance metrics. All the elements have their parameters optimized to reduce the system's power consumption.
 
 == Transmitter (TX)
 
@@ -231,11 +231,11 @@ To finalize, we conclude that the power consumption of the TX chain is of $1.930
 
 == Transmission Channel
 
-In this project we will be considering a memoryless channel that can have its attenuation fully characterized by the Friis transmission equation, shown in @eq:Friis_transmission. In this equation $G_r$ is the receiver gain, $G_e$ the transmitter gain, $P_r$ the power received, $P_e$ the power transmitted, $lambda$ the wavelength of the transmitted signal, and $d$ the distance between the transmitter and the receiver.
+For the transmission channel, we will be considering a memoryless channel that can have its attenuation fully characterized by the Friis transmission equation, shown in @eq:Friis_transmission. In this equation $G_r$ is the receiver gain, $G_e$ the transmitter gain, $P_r$ the power received, $P_e$ the power transmitted, $lambda$ the wavelength of the transmitted signal, and $d$ the distance between the transmitter and the receiver.
 
 $ P_r = G_r G_e P_e ((lambda)/(4 pi d)) $ <eq:Friis_transmission>
 
-In this project, the distance between the receiver and the transmitter covers a range from $d=1.4 thin "m"$ to $d=1.4 thin "km"$. We also shall consider that the transmitting and receiving antennas provide no gain ($G_r = G_e = 1$). Therefore, we can write the channel attenuation in dB as in equation @eq:Friis_att.
+The projected distance range between the receiver and the transmitter cover goes from $d=1.4 thin "m"$ to $d=1.4 thin "km"$. We also shall consider that the transmitting and receiving antennas provide no gain ($G_r = G_e = 1$). Therefore, we can write the channel attenuation in dB as in equation @eq:Friis_att.
 
 $ "Att" = 20 times log ((lambda)/(4 pi d)) $ <eq:Friis_att>
 
