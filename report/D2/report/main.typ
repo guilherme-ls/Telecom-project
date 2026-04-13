@@ -209,14 +209,25 @@ However, to verify the validity of this choice, we will test them in simulation 
 
 #figure(
   image("./assets/PA_ACPR.png", width: 95%),
-  caption: [DAC output ACPR per number of bits considering a 16-QAM modulated input.]
+  caption: [PA output around $2.4 "GHz"$, for different PAs.]
 ) <fig:PA_ACPR>
 
 Therefore, since the ADL5606 power amplifier has the lowest power consumption among those that had an ACPR higher than $45 "dB"$, it is the evident choice.
 
 === Full TX chain
 
-As e
+Having designed every component of the chain, we now proceed with testing the whole chain working together. A simulation with a modulated 16-QAM input signal is prepared and the results are shown in @fig:TX_chain_signal.
+
+#figure(
+  image("./assets/TX_chain.png", width: 95%),
+  caption: [Signal spectrum through different points of the TX chain.]
+) <fig:TX_chain_signal>
+
+We can observe that the transmission chain performs as expected, giving us a $19.9385 "dBm"$ of power at the output and having an ACPR of $-54.2316 "dB"$. Therefore, all the specifications are met. We outline that the signal power is slightly lower than $20 "dBm"$ to prevent saturation of the ADC on reception.
+
+Interestingly, during testing we came to the conclusion that even with a 1 bit DAC the system would reach the desired ACPR target. However, practical limitations of such an implementation led us to opt for continuing the usage of the 10 bit DAC.
+
+To finalize, we conclude that the power consumption of the TX chain is of $1.9303 "W"$.
 
 == Transmission Channel
 
@@ -446,7 +457,32 @@ At last, the power consumption of the RX chain was of $73.22 "mW"$.
 
 == Complete TX/Rx Chain
 
+Having designed the whole transmission and reception systems, we now perform simulations covering the entire communication chain. We start by sending a complex exponential signal of frequency $7.5 "MHz"$, considering a channel where $d = 1.4 "km"$. The results are shown in @fig:Full_chain_1400. As an implementation note, observe that the average power of a complex exponential signal is much higher than that of the modulated signal, which demands an increase of the attenuation before the PA in around $4 "dB"$.
 
+#figure(
+  image("./assets/Full_chain_1400.png", width: 95%),
+  caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "km"$.]
+) <fig:Full_chain_1400>
+
+We can verify that the chain works perfectly together, performing as required. The code gives an SNR of $10.6027 "dB"$ at the output, meeting expectations.
+
+Now we perform the same simulation considering a channel where $d = 1.4 "m"$.
+
+#figure(
+  image("./assets/Full_chain_14.png", width: 95%),
+  caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "m"$.]
+) <fig:Full_chain_14>
+
+Again, the communication chain performs as expected. Even if the output appears to have some harmonics due to saturation of the ADC, they are simply the quantization noise of the DAC that created the signal. We can confirm this through the SNR of $64.0591 "dB"$ at the output, which is close to the SQNR of a 10 bit DAC.
+
+Lastly, we perform a sweep over different distances inside the established limits and collect the SNRs along these points. The results are shown in @fig:SNR_dist.
+
+#figure(
+  image("./assets/SNRversusDist.png", width: 95%),
+  caption: [SNR of the output signal for distances between $1.4 "m"$ and $1.4 "km"$ between the transmitter and the receiver.]
+) <fig:SNR_dist>
+
+The plot shows that the system reaches the required SNR for every distance inside the specified limits.
 
 = Hardware Experiments
 
