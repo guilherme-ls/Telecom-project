@@ -36,10 +36,6 @@ Cloud Radio Access Network (C-RAN)",
   footer-text: "PRJ_4TE05_TP",
 )
 
-- Aux calculs analytiques qui vous ont permis de trouver les principales spécifications
-- A l'approche suivie pour l'optimisation de vos chaines d'émission et de réception
-- Aux résultats de simulation et à leur analyse
-
 = Introduction
 
 In this report, we modeled, optimized, simulated, and tested a transceiver communication chain. 
@@ -104,9 +100,27 @@ Given these observations, we start the design process of the TX chain.
 
 === Digital to Analog Converter
 
-Firstly, the DAC was chosen to be a zero order holder, due mostly to the power requirements of the system.
+Firstly, we must choose between a zero order holder and a zero padding DAC. To help better understand the difference between the two and guide the choice to be made, a testbench was created to input a lowpass noise to each one and to plot the spectrum of the resulting output. The corresponding plots are in @fig:DAC_styles.
 
-To obtain a preliminary estimation of the number of bits to choose for the DAC
+#figure(
+  image("./assets/DAC_styles.png", width: 95%),
+  caption: [Zero order holder and zero padding DAC output spectrums.]
+) <fig:DAC_styles>
+
+The figure shows that the zero padding DAC's output suffers an intense attenuation, while the zero order holder (ZOH) power is mostly conserved. Additionally, we observe that the ZOH DAC has its output signal filtered by a sinc function, which is to be expected.
+
+Based on the power requirements of the system being implemented, we opt for the ZOH implementation. Now, we must follow the analysis by determining the minimum number of bits the ADC must have for the system to achieve the desired performance.
+
+To obtain a preliminary estimation of the number of bits to choose for the DAC, we employ the heuristic that the output ACPR of the DAC itself must not be affected by its quantization noise, such that its influence on the final ACPR of the chain is minimized. To this end, a testbench was created to insert a single 16-QAM modulated signals in a series of DACs with different number of bits, measuring the ACPR of the output in each case. The results are shown in @fig:DAC_ACPR.
+
+#figure(
+  image("./assets/DAC_ACPR.png", width: 95%),
+  caption: [DAC output ACPR per number of bits considering a 16-QAM modulated input.]
+) <fig:DAC_ACPR>
+
+The plot shows that from 10 bits onwards the ACPR stabilizes around a fixed value, suggesting that at this point the DAC's quantization noise becomes insignificant when compared to the signal in the adjacent bands. Therefore, we adopt 10 bits as the number of bits for the DAC.
+
+As an addendum, it is interesting to mention that when conducting further tests with the full chain, a much lower number of bits was capable of achieving the desired performances in terms of ACPR. This will be later commented.
 
 === Reconstruction Filter
 
@@ -176,7 +190,7 @@ As the last step in the transmission chain implementation we must choose the pow
 
 From the table, we can immediately see that while the ZX60_V63+ and ZX60_V62+ have the lowest power consumption among the options, operating them at $20 "dBm"$ of output would put them beyond the $1 "dB"$ compression point, leading to heavy non-linearities and a steep decrease in the ACPR. Among the remaining options, the ADL5606 power amplifier offers at the same time the highest IIP3, highest $1 "dB"$ gain compression power, and lowest power consumption, presenting itself as the best choice available.
 
-However, to verify the validity of this choice, we will test them in simulation and calculate the ACPR at $20 "dBm"$ output power for each one. The output spectrum of each one is presented in x, and the ACPR in @tab:PA_ACPR. We must observe that all the power amplifiers have a higher gain than necessary for the desired output level. To each amplifier input signal was added a proportional attenuation to ensure the correct output.
+However, to verify the validity of this choice, we will test them in simulation and calculate the ACPR at $20 "dBm"$ output power for each one. The output spectrum of each one is presented in @fig:PA_ACPR, and the ACPR in @tab:PA_ACPR. We must observe that all the power amplifiers have a higher gain than necessary for the desired output power level. To each amplifier input signal was added a proportional attenuation to ensure the correct output.
 
 #figure(
   caption: [Power Amplifier ACPR at $20 "dBm"$ output power.],
@@ -186,14 +200,19 @@ However, to verify the validity of this choice, we will test them in simulation 
     table.header(
         [],[ZX60_V63+],[ZX60_V62+],[ZHL42],[ADL5606],[RFLUPA05M06G]
     ),
-    [ACPR (dB)],[19.7],[15.5],[39.46],[21.45],[33],
+    [ACPR (dB)],[19.7204],[24.8733],[54.1656],[53.1469],[50.3882],
     table.hline(),
-    [Attenuation (dB)],[19.7],[0],[39.46],[21.45],[33],
+    [Attenuation (dB)],[4.4],[0],[24.2],[6.2],[17.7],
     table.hline(),
   ),
 ) <tab:PA_ACPR>
 
+#figure(
+  image("./assets/PA_ACPR.png", width: 95%),
+  caption: [DAC output ACPR per number of bits considering a 16-QAM modulated input.]
+) <fig:PA_ACPR>
 
+Therefore, since the ADL5606 power amplifier has the lowest power consumption among those that had an ACPR higher than $45 "dB"$, it is the evident choice.
 
 === Full TX chain
 
@@ -392,7 +411,7 @@ The results are shown in @tab:ADC_calculations.
 
 From the table, we see that the ideal choice consists of an ADC with 12 bits and an LNA with $"NF"_"LNA" = 10 dot log(3.523)= 5.4 "dB"$. Interestingly, we can also observe that reducing the number of bits of the ADC to 11 leads to a $6 "dB"$ loss in the SNR, which indicates that it is the point where quantization noise completely overwhelms the other noise sources, according to @eq:SQNR.
 
-Testing these values in simulation they were mostly correct, leading to a final SNR of arround $10.4 "dB"$.
+Testing these values in simulation they were mostly correct, leading to a final SNR of around $10.4 "dB"$.
 
 === Full RX Simulation
 
@@ -425,7 +444,7 @@ Now looking at the mixer I output, we see that the useful signal was indeed atte
 
 At last, the power consumption of the RX chain was of $73.22 "mW"$.
 
-=== Complete TX/Rx Chain
+== Complete TX/Rx Chain
 
 
 
