@@ -25,10 +25,10 @@ signal_wavewidth = 10; % nm
 
 %%%%%%%%%% Dispersion Transfer Function
 
-dispersion = dispersion_0 + dispersion_slope*(wavelength - wavelength_0);
+dispersion = dispersion_0 + dispersion_slope*wavelength;
 
-beta_2 = - dispersion * wavelength_0^2 / (2*pi*c);
-beta_3 = dispersion_slope * wavelength_0^4 / (2*pi*c)^2;
+beta_2 = - dispersion * (wavelength_0 + wavelength)^2 / (2*pi*c);
+beta_3 = dispersion_slope * (wavelength_0 + wavelength)^4 / (2*pi*c)^2;
 
 beta = @(dw) (beta_2*dw^2)/2 + (beta_3*dw^3)/6;
 transfer_fun = @(dw) exp((-alpha -1j*beta(dw))*fiber_length);
@@ -43,7 +43,7 @@ half_width_max = sqrt(-2 * log(1/sqrt(2)) / (pulse_T0^2));
 half_width = half_width_max * 2;
 analitical_time_dispersion = beta_2 * half_width * fiber_length;
 
-T_min = pulse_T0 + analitical_time_dispersion;
+T_min = pulse_T0 + analitical_time_dispersion*1e-12;
 
 assert(0);
 N_points = 0;
