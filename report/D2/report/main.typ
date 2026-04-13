@@ -551,6 +551,67 @@ From these values, more static values were calculated and can be found in the le
   caption: "Comparison of the measured and expected performance values for the ZX60_V62 PA",
 )<pa-meas> 
 
+We also measured, using the pocket spectrum analyser TinySA, how the amplifier impacted different signal types (one tone, two tone, modulated).
+In @fig:pa-one-in you can see how the one tone signal was before entering the PA, and in @fig:pa-one-out how it looks like after. It's important to note the 
+existance of a second smaller peak at $2.39 "GHz"$, it comes from the local oscilator used by the ADALM-Pluto.
+
+#figure(
+  image("./data/tinySA/ONE-TONE.bmp", width: 95%),
+  caption: [Harmonic signal at the input of the PA.]
+) <fig:pa-one-in>
+
+#figure(
+  image("./data/tinySA/ONE-PA.bmp", width: 95%),
+  caption: [Harmonic signal at the output of the PA.]
+) <fig:pa-one-out>
+
+Meanwhile, if we introduce a two tone signal (@fig:pa-two-in), we can see how the intermodulation products appear from the PA non linearities in @fig:pa-two-out.
+
+#figure(
+  image("./data/tinySA/TWO-TONE.bmp", width: 95%),
+  caption: [Two tone signal at the input of the PA.]
+)<fig:pa-two-in>
+
+#figure(
+  image("./data/tinySA/TWO-PA.bmp", width: 95%),
+  caption: [Two tone signal at the output of the PA.]
+) <fig:pa-two-out>
+
+Finally, in figures @fig:pa-mod-10, @fig:pa-mod-15, @fig:pa-mod-17 and @fig:pa-mod-20, we can see the same modulated signal with different gains, 
+producing different ACPR values, given in @tab:pa-mod-acpr.
+
+#figure(
+  table(
+    columns: 4,
+    [*Input (dBm)*],[*Lower ACPR (dBc)*],[*Upper ACPR (dBc)*],[*Total ACPR (dBc)*],
+    [$-10$],[$-74.21$],[$-78.64$],[$-75.88$],
+    [$-15$],[$-72.04$],[$-70.33$],[$-71.10$],
+    [$-17$],[$-66.45$],[$-66.05$],[$-66.24$],
+    [$-20$],[$-66.98$],[$-68.26$],[$-67.57$],
+  ),
+  caption: "Values of ACPR for different inputs for the ZX60_V62 PA",
+) <tab:pa-mod-acpr>
+
+#figure(
+  image("./data/tinySA/MOD-10.bmp", width: 95%),
+  caption: [Modulated signal input of $-10 "dBm"$ at the output of the PA.]
+) <fig:pa-mod-10>
+
+#figure(
+  image("./data/tinySA/MOD-15.bmp", width: 95%),
+  caption: [Modulated signal input of $-15 "dBm"$ at the output of the PA.]
+) <fig:pa-mod-15>
+
+#figure(
+  image("./data/tinySA/MOD-17.bmp", width: 95%),
+  caption: [Modulated signal input of $-17 "dBm"$ at the output of the PA.]
+) <fig:pa-mod-17>
+
+#figure(
+  image("./data/tinySA/MOD-20.bmp", width: 95%),
+  caption: [Modulated signal input of $-20 "dBm"$ at the output of the PA.]
+)<fig:pa-mod-20>
+
 == Pluto Self-Communication
 
 In this last part we used the ADALM-PLUTO SDR to emulate the transceiver chain, and see how its performance varies with 
