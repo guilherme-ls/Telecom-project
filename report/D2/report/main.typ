@@ -49,7 +49,7 @@ and the other with an ADALM-PLUTO SDR.
 The resulting curves are shown, and how they differ from the expected values found in the datasheets. Again with the same SDR, the transceiver chain was tested, with the needed 
 post-processing on the received symbols, producing some metrics curved.
 
-Finally and a discussion going over how the AD9363 chip (found in the ADALM-PLUTO) internal blocks differ from the modeled chain can be found in the conclusion section.
+Finally a discussion going over how the AD9363 chip (found in the ADALM-PLUTO) internal blocks differ from the modeled chain can be found in the conclusion section.
 
 = System Simulation
 
