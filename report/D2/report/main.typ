@@ -515,7 +515,7 @@ can be found at @pa-am-am, @pa-gain and @pa-eff. As these values were gathered "
 #create-pa-efficience-figure("data/ZX60_V62.csv", [ZX60_V62 - $eta_("DE")$ and $eta_("PAE")$], [Curve of the measured $eta_("DE")$ and $eta_("PAE")$ for the ZX60_V62 PA.], 
                              [Power (dBm)], [$eta_("DE")$], [$eta_("PAE")$]) <pa-eff>
 
-From these values, more static values were calculated and can be found in the left table @pa-meas. Comparing them with the numbers provided by the datasheet (right table) we can see that they closely match, with the exception of the $P_"1dB"$ point, which happened earlier than expected in our measurements.
+From these values, more static values were calculated and can be found in the left table @pa-meas. Comparing them with the numbers provided by the datasheet (right table) we can see that they closely match, with the exception of the $P_"1dB"$ point, which happened earlier than expected in our measurements. This may be attributed to some unexpected attenuation of the output which is not accounted for here.
 
 #figure(
   align(center + top,
@@ -574,12 +574,23 @@ than the Full Scale when optimizing the chain.
             varying the transmitter Gain or the DAC Full Scale.],
 ) <pluto-self>
 
+This fact is to be expected, since reducing the full scale will reduce the signal power but still produce the same quantization noise. Therefore, the SNR is also lowered.
+
 = Conclusion
 
-As discussed in this report, a lot goes into modeling and optimizing a communication chain. But it is important to note that there 
-are important differences between the simulated/optimized system and the experimental one. 
+Throughout this report we discussed in detail two parallel approaches to the study of RF communication systems. In the first part we modelled a full communication system through detailed matlab simulations representing all the individual blocks of a Homodyne TX and RX. This permitted a deep understanding of the underlying theory behind each components' behavior, and also gave an overview of how these components integrate and interact with each other. And all this information was used in choosing the parameters for each component of the chain that would guarantee the desired performance while still minimizing the total power consumed.
 
-For starters, we can look at how the ADALM-PLUTO differs from the AD9363 base circuit, as shown by @tab:code_information.
+Second, we took a more physical approach, using the AD9363 RF transceiver circuit in the ADALM-PLUTO board to empirically implement a transmission chain, focusing both in the evaluation of how changing the gain and DAC scale parameters affected performance, and on how to synchronise and decode modulated symbols that were transmitted through real non-ideal channels. This gives more of an idea on how RF systems readily available in the market perform in practice and on how to use their many features.
+
+Comparing the measurement results from both systems, we can see an equivalence in the fact that the simulation shows a decrease in output signal quality as the distance increases, while the ADALM-PLUTO board shows a decrease in signal quality as the TX gain or the scale factor decrease, which is in a certain way equivalent. We must also consider that the AD9363 was not working at its full capacity with the gain and scale used.
+
+Therefore, each section of this project had a complementary purpose. However, we can still compare both systems. Compared to the simulation implementation, the AD9363 circuit is much more robust, promoting 12 bit ADCs and DACs, a sampling rate of up to $61.44 "MSPS"$, programmable gain, among other useful tools that permit a greater versatility.
+
+We can specially highlight the Automatic Gain Control in the board, which permits an increase on the gain of the LNA and the baseband amplifier when the signal is too attenuated to reach the ADC full-scale. This was impossible in the simulation, and led to the fact that the maximum power signal would always limit the gain of the chain, making it impossible to sufficiently increase the power of the more attenuated signals.
+
+To finalize the analysis, even if the simulation implemented many non-linearities of different components, it was still mostly idealized in terms of the transmission channel and the noise modelling. This is great when theoretically parametrizing the components of the chain to achieve the desired performance, but also fails to capture many difficulties that were only seen when using the pluto board. Thus, both approaches have its merits.
+
+Besides the communication chain aspects discussed until now, many measuring sessions were conducted during the project, characterizing PAs and LNAs. This permitted an experimental view on how to determine gain, IIP3, IM3, ACPR, and noise figure from different components using tools such as a VNA and an SDR.
 
 #figure(
     caption: [Comparison between the ADALM-PLUTO and the base AD9363 circuit.],
