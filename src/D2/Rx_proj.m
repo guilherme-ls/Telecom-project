@@ -79,7 +79,7 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     %%% Analog to Digital Conversion %%%
     nBitADC = rx_config.nBitADC;
     Vref    = rx_config.Vref;
-    total_delay = (rx_config.delayADC + RXBB_Filt_n) / 2; % WARNING : non trivial value !!! to be thoroughly analyzed
+    total_delay = 0; % (rx_config.delayADC + RXBB_Filt_n) / 2; % WARNING : non trivial value !!! to be thoroughly analyzed
     delay = 0; %mod(total_delay, round(continuousTimeSamplingRate/basebandSamplingRate));
     adcSamplingRate = basebandSamplingRate;
     % Perform conversion
@@ -105,9 +105,7 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     % RX RRC and downsampling (reverse effect of resample(qamSig...) )
     % WARNING : this downsampling may create unexpected sampling effects due to butterworth filtering and phase distortion
     %           please check signals integrity before and after this step
-    shift = 0; %floor(total_delay/round(continuousTimeSamplingRate/basebandSamplingRate)) + 1;
-    basebandComplexDigital_shifted = basebandComplexDigital(shift + 1 : end);
-    basebandComplexDigital_fir            = resample(basebandComplexDigital_shifted,1,basebandOverSampling,basebandRRC);
+    basebandComplexDigital_fir            = resample(basebandComplexDigital,1,basebandOverSampling,basebandRRC);
     
     % Normalize received symbols to UnitAveragePower (see qammod(inSig)) 
     % Trully effective when noise and distortions are not too large compared to the useful signal
@@ -126,18 +124,49 @@ function [rx_output, rx_output_truncated, perf_rx] = Rx_proj(simulation_config, 
     perf_rx.power.P_downMixer = P_downMixer;
     perf_rx.power.P_ADC = P_ADC;
     
+    voltsq2mwatt    = 1e3/Rin;
+
     %%% Output signal power and SNR
     if strcmpi(signal_config.test_type, 'onetone')
         BW  = 10e6;
         Nbins = length(basebandComplexDigital);
         Bin_limits     = Nbins/2+[round(-BW/adcSamplingRate*Nbins),round(BW/adcSamplingRate*Nbins)];
         % Compute SNR
-        Bin_in       = round(7.12e6/adcSamplingRate*Nbins); % Determining the input bin
+        Bin_in       = round(7.5e6/adcSamplingRate*Nbins); % Determining the input bin
         Bin_sig_shiftd = Nbins/2+Bin_in;
-        bin_width      = 4;
-
-        voltsq2mwatt    = 1e3/Rin;
+        bin_width      = 3;
 
         [perf_rx.snr, perf_rx.signal_power] = perf_estim(basebandComplexDigital*sqrt(voltsq2mwatt),Bin_sig_shiftd,bin_width,Bin_limits,true);
     end
+
+    window_number = 10;
+    figure(window_number)
+    lineSpec_index = 1;
+    subplot(2,2,1)
+    plot_spectrum(channel_output*sqrt(voltsq2mwatt),window_number, continuousTimeSamplingRate,lineSpec_index);
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    title('Input Signal')
+    %axis([0,100e6,-200,1])
+
+    subplot(2,2,2)
+    plot_spectrum(rfLNASignal*sqrt(voltsq2mwatt),window_number, continuousTimeSamplingRate,lineSpec_index,false);
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    title('LNA output')
+    %axis([0,100e6,-200,1])
+
+    subplot(2,2,3)
+    plot_spectrum(basebandAnalog_raw_I*sqrt(voltsq2mwatt),window_number, continuousTimeSamplingRate,lineSpec_index,false);
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    title('I Mixer Output ')
+    %axis([0,100e6,-200,1])
+
+    subplot(2,2,4)
+    plot_spectrum(basebandAnalog_amp_I*sqrt(voltsq2mwatt),window_number, continuousTimeSamplingRate,lineSpec_index,false);
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    title('I ADC Input')
+    xlim([0,basebandSamplingRate/2])
 end

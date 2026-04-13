@@ -11,7 +11,7 @@ signal_config.test_type = 'mod';
 
 %%% TX Params %%%
 %%%%% DAC %%%%
-tx_config.nBitDAC = 4; % Number of bits of the DAC
+tx_config.nBitDAC = 1; % Number of bits of the DAC
 tx_config.Vref = 1;    % Voltage reference of the DAC
 %%%%% Filter %%%%
 tx_config.TXBB_Filt_rp = 0.5; % Passband ripple in dB
@@ -21,7 +21,7 @@ tx_config.TXBB_Filt_f = [10 15]*1e6; % Cutoff frequencies (Hz) 0.5;
 tx_config.Flo  = 2.4e9;
 %%%%% PA %%%%                                             
 tx_config.PA_mux = 'ADL5606'; % PA Model 
-tx_config.attenuation = -6.2; % (dB) pre-attenuation
+tx_config.attenuation = -6.25; % -10.9; % (dB) pre-attenuation
 
 
 %%% Transmission Chain %%%

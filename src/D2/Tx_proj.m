@@ -15,10 +15,10 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
     %%% Signal Generation %%%
     symbolRate              = simulation_config.symbolRate;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
     basebandOverSampling    = round(basebandSamplingRate/symbolRate);
-    NSamples_BB             = 2^13;   % Signal length (after RRC filter)
+    NSamples_BB             = 2^11;   % Signal length (after RRC filter)
     
     % Signal frequencies
-    freqVin_or1   = 7.12e6;
+    freqVin_or1   = 7.5e6;
     freqVin_or2   = 6.12e6;
     % Place the sine waves in an FFT bin
     freqVin1      = round(freqVin_or1/basebandSamplingRate*NSamples_BB)...
@@ -212,5 +212,38 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
         perf_tx.acpr = ACPR;
         perf_tx.signal_power = signal_power;
     end
+
+    %%% Plotting %%%
+    Rin = 50;
+    voltsq2mwatt    = 1e3/Rin; % Conversion factor from V^2 to milliWatt
+    window_number       = 11;
+    lineSpec_index      = 1;
+    
+    figure(window_number)
+    subplot(2,2,1)
+    plot_spectrum(basebandAnalog_dac_I*sqrt(voltsq2mwatt), window_number, continuousTimeSamplingRate, lineSpec_index, false);
+    title('DAC I Output')
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    xlim([0,basebandSamplingRate*3])
+    
+    subplot(2,2,2)
+    plot_spectrum(rfSignal*sqrt(voltsq2mwatt), window_number, continuousTimeSamplingRate,lineSpec_index, false);
+    title('Pa Input')
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+
+    subplot(2,2,3)
+    plot_spectrum(rfPASignal*sqrt(voltsq2mwatt), window_number, continuousTimeSamplingRate, 1, false);
+    title('TX Output')
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    
+    subplot(2,2,4)
+    plot_spectrum(rfPASignal*sqrt(voltsq2mwatt), window_number, continuousTimeSamplingRate, 1, false);
+    title('TX Output (useful band)')
+    xlabel('frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    xlim([2.355e9,2.445e9])
 
 end

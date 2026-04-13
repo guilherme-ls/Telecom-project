@@ -7,12 +7,12 @@ simulation_config.basebandSamplingRate = 30.72e6;
 simulation_config.symbolRate = 15.36e6;
 
 %%% Signal Params %%%
-signal_config.test_type = 'mod';
+signal_config.test_type = 'onetone';
 
 %%% TX Params %%%
 %%%%% DAC %%%%
 tx_config.nBitDAC = 10; % Number of bits of the DAC
-tx_config.Vref = 1;    % Voltage reference of the DAC
+tx_config.Vref = 1;     % Voltage reference of the DAC
 %%%%% Filter %%%%
 tx_config.TXBB_Filt_rp = 0.5; % Passband ripple in dB
 tx_config.TXBB_Filt_rs = 40; % Stopband ripple in dB
@@ -21,10 +21,10 @@ tx_config.TXBB_Filt_f = [10 15]*1e6; % Cutoff frequencies (Hz) 0.5;
 tx_config.Flo  = 2.4e9;
 %%%%% PA %%%%                                             
 tx_config.PA_mux = 'ADL5606'; % PA Model 
-tx_config.attenuation = -6.4; %  -10.4; % (dB) Preattenuation before PA
+tx_config.attenuation = -10.9; % -6.4; %  (dB) Preattenuation before PA
                                                     
 %%% Channel Params %%%
-channel_config.distance = 1400;
+channel_config.distance = 1.400;
 
 %%% RX Params %%%
 %%%%% LNA  %%%%
@@ -35,7 +35,7 @@ rx_config.LNA_NF   = 5.4;   % (dB)
 rx_config.Flo  = 2.4e9;
 rx_config.RXBB_Filt_rp = 0.5;
 rx_config.RXBB_Filt_rs = 40;
-rx_config.RXBB_Filt_f = [10 15]*1e6;  
+rx_config.RXBB_Filt_f = [10 15]*1e6;
 %%%%% BBAmp %%%%
 rx_config.BBamp_Gain = 23.5; % (dB)
 rx_config.BBamp_IIP3 = 100; % (dBm)
@@ -62,27 +62,29 @@ window_number       = 1;
 lineSpec_index      = 1;
 fullband_spectrum   = true;
 
+figure(window_number)
+subplot(2,2,1);
 plot_spectrum(tx_input*sqrt(voltsq2mwatt), window_number,...
                basebandSamplingRate,lineSpec_index, fullband_spectrum);
 title('TX signal')
 xlabel('frequency (Hz)')
 ylabel('PSD (dBm/bin)')
 
-window_number       = window_number+1;
+subplot(2,2,2);
 plot_spectrum(tx_output*sqrt(voltsq2mwatt), window_number, ...
               simulation_config.continuousTimeSamplingRate, 1, false);
 title('TX Output')
 xlabel('frequency (Hz)')
 ylabel('PSD (dBm/bin)')
 
-window_number       = window_number+1;
+subplot(2,2,3);
 plot_spectrum(channel_output*sqrt(voltsq2mwatt), window_number, ...
               simulation_config.continuousTimeSamplingRate, 1, false);
 title('RX Input')
 xlabel('frequency (Hz)')
 ylabel('PSD (dBm/bin)')
 
-window_number       = window_number+1;
+subplot(2,2,4);
 plot_spectrum(rx_output*sqrt(voltsq2mwatt),window_number,...
                basebandSamplingRate,lineSpec_index, true);
 title('Receiver complex recombined output')

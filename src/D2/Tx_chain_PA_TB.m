@@ -1,25 +1,28 @@
-function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config, tx_config, signal_config)
+function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config, tx_config, signal_config, att)
 
     isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+    function signalPSD = PSD(signal)
+        Nsignal = length(signal);
+        win     = blackman(Nsignal);
+        U       = (1/length(win))*sum(abs(win).^2);
+        win     = sqrt(1/U)*win/length(win);
+        signalPSD = abs(fft(signal.*win)).^2;
+    end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%                   Transmitter                        %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % System properties
-    BW  = 10e6;     % Signal bandwidth
-    K   = 1.38e-23; % Boltzmann Constant
-    T   = 290;      % room temperature
     Rin = 50;       % Matching impedance chosen equal to 50
     
     %%% Signal Generation %%%
     continuousTimeSamplingRate    = simulation_config.continuousTimeSamplingRate; % A sampling rate which is sufficiently high in order to be close to the continous time
-    basebandSamplingRate_or       = 30e6;     % The sampling rate of the complex baseband signal. In this project it MUST BE a multiple of symbolRate
-    basebandSamplingRate          = basebandSamplingRate_or; % continuousTimeSamplingRate/round(continuousTimeSamplingRate/basebandSamplingRate_or);
+    basebandSamplingRate       = simulation_config.basebandSamplingRate;     % The sampling rate of the complex baseband signal. In this project it MUST BE a multiple of symbolRate
     
     %%% Signal Generation %%%
-    symbolRate              = 15e6;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
+    symbolRate              = simulation_config.symbolRate;  % The raw symbol rate : the raw complex QAM symbols are sent at this rate ; Units : Symbols/second
     basebandOverSampling    = round(basebandSamplingRate/symbolRate);
-    NSamples_BB             = 2^13;   % Signal length (after RRC filter)
+    NSamples_BB             = 2^12;   % Signal length (after RRC filter)
     
     % Signal frequencies
     freqVin_or1   = 7.12e6;
@@ -58,6 +61,7 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
             %%% Modulated signal
             modSize       = 16; % Modulation order for 16QAM
             nQAMSymbols   = round(NSamples_BB/basebandOverSampling); % Number of QAM symbols to be generated
+            rng(0);
             inSig         = randi([0 modSize-1],nQAMSymbols,1);      % generate symbols as integer
             % Perform modulation : convert integer symbols to complex symbols
             if isOctave
@@ -131,62 +135,61 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
     P_upMixer = 5 * 10e-12 * Flo;
     P_upMixer_total = 2 * P_upMixer;
     
+
+
     %%% RF Amplification %%%
-    PA_mux = tx_config.PA_mux;
+    figure(10)
+    hold on;
+    attenuation = [-4.4, 0, -24.2, -6.2, -17.7];
+    amplifiers = {'ZX60_V63+', 'ZX60_V62+', 'ZHL42', 'ADL5606', 'RFLUPA05M06G'};
+    linespec = 0;
+    for i = 1:5
     
-    switch PA_mux
-        case 'ZX60_V63+'
-            PA_IIP3       = 30-19.7;      % OIP3 = 31.2 dBm à 2GHz et 28.8 dBm à 3GHz
-            PA_NF         = 5.1;      % PA Noise figure ; in dB
-            PA_Gain       = 19.7;     % 20.3 dB à 2GHz et 19.2 dB à 3 GHz
-            P_cons_PA = 5*69*10^(-3);
-        case 'ZX60_V62+'
-            PA_IIP3       = 31.9-15.5;      % OIP3 = 33.4 dBm à 2GHz et 30.4 dBm à 3GHz
-            PA_NF         = 5.1;      % PA Noise figure ; in dB
-            PA_Gain       = 15.5;     % 
-            P_cons_PA = 5*82*10^(-3);
-        case 'ZHL42'
-            PA_IIP3       = 44.85-39.46;      % 
-            PA_NF         = 8.07;      % PA Noise figure ; in dB
-            PA_Gain       = 39.46;     %
-            P_cons_PA = 15*1;
-        case 'ADL5606'
-            PA_IIP3       = 44.3-21.45;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
-            PA_NF         = 4.9;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
-            PA_Gain       = 21.45;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
-            P_cons_PA = 380*10^(-3) * 5;
-        case 'RFLUPA05M06G'
-            PA_IIP3       = 43-33;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
-            PA_NF         = 3;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
-            PA_Gain       = 33;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
-            P_cons_PA = 12 * 350 * 10^(-3);
-        case 'none'
-            PA_IIP3       = 150;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
-            PA_NF         = 0;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
-            PA_Gain       = 0;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
-            P_cons_PA = 0;
-    end
-
-    function signalPSD = PSD(signal)
-        Nsignal = length(signal);
-        win     = blackman(Nsignal);
-        U       = (1/length(win))*sum(abs(win).^2);
-        win     = sqrt(1/U)*win/length(win);
-        signalPSD = abs(fft(signal.*win)).^2;
-    end
+        %PA_mux = tx_config.PA_mux;
+        att = attenuation(i);
+        PA_mux = amplifiers{i};
         
-    P_TX_total = P_cons_PA + P_upMixer_total + P_DAC_total;
-    
-    %%% Power Performances
-    perf_tx.power.P_TX_total = P_TX_total;
-    perf_tx.power.P_cons_PA = P_cons_PA;
-    perf_tx.power.P_upMixer = P_upMixer;
-    perf_tx.power.P_DAC = P_DAC;
-    
-
-    dif = 1;
-    att = 0;
-    while abs(dif) > 0.1
+        switch PA_mux
+            case 'ZX60_V63+'
+                PA_IIP3       = 30-19.7;      % OIP3 = 31.2 dBm à 2GHz et 28.8 dBm à 3GHz
+                PA_NF         = 5.1;      % PA Noise figure ; in dB
+                PA_Gain       = 19.7;     % 20.3 dB à 2GHz et 19.2 dB à 3 GHz
+                P_cons_PA = 5*69*10^(-3);
+            case 'ZX60_V62+'
+                PA_IIP3       = 31.9-15.5;      % OIP3 = 33.4 dBm à 2GHz et 30.4 dBm à 3GHz
+                PA_NF         = 5.1;      % PA Noise figure ; in dB
+                PA_Gain       = 15.5;     % 
+                P_cons_PA = 5*82*10^(-3);
+            case 'ZHL42'
+                PA_IIP3       = 44.85-39.46;      % 
+                PA_NF         = 8.07;      % PA Noise figure ; in dB
+                PA_Gain       = 39.46;     %
+                P_cons_PA = 15*1;
+            case 'ADL5606'
+                PA_IIP3       = 44.3-21.45;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
+                PA_NF         = 4.9;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
+                PA_Gain       = 21.45;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
+                P_cons_PA = 380*10^(-3) * 5;
+            case 'RFLUPA05M06G'
+                PA_IIP3       = 43-33;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
+                PA_NF         = 3;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
+                PA_Gain       = 33;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
+                P_cons_PA = 12 * 350 * 10^(-3);
+            case 'none'
+                PA_IIP3       = 150;      % 45.5 dBm à 2140MHz et 43.2 dBm à 2630MHz
+                PA_NF         = 0;      % 4.7dB à 2140MHz et 5.1dB à 2630MHz
+                PA_Gain       = 0;     % 24.3 dB à 2140MHz et 20.6dB à 2630 MHz
+                P_cons_PA = 0;
+        end
+            
+        P_TX_total = P_cons_PA + P_upMixer_total + P_DAC_total;
+        
+        %%% Power Performances
+        perf_tx.power.P_TX_total = P_TX_total;
+        perf_tx.power.P_cons_PA = P_cons_PA;
+        perf_tx.power.P_upMixer = P_upMixer;
+        perf_tx.power.P_DAC = P_DAC;
+        
         % Pre-amplification step
         rfSignalIn = rfSignal * 10^(att/20);
         
@@ -218,14 +221,23 @@ function [signal_out, basebandSig, qamSig, perf_tx] = Tx_proj(simulation_config,
             perf_tx.acpr = ACPR;
             perf_tx.signal_power = signal_power;
         end
-
-        dif = 20 - 10*log10(perf_tx.signal_power);
-        att = att + dif;
-        disp(['Att: ', num2str(att)])
+    
+        perf_tx.attenuation = att;
+        disp(PA_mux)
+        disp(['Signal power: ', num2str(perf_tx.signal_power), ' mW or ', num2str(10*log10(perf_tx.signal_power)), ' dBm.'])
+        disp(['ACPR: ', num2str(10*log10(perf_tx.acpr)), ' dB.'])
+        disp(['Total power used by TX: ', num2str(perf_tx.power.P_TX_total), ' W.'])
+        
+        linespec = linespec + 1;
+        plot_spectrum(rfPASignal,10,continuousTimeSamplingRate,linespec,false);
     end
-
-    perf_tx.attenuation = att;
-
+    xlim([2.355e9, 2.445e9])
+    grid()
+    title('PA output')
+    xlabel('Frequency (Hz)')
+    ylabel('PSD (dBm/bin)')
+    l = legend('ZX60_V63+', 'ZX60_V62+', 'ZHL42', 'ADL5606', 'RFLUPA05M06G');
+    set(l, 'Interpreter', 'none');
 end
 
 
@@ -242,59 +254,23 @@ signal_config.test_type = 'mod';
 
 %%% TX Params %%%
 %%%%% DAC %%%%
-tx_config.nBitDAC = 6; % Number of bits of the DAC
+tx_config.nBitDAC = 10; % Number of bits of the DAC
 tx_config.Vref = 1;    % Voltage reference of the DAC
 %%%%% Filter %%%%
 tx_config.TXBB_Filt_rp = 0.5; % Passband ripple in dB
 tx_config.TXBB_Filt_rs = 40; % Stopband ripple in dB
-tx_config.TXBB_Filt_f = [15 20]*1e6; % Cutoff frequencies (Hz) 0.5;        
+tx_config.TXBB_Filt_f = [10 15]*1e6; % Cutoff frequencies (Hz) 0.5;        
 %%%%% Up Mixer %%%%
 tx_config.Flo  = 2.4e9;
 %%%%% PA %%%%                                             
-tx_config.PA_mux = 'RFLUPA05M06G'; % PA Model 
+tx_config.PA_mux = 'ZX60_V63+'; % PA Model 
 
 
 %%% Transmission Chain %%%
 
-N = 4:14;
-ACPRs = zeros(1,length(N));
-Ps = zeros(1,length(N));
-Powers = zeros(1,length(N));
-Atts = zeros(1,length(N));
-for n = 1:length(N)
-    tx_config.nBitDAC = N(n); % Number of bits of the DAC
-    [tx_output, tx_input, tx_qam_input, perf_tx] = Tx_proj(simulation_config, tx_config, signal_config); 
-    ACPRs(n) = 10*log10(perf_tx.acpr);
-    Ps(n) = 10*log10(perf_tx.signal_power);
-    Powers(n) = perf_tx.power.P_TX_total;
-    Atts(n) = perf_tx.attenuation;
-end
+attenuation = -4.7; % (dB) does nothing in this state
 
-figure(1)
-subplot(2,2,1)
-plot(N, ACPRs)
-xlabel ("Nbits");
-ylabel ("ACPR (dB)");
-title ("ACPR per Nbits");
-
-subplot(2,2,2)
-plot(N, Ps)
-xlabel ("Nbits");
-ylabel ("Power (dBm)");
-title ("Signal Power per Nbits");
-
-subplot(2,2,3)
-plot(N, Powers)
-xlabel ("Nbits");
-ylabel ("Power (W)");
-title ("Power per Nbits");
-
-subplot(2,2,4)
-plot(N, Atts)
-xlabel ("Nbits");
-ylabel ("Attenuation (dB)");
-title ("Attenuation per Nbits");
-sgtitle(['Configuration: ', tx_config.PA_mux]);
+[tx_output, tx_input, tx_qam_input, perf_tx] = Tx_proj(simulation_config, tx_config, signal_config, attenuation);
 
 basebandSamplingRate          = simulation_config.basebandSamplingRate;
 
@@ -302,25 +278,15 @@ basebandSamplingRate          = simulation_config.basebandSamplingRate;
 Rin = 50;
 voltsq2mwatt    = 1e3/Rin; % Conversion factor from V^2 to milliWatt
 window_number       = 2;
-lineSpec_index      = 1;
-fullband_spectrum   = true;
 
-plot_spectrum(tx_input*sqrt(voltsq2mwatt), window_number,...
-               basebandSamplingRate,lineSpec_index, fullband_spectrum);
-title('TX Digital Complex recombined signal')
-xlabel('frequency (Hz)')
-ylabel('PSD (dBm/bin)')
-
-window_number       = window_number+1;
-fullband_spectrum   = false;
-plot_spectrum(tx_output*sqrt(voltsq2mwatt), window_number, ...
-              simulation_config.continuousTimeSamplingRate, 1, false);
-title('TX Output')
-xlabel('frequency (Hz)')
-ylabel('PSD (dBm/bin)')
-
-disp(['Signal power: ', num2str(perf_tx.signal_power), ' mW or ', num2str(10*log10(perf_tx.signal_power)), ' dBm.'])
-disp(['ACPR: ', num2str(10*log10(perf_tx.acpr)), ' dB.'])
-disp(['Total power used by TX: ', num2str(perf_tx.power.P_TX_total), ' W.'])
+% plot_spectrum(tx_output*sqrt(voltsq2mwatt), window_number, ...
+%               simulation_config.continuousTimeSamplingRate, 1, false);
+% title('TX Output')
+% xlabel('frequency (Hz)')
+% ylabel('PSD (dBm/bin)')
+% 
+% disp(['Signal power: ', num2str(perf_tx.signal_power), ' mW or ', num2str(10*log10(perf_tx.signal_power)), ' dBm.'])
+% disp(['ACPR: ', num2str(10*log10(perf_tx.acpr)), ' dB.'])
+% disp(['Total power used by TX: ', num2str(perf_tx.power.P_TX_total), ' W.'])
 
 %%% Performances %%%

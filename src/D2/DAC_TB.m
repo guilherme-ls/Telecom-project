@@ -39,7 +39,7 @@ Input         = Input/max(Input);       % Normalize
 
 %%%%%%%%%%%%% Zero Order Hold %%%%%%%%%%%%%%%%%%%
 mode              = 'zoh';
-AnalogOutputZOH   = DAC(Input',Nbits_DAC,Vref_DAC,mode,Fs_DAC,continuousTimeSamplingRate);
+AnalogOutputZOH   = DAC(basebandSig',Nbits_DAC,Vref_DAC,mode,Fs_DAC,continuousTimeSamplingRate);
 
 %%%%%%%%%%%%% Zero Padding %%%%%%%%%%%%%%%%%%%
 mode              = 'impulse';
