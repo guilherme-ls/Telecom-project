@@ -22,7 +22,7 @@ pluto_configs.sync.coarse.frequency_resolution = 100;
 %%%%% TX Config %%%%% 
 pluto_configs.tx.enable = true;  
 pluto_configs.tx.automatic_emmision = true;
-pluto_configs.tx.gain = -10; % dB 
+pluto_configs.tx.gain = -50; % dB 
 pluto_configs.tx.dac.scale_factor = 0.01; % [0, 1]
 
 %%%%% RX Config %%%%% 

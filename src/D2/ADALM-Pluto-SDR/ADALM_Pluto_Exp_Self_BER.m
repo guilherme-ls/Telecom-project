@@ -77,9 +77,9 @@ pluto_configs.performace.ber = true;
 %%%            Call Experiment Script                   %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-num_of_points = 1:10;
+num_of_points = 1:20;
 gain_max = -10; %dB
-gain_min = -50; %dB
+gain_min = -70; %dB
 
 scale_factor_max = -10; %dBFS
 scale_factor_min = -40; %dBFS
@@ -165,9 +165,9 @@ ylabel('BER');
 
 if SAVE_TO_FILE
   dac_file_name = sprintf("%s_%s.csv", FILE_NAME_PREFIX, "fixed-dac");
-  writematrix(dac_file_name, [gain_val', fixed_dac_ser', fixed_dac_ber']);
+  writematrix([gain_val', fixed_dac_ser', fixed_dac_ber'], dac_file_name);
   gain_file_name = sprintf("%s_%s.csv", FILE_NAME_PREFIX, "fixed-gain");
-  writematrix(gain_file_name, [dac_scale_val', fixed_gain_ser', fixed_gain_ber']);
+  writematrix([dac_scale_val', fixed_gain_ser', fixed_gain_ber'], gain_file_name);
 end
 
 
