@@ -111,10 +111,10 @@ tx = sdrtx('Pluto');
 tx.BasebandSampleRate = basebandSamplingRate;
 tx.CenterFrequency    = 2.4e9;% (Hz)
 tx.filtRFBandwidth    = 20e6; % (Hz), the bandwidth of the RF filter in the SDR
-tx.Gain               = tx_gain; % -10;  % (dB), adjust as needed to avoid saturation of the RF front end.
+tx.Gain               = -10;  % (dB), adjust as needed to avoid saturation of the RF front end.
 
 % Transmit the signal ; always scale the signal down to avoid saturation of the DAC. 
-DAC_scale_factor = 10^(dac_scale_factor/10); % 5e-1; % Adjust this factor to ensure the signal does not saturate the DAC.
+DAC_scale_factor = 0.75 % Adjust this factor to ensure the signal does not saturate the DAC.
 tx.transmitRepeat(DAC_scale_factor*basebandSig)
 
 
