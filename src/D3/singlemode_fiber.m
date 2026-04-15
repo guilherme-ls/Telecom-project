@@ -3,14 +3,14 @@ close all;
 %%%%%%%%%%%%%%%% Fiber Constants
 
 alpha = 0.2; % db/km
-dispersion_0 = 10; % ps/nm/km
-dispersion_slope = 1;
-fiber_length = 1; % km
+dispersion_0 = 17; % ps/nm/km
+dispersion_slope = 0.09; % ps/nm2/km
+fiber_length = 20; % km
 
 
 %%%%%%%%%%%%%%%% Physical Constants
 
-c = physconst("LightSpeed");
+c = 3e9; % physconst("LightSpeed");
 
 %%%%%%%%%% Transmission Constants 
 
@@ -19,16 +19,15 @@ signal_A0 = 1;
 f_0 = 193e12; % Hz 
 wavelength_0 = (c / f_0) * 1e9; % nm
 
-f = 1e9; % Hz
-wavelength = (c / f) * 1e9; % nm
-signal_wavewidth = 10; % nm
+f_sig = 1e9; % Hz
+signal_wavelength = (c / (f_sig + f_0)) * 1e9; % nm
 
 %%%%%%%%%% Dispersion Transfer Function
 
-dispersion = dispersion_0 + dispersion_slope*wavelength;
+dispersion = dispersion_0 + dispersion_slope*(signal_wavelength - wavelength_0);
 
-beta_2 = - dispersion * (wavelength_0 + wavelength)^2 / (2*pi*c);
-beta_3 = dispersion_slope * (wavelength_0 + wavelength)^4 / (2*pi*c)^2;
+beta_2 = - dispersion * signal_wavelength^2 / (2*pi*c);
+beta_3 = dispersion_slope * signal_wavelength^4 / (2*pi*c)^2;
 
 beta = @(dw) (beta_2*dw^2)/2 + (beta_3*dw^3)/6;
 transfer_fun = @(dw) exp((-alpha -1j*beta(dw))*fiber_length);
@@ -37,22 +36,34 @@ transfer_fun = @(dw) exp((-alpha -1j*beta(dw))*fiber_length);
 %%%%%%%%%% Time/Frequency Vector 
 
 %%%%%%%%%%% Pulse Signal Creation
-pulse_T0 = 1e-9;
+pulse_T0 = 1000; % ps
 
-half_width_max = sqrt(-2 * log(1/sqrt(2)) / (pulse_T0^2));
-half_width = half_width_max * 2;
-analitical_time_dispersion = beta_2 * half_width * fiber_length;
+half_width_max = sqrt(-2 * log(1/sqrt(2)) / (pulse_T0^2)); % THz
+half_width = half_width_max * 2; % THz
+analitical_time_dispersion = beta_2 * half_width * fiber_length; % ps
 
-T_min = pulse_T0 + analitical_time_dispersion*1e-12;
+T_min = pulse_T0 + analitical_time_dispersion; % ps
 
-assert(0);
-N_points = 0;
+bw_cutoff = 0.01;
 
-t_vec = (-N_points:1:N_points);
-f_vec = (-N_points:1:N_points)*f_max/N_points;
+band_width_max = sqrt(-2 * log(bw_cutoff) / (pulse_T0^2)); % THz
+band_width = band_width_max * 2; % THz
+
+
+f_min = band_width; % THz 
+
+N_pulse = ceil(pulse_T0 * f_min);
+N_dispersion = ceil(analitical_time_dispersion * f_min);
+N_total = N_pulse + 2 * N_dispersion;
+
+
+t_vec = (-N_total:1:N_total) / f_min;
+pulse_vec = (-N_pulse:1:N_pulse) / f_min;
+f_vec = (0:2*N_total) * f_min / N_total;
 
 %%%%%%%%%%% Pulse Signal Creation
-pulse = signal_A0*exp(-t_vec.^2/(2*pulse_T0^2));
+pulse = signal_A0*exp(-pulse_vec.^2/(2*pulse_T0^2));
+pulse = [zeros(1, N_dispersion), pulse, zeros(1, N_dispersion)];
 pulse_fft = fft(pulse);
 
 %%%%%%%%%%% Simulated Dispersion
