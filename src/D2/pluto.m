@@ -112,7 +112,7 @@ tx.BasebandSampleRate = basebandSamplingRate;
 tx.CenterFrequency    = 2.4e9;% (Hz)
 tx.filtRFBandwidth    = 20e6; % (Hz), the bandwidth of the RF filter in the SDR
 tx.Gain               = -9;  % (dB), adjust as needed to avoid saturation of the RF front end.
-DAC_SignalToFullScale_Ratio=0.75;
+DAC_SignalToFullScale_Ratio=0.1;
 % Transmit the signal ; always scale the signal down to avoid saturation of the DAC. 
 tx.transmitRepeat(DAC_SignalToFullScale_Ratio*basebandSig)
 

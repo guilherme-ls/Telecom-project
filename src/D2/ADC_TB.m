@@ -63,5 +63,38 @@ ylabel('PSD (dB/bin)')
 title('All signals (normalized)')
 axis([0,Fs_ADC/2,-200,1])
 
+Nbits = 1:18;
+ADC_SNRs = zeros(length(Nbits), 1);
+ADC_NF = zeros(length(Nbits), 1);
+ADC_P = zeros(length(Nbits), 1);
+ADC_OSR = Fs_ADC / basebandSamplingRate;
+for ii = Nbits
+  ADC_NBits = ii;
+  ADC_Dyn = 6.02 * ADC_NBits;
+  ADC_SNR = 1.76 + ADC_Dyn + 3.01 * log10(ADC_OSR);
+  ADC_SNRs(ii) = ADC_SNR;
+  ADC_ENOB = (ADC_SNR - 1.76) / 6.02;
+  ADC_P(ii) = -130 + 10*log10(Fs_ADC) + 10*log10(2) * ADC_ENOB;
+  ADC_NF(ii) = 10*log10((Vref_ADC / (2^ADC_NBits))^2 / 12) + ADC_SNR ...
+	       - 3.01 *log10(ADC_OSR);
+end
+figure(2)
+subplot(2,2,1)
+plot(Nbits, ADC_SNRs)
+xlabel ("Nbits");
+ylabel ("SNR");
+title ("ADC SNR");
+subplot(2,2,2)
+plot(Nbits, ADC_P)
+xlabel ("Nbits");
+ylabel ("Power");
+title ("ADC Power");
+subplot(2,2,3)
+plot(Nbits, ADC_NF)
+xlabel ("Nbits");
+ylabel ("NF");
+title ("ADC NF");
+
+
 
 %disp(sprintf('%s will be %d this year.', PSD));

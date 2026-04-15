@@ -5,9 +5,7 @@
 close all;
 clear;
 
-addpath('./subblocks')
-
-
+addpath('./ref/D2/subblocks')
 
 K   = 1.38e-23; % Boltzmann Constant
 T   = 290;      % room temperature
