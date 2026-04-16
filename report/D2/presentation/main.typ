@@ -215,17 +215,302 @@
 
 = System Simulation
 
-== Power Amplifier Characterization
+== Transmitter (TX)
 
-#lorem(20)
+#figure(
+  image("../report/assets/TX_fig.png", width: 80%),
+  caption: [TX transmission chain with all its individual components.]
+) <fig:TX_chain>
 
-/ *Term*: Definition
+#figure(
+  caption: [TX specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [Pout Average], [$20 "dBm"$],
+    table.hline(),
+    [ACPR], [$45 "dBm"$],
+    table.hline(),
+    [RF Bandwidth], [$30 "MHz"$],
+    table.hline(),
+    [Useful Bandwidth], [$20 "MHz"$],
+    table.hline(),
+    [Central Frequency], [$2.4 "GHz"$],
+    table.hline(),
+    [Matching Resistance], [$50 thin Omega$],
+    table.hline(),
+    [Temperature], [$290 "K"$],
+    table.hline(),
+    [DAC Full Scale], [$plus.minus 1 "V"$],
+    table.hline(),
+  ),
+) <tab:TX_specifications>
 
-== LNA Measurement
+== DAC
 
-#lorem(20)
+#figure(
+  image("./assets/DAC_styles.png", width: 95%),
+  caption: [Zero order holder and zero padding DAC output spectrums.]
+) <fig:DAC_styles>
 
-/ *Term*: Definition
+#figure(
+  image("./assets/DAC_ACPR.png", width: 95%),
+  caption: [DAC output ACPR per number of bits considering a 16-QAM modulated input.]
+) <fig:DAC_ACPR>
+
+== Reconstruction Filter
+
+#figure(
+  caption: [TX baseband filter specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [$f_1$], [$10 "MHz"$],
+    table.hline(),
+    [$f_2$], [$15 "MHz"$],
+    table.hline(),
+    [$A_"max"$], [$0.5 "dB"$],
+    table.hline(),
+    [$A_"min"$], [$40 "dB"$],
+    table.hline(),
+  ),
+) <tab:TX_filter_specifications>
+
+== Upsampling Mixer
+
+The output of the combiner-mixer is modelled by:
+$ y(t) = x^I(t) cos(2 pi f_"LO" t) - x^Q(t) sin(2 pi f_"LO" t) $
+
+where $x^I(t)$ is the in-phase signal and $x^Q(t)$ is the in-quadrature signal. Developing the equation:
+$
+y(t) &= A_I cos(2 pi f_{1} t) cos(2 pi f_"LO" t) - A_Q sin(2 pi f_{1} t) sin(2 pi f_"LO" t) \
+y(t) &= (A_I - A_Q)/2 cos(2 pi (f_1 - f_"LO") t) + (A_I + A_Q)/2 cos(2 pi (f_1 + f_"LO") t)
+$
+
+Therefore, when the amplitudes are equal ($A_I = A_Q$), the output signal is simply the input signal with its frequency spectrum shifted to be centered around $f_"LO"$, as shown in the following equation:
+
+$ y(t) = A cos(2 pi (f_1 + f_"LO") t) $
+
+== Power Amplifier
+
+#figure(
+  caption: [Power Amplifier specs.],
+  table(
+    columns: 6,
+    align: center,
+    table.header(
+        [],[ZX60_V63+],[ZX60_V62+],[ZHL42],[ADL5606],[RFLUPA05M06G]
+    ),
+    [Gain (dB)],[19.7],[15.5],[39.46],[21.45],[33],
+    table.hline(),
+    [Power (W)],[0.345],[0.410],[13.2],[1.9],[4.2],
+    table.hline(),
+    [IIP3],[10.3],[16.4],[5.39],[23.4],[10],
+    table.hline(),
+    [$"P"_"1dB"$ (dBm)],[17.8],[19],[28],[30],[29],
+    table.hline(),
+  ),
+) <tab:PA_details>
+
+#figure(
+  caption: [Power Amplifier ACPR at $20 "dBm"$ output power.],
+  table(
+    columns: 6,
+    align: center,
+    table.header(
+        [],[ZX60_V63+],[ZX60_V62+],[ZHL42],[ADL5606],[RFLUPA05M06G]
+    ),
+    [ACPR (dB)],[19.7204],[24.8733],[54.1656],[53.1469],[50.3882],
+    table.hline(),
+    [Attenuation (dB)],[4.4],[0],[24.2],[6.2],[17.7],
+    table.hline(),
+  ),
+) <tab:PA_ACPR>
+
+#figure(
+  image("./assets/PA_ACPR.png", width: 60%),
+  caption: [PA output around $2.4 "GHz"$, for different PAs.]
+) <fig:PA_ACPR>
+
+== Full TX chain
+
+#figure(
+  image("./assets/TX_chain.png", width: 70%),
+  caption: [Signal spectrum through different points of the TX chain.]
+) <fig:TX_chain_signal>
+
+We can observe that the transmission chain performs as expected, giving us a $19.9385 "dBm"$ of power at the output and having an ACPR of $-54.2316 "dB"$. Power consumption of the TX chain is of $1.9303 "W"$.
+
+== Transmission Channel
+
+$ "Att" = 20 times log ((lambda)/(4 pi d)) $ <eq:Friis_att>
+
+$ "Att" = [-42.97, -102.97] "dB" $
+
+$ P_r = 20 "dBm" + "Att" = [-22.97, -82.97] "dBm" $
+
+$ N_r = 10 times log ((k T B)/(1 "mW")) = -101 "dBm" $ <eq:thermal_noise>
+
+$ "SNR"_r = [78.03, 18.03] $
+
+== Receiver
+
+#figure(
+  image("./assets/RX_fig.png", width: 80%),
+  caption: [RX reception chain with all its individual components.]
+) <fig:RX_chain>
+
+#figure(
+  caption: [RX specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [SNR Receiver Out], [$>10 "dB"$],
+    table.hline(),
+    [In-band ripple], [$<1 "dB"$],
+    table.hline(),
+    [RF Bandwidth], [$30 "MHz"$],
+    table.hline(),
+    [Useful Bandwidth], [$20 "MHz"$],
+    table.hline(),
+    [Central Frequency], [$2.4 "GHz"$],
+    table.hline(),
+    [Matching Resistance], [$50 thin Omega$],
+    table.hline(),
+    [Temperature], [$290 "K"$],
+    table.hline(),
+    [ADC Full Scale], [$plus.minus 1 "V"$],
+    table.hline(),
+  ),
+) <tab:RX_specifications>
+
+$ G_("chain") = 10 "dBm" + 22.97 "dBm" = 32.97 "dBm" $
+
+$ "NF"_"chain" = 18.03 "dBm" - 10 "dBm" = 8.03 "dBm" $
+
+== Low Noise Amplifier
+
+$ F_("chain") = F_("LNA") + (F_("rest") - 1)/(G_("LNA")) $ <eq:Friis_noise>
+
+$ G_("LNA") = 15 "dB" $
+
+$ "P"_"LNA" = 10^(-2)/(10^("NF"_"LNA"/10) - 1) $ <eq:LNA_power>
+
+The IIP3 value of 0 dBm was adopted.
+
+== Down Sampling Mixer
+
+$ v_"in" (t) = I(t) cos (omega_"LO" t) + Q(t) sin (omega_"LO" t) $
+
+$ v_"LO,I" (t) = cos(omega_"LO" t) $
+$ v_"LO,Q" (t) = sin(omega_"LO" t) $
+
+
+$ v_I (t) &= v_"in" (t) cos(omega_"LO" t) = I(t)/2 [1 + cos(2 omega_"LO" t)] - Q(t)/2 sin(2 omega_"LO" t) $
+
+$ v_Q (t) &= v_"in" (t) sin(omega_"LO" t) = -I(t)/2 sin(2 omega_"LO" t) + Q(t)/2 [1 + cos(2 omega_"LO" t)] $
+
+
+$ v_"I,filt" (t) &= I(t)/2 \
+  v_"Q,filt" (t) &= Q(t)/2 $
+
+Therefore, this $6 "dB"$ loss in each arm must be considered in our chain gain calculations.
+
+== Anti-Alias Filter
+
+After the down-mixer the signal passes through a low-pass filter, which seeks to attenuate the replica of the signal at $2 f_("LO")$ and the noise outside the useful band, preventing both from being aliased into the useful signal when passing through the ADC.
+
+#figure(
+  caption: [RX baseband filter specifications.],
+  table(
+    columns: 2,
+    align: center,
+    [$f_1$], [$10 "MHz"$],
+    table.hline(),
+    [$f_2$], [$15 "MHz"$],
+    table.hline(),
+    [$A_"max"$], [$0.5 "dB"$],
+    table.hline(),
+    [$A_"min"$], [$40 "dB"$],
+    table.hline(),
+  ),
+) <tab:RX_filter_specifications>
+
+== Baseband Amplifier
+
+We can easily determine its theoretical gain through the following equation which sums all the gains in the chain:
+
+$ G_"chain,dB" = G_"LNA,dB" + G_"mixer,dB" + G_"BBamp,dB" $
+
+$ 32.97 = 15 -6 + G_"BBamp,dB" arrow.r.double.long G_"BBamp,dB" = 23.97 "dB" $
+
+In practice, a slightly lower value of $G_"BBamp,dB" = 23.5 "dB"$ was employed in the simulated system to prevent the saturation of the ADC, which always leads to catastrophic results in the output signal.
+
+In terms of noise factor, the system specifications define a fixed value of $N F_"BBamp" = 10 "dB"$.
+
+== Analog to Digital Converter
+
+$ "SQNR" = 6.02 dot N + C $ <eq:SQNR>
+$ P_"ADC" = 10^(-13) dot f_s dot 2^("ENOB") $ <eq:PADC>
+
+Since there is no easy way to calculate the noise factor of the ADC to determine its number of bits theoretically, we decided to create a simulation of the full RX chain, considering an LNA with $"NF"_"LNA" = 0$ and a sinusoidal input of power $-82.97 "dB"$.
+
+#figure(
+  caption: [Power consumption and LNA noise figure as a function of N.],
+  table(
+    columns: 7,
+    align: center,
+    table.header(
+        [N],[$"SNR"_"dB"$],[$"F"_"rest"$],[$"F"_"LNA"$],[$"P"_"rest"$ (mW)],[$"P"_"LNA"$ (mW)],[$"P"_"total"$ (mW)]
+    ),
+    [11],[6.0275],[-],[-],[-],[-],[-],
+    table.hline(),
+    [12],[12.247],[3.787],[3.523],[69],[4],[73],
+    table.hline(),
+    [13],[15.524],[1.781],[5.529],[94],[2],[96],
+    table.hline(),
+  ),
+) <tab:ADC_calculations>
+
+From the table, we see that the ideal choice consists of an ADC with 12 bits and an LNA with $"NF"_"LNA" = 10 dot log(3.523)= 5.4 "dB"$.
+
+== Full RX Simulation
+
+#figure(
+  image("./assets/RX_chain_1400.png", width: 80%),
+  caption: [Signal at different points of the RX chain, whith the main peaks highlighted. This considers an input signal corresponding to the distance $d=1.4 "km"$.]
+) <fig:RX_chain_sim_1400>
+
+#figure(
+  image("./assets/RX_chain_14.png", width: 80%),
+  caption: [Signal at different points of the RX chain, whith the main peaks highlighted. This considers an input signal corresponding to the distance $d=1.4 "m"$.]
+) <fig:RX_chain_sim_14>
+
+#figure(
+  image("./assets/RX_output_1400.png", width: 70%),
+  caption: [Signal output of the chain considering an input signal corresponding to the distance $d=1.4 "km"$.]
+) <fig:RX_output_sim_1400>
+#figure(
+  image("./assets/RX_output_14.png", width: 70%),
+  caption: [Signal output of the chain considering an input signal corresponding to the distance $d=1.4 "m"$.]
+) <fig:RX_output_sim_14>
+
+== Complete TX/Rx Chain
+
+#figure(
+  image("./assets/Full_chain_1400.png", width: 80%),
+  caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "km"$.]
+) <fig:Full_chain_1400>
+
+#figure(
+  image("./assets/Full_chain_14.png", width: 80%),
+  caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "m"$.]
+) <fig:Full_chain_14>
+
+#figure(
+  image("./assets/SNRversusDist.png", width: 80%),
+  caption: [SNR of the output signal for distances between $1.4 "m"$ and $1.4 "km"$ between the transmitter and the receiver.]
+) <fig:SNR_dist>
 
 = Hardware Experiments
 

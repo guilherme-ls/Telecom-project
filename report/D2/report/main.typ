@@ -502,6 +502,49 @@ Comparing these results to the datasheet, they are entirely reasonable, close to
 #create-lna-figure("data/PA-measurements/s11.csv", [S21], [Measured $S_"21"$ curve for the TB-432-8A+ LNA.],
                    [Frequency (MHz)], [Power (dB)], 6) <lna-s21>
 
+== First Using Pluto
+
+@tab:code_information provides a comparative characterization of both the ADALM-PLUTO and the AD9363 transceiver it uses. There are only small differences that can be associated to the fact that ADALM-PLUTO is a teaching ressource rather than a commercial system.
+
+#figure(
+    caption: [Comparison between the ADALM-PLUTO and the base AD9363 circuit.],
+    table(
+      columns: 3,
+      align: center,
+
+      table.header(
+        [],[AD9363],[ADALM-Pluto],
+      ),
+
+      table.hline(),
+
+      [Transmitters],
+      [$2$],[$1$],
+
+      table.hline(),
+
+      [Receivers],
+      [2],[1],
+
+      table.hline(),
+
+      [Local Oscillator Freq.],
+      table.cell(colspan: 2, $325 "MHz to" 3.8 "GHz"$),
+
+      table.hline(),
+
+      [Sampling Frequency],
+      table.cell(colspan: 2, $65.2 "kSPS to" 61.44 "MSPS"$),
+
+      table.hline(),
+
+      [Transmitted Power],
+      [$7.5 "dBm"$],[$7 "dBm"$],
+
+      table.hline(),
+
+    ),
+  ) <tab:code_information>
 
 == Power Amplifier Measurements
 
@@ -553,27 +596,27 @@ From these values, more static values were calculated and can be found in the le
 
 We also measured, using the pocket spectrum analyser TinySA, how the amplifier impacted different signal types (one tone, two tone, modulated).
 In @fig:pa-one-in you can see how the one tone signal was before entering the PA, and in @fig:pa-one-out how it looks like after. It's important to note the 
-existance of a second smaller peak at $2.39 "GHz"$, it comes from the local oscilator used by the ADALM-Pluto.
+existance of a second smaller peak at $2.39 "GHz"$, it comes from the local oscilator used by the ADALM-Pluto. We see that its HD3 is $-45 "dBc"$
 
 #figure(
-  image("./data/tinySA/ONE-TONE.bmp", width: 95%),
+  image("./data/tinySA/ONE-TONE.jpg", width: 70%),
   caption: [Harmonic signal at the input of the PA.]
 ) <fig:pa-one-in>
 
 #figure(
-  image("./data/tinySA/ONE-PA.bmp", width: 95%),
+  image("./data/tinySA/ONE-PA.jpg", width: 70%),
   caption: [Harmonic signal at the output of the PA.]
 ) <fig:pa-one-out>
 
-Meanwhile, if we introduce a two tone signal (@fig:pa-two-in), we can see how the intermodulation products appear from the PA non linearities in @fig:pa-two-out.
+Meanwhile, if we introduce a two tone signal (@fig:pa-two-in), we can see how the intermodulation products appear from the PA non-linearities in @fig:pa-two-out. We can quickly determine from the figure its IM3 as $-50 "dBc"$ and the IIP3 as close to $18 "dB"$, which agrees with its datasheet.
 
 #figure(
-  image("./data/tinySA/TWO-TONE.bmp", width: 95%),
+  image("./data/tinySA/TWO-TONE.jpg", width: 70%),
   caption: [Two tone signal at the input of the PA.]
 )<fig:pa-two-in>
 
 #figure(
-  image("./data/tinySA/TWO-PA.bmp", width: 95%),
+  image("./data/tinySA/TWO-PA.jpg", width: 70%),
   caption: [Two tone signal at the output of the PA.]
 ) <fig:pa-two-out>
 
@@ -593,22 +636,22 @@ producing different ACPR values, given in @tab:pa-mod-acpr.
 ) <tab:pa-mod-acpr>
 
 #figure(
-  image("./data/tinySA/MOD-10.bmp", width: 95%),
+  image("./data/tinySA/MOD-10.jpg", width: 70%),
   caption: [Modulated signal input of $-10 "dBm"$ at the output of the PA.]
 ) <fig:pa-mod-10>
 
 #figure(
-  image("./data/tinySA/MOD-15.bmp", width: 95%),
+  image("./data/tinySA/MOD-15.jpg", width: 70%),
   caption: [Modulated signal input of $-15 "dBm"$ at the output of the PA.]
 ) <fig:pa-mod-15>
 
 #figure(
-  image("./data/tinySA/MOD-17.bmp", width: 95%),
+  image("./data/tinySA/MOD-17.jpg", width: 70%),
   caption: [Modulated signal input of $-17 "dBm"$ at the output of the PA.]
 ) <fig:pa-mod-17>
 
 #figure(
-  image("./data/tinySA/MOD-20.bmp", width: 95%),
+  image("./data/tinySA/MOD-20.jpg", width: 70%),
   caption: [Modulated signal input of $-20 "dBm"$ at the output of the PA.]
 )<fig:pa-mod-20>
 
@@ -652,46 +695,4 @@ We can specially highlight the Automatic Gain Control in the board, which permit
 To finalize the analysis, even if the simulation implemented many non-linearities of different components, it was still mostly idealized in terms of the transmission channel and the noise modelling. This is great when theoretically parametrizing the components of the chain to achieve the desired performance, but also fails to capture many difficulties that were only seen when using the pluto board. Thus, both approaches have its merits.
 
 Besides the communication chain aspects discussed until now, many measuring sessions were conducted during the project, characterizing PAs and LNAs. This permitted an experimental view on how to determine gain, IIP3, IM3, ACPR, and noise figure from different components using tools such as a VNA and an SDR.
-
-#figure(
-    caption: [Comparison between the ADALM-PLUTO and the base AD9363 circuit.],
-    table(
-      columns: (1fr, 1fr, 1fr),
-      inset: 12pt,
-      align: center,
-      stroke: 0.6pt,
-
-      table.header(
-        [],[AD9363],[ADALM-Pluto],
-      ),
-
-      table.hline(),
-
-      [Transmitters],
-      [$2$],[$1$],
-
-      table.hline(),
-
-      [Receivers],
-      [2],[1],
-
-      table.hline(),
-
-      [Local Oscillator Freq.],
-      table.cell(colspan: 2, $325 "MHz to" 3.8 "GHz"$),
-
-      table.hline(),
-
-      [Sampling Frequency],
-      table.cell(colspan: 2, $65.2 "kSPS to" 61.44 "MSPS"$),
-
-      table.hline(),
-
-      [Transmitted Power],
-      [$7.5 "dBm"$],[$7 "dBm"$],
-
-      table.hline(),
-
-    ),
-  ) <tab:code_information>
 
