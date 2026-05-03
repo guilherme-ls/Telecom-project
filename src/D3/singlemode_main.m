@@ -4,8 +4,8 @@ close all;
 
 fiber_config.alpha = 0.2; % db/km
 fiber_config.dispersion_0 = 17; % ps/nm/km
-fiber_config.dispersion_slope = 0.09; % ps/nm2/km
-fiber_config.fiber_length = 20; % km
+fiber_config.dispersion_slope = 0; %0.09; % ps/nm2/km
+fiber_config.fiber_length = 1; % km
 
 %%%%%%%%%%%%%%%% Physical Constants
   
@@ -28,31 +28,30 @@ dispersion = fiber_config.dispersion_0 + fiber_config.dispersion_0*(signal_wavel
 beta_2 = - dispersion * signal_wavelength^2 / (2*pi*c);
 
 %%%%%%%%%%% Pulse Signal Creation
-pulse_T0 = 1000; % ps
+pulse_T0 = 10; % ps
+pulse_a = log(2) / (2 * (pulse_T0 / 2)^2);
 
-half_width_max = sqrt(-2 * log(1/sqrt(2)) / (pulse_T0^2)); % THz
-half_width = half_width_max * 2; % THz
-analitical_time_dispersion = beta_2 * half_width * fiber_config.fiber_length; % ps
+pulse_freq_width = 2 * sqrt(2 * pulse_a * log(2)); % THz 
+analitical_time_dispersion = beta_2 * pulse_freq_width * fiber_config.fiber_length; % ps
 
-T_min = pulse_T0 + analitical_time_dispersion; % ps
+T_min = pulse_T0 * 5 + abs(analitical_time_dispersion); % ps
 
-bw_cutoff = 0.001;
+bw_cutoff = 0.00001;
 
-band_width_max = sqrt(-2 * log(bw_cutoff) / (pulse_T0^2)); % THz
-band_width = band_width_max * 2; % THz
+band_width = 2 * sqrt(2 * pulse_a * log(1 / sqrt(bw_cutoff))); % THz
 
-f_min = band_width; % THz 
+f_min = 10 ; %band_width; % THz 
 
-N_pulse = ceil(pulse_T0 * f_min);
+N_pulse = ceil(pulse_T0 * 5 * f_min);
 N_dispersion = ceil(abs(analitical_time_dispersion * f_min));
 N_total = N_pulse + N_dispersion;
 
 t_vec = (-N_total:1:N_total) / f_min;
 pulse_vec = (-N_pulse:1:N_pulse) / f_min;
-f_vec = (0:2*N_total) * f_min / N_total;
+f_vec = (-N_total:1:N_total) * f_min / 2;
 
 %%%%%%%%%%% Pulse Signal Creation
-pulse = signal_A0*exp(-pulse_vec.^2/(2*pulse_T0^2));
+pulse = signal_A0*exp(-pulse_vec.^2 / (2 * pulse_T0^2));
 pulse = [zeros(1, N_dispersion), pulse, zeros(1, N_dispersion)];
 
 %%%%%%%%%%% Simulated Dispersion
@@ -60,11 +59,11 @@ pulse = [zeros(1, N_dispersion), pulse, zeros(1, N_dispersion)];
 [pulse_out, fiber_trans] = singlemode_fiber(fiber_config, wavelength_0, signal_wavelength, ...
                                             pulse, f_vec);
 
-figure();
-subplot(2,1,1);
-plot(f_vec, abs(fiber_trans));
-subplot(2,1,2);
-plot(f_vec, angle(fiber_trans));
+%figure();
+%subplot(2,1,1);
+%plot(f_vec, abs(fiber_trans));
+%subplot(2,1,2);
+%plot(f_vec, angle(fiber_trans));
 
 figure();
 subplot(2,1,1);

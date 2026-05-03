@@ -20,7 +20,7 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, transmission_
   
   %%%%%%%%%%%%%%%% Physical Constants
   
-  c = 3e9; % physconst("LightSpeed");
+  c = 3e8; % physconst("LightSpeed");
   
   %%%%%%%%%% Dispersion Transfer Function
   
@@ -36,10 +36,10 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, transmission_
   
   fiber_trans = arrayfun(transfer_fun, frequency_vector); 
   
-  signal_fft = fft(signal_in);
+  signal_fft = fftshift(fft(signal_in));
 
   fiber_out_fft = signal_fft .* fiber_trans;
   
-  fiber_out = ifftshift(fftshift(fiber_out_fft));
+  fiber_out = ifft(ifftshift(fiber_out_fft));
 
 end
