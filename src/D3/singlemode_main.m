@@ -59,11 +59,11 @@ pulse = [zeros(1, N_dispersion), pulse, zeros(1, N_dispersion)];
 [pulse_out, fiber_trans] = singlemode_fiber(fiber_config, wavelength_0, signal_wavelength, ...
                                             pulse, f_vec);
 
-%figure();
+figure();
 %subplot(2,1,1);
 %plot(f_vec, abs(fiber_trans));
 %subplot(2,1,2);
-%plot(f_vec, angle(fiber_trans));
+plot(f_vec, angle(fiber_trans));
 
 figure();
 subplot(2,1,1);

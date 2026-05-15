@@ -34,7 +34,7 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, transmission_
   
   %%%%%%%%%%% Simulated Dispersion
   
-  fiber_trans = arrayfun(transfer_fun, frequency_vector); 
+  fiber_trans = arrayfun(transfer_fun, frequency_vector * 2 * pi); 
   
   signal_fft = fftshift(fft(signal_in));
 
