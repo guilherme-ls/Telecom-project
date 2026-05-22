@@ -10,7 +10,7 @@
 %% Return:
 %%  - fiber_out.alpha : J/ps 
 %%  - transfer_fun : J/THz 
-function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, transmission_wavelength, signal_wavelength, ...
+function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, wavelength_0, signal_central_wavelength, ...
                                             signal_in, frequency_vector)
   %%%%%%%%%%%%%%%% Fiber Constants
   alpha = fiber_config.alpha; % db/km
@@ -24,10 +24,10 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, transmission_
   
   %%%%%%%%%% Dispersion Transfer Function
   
-  dispersion = dispersion_0 + dispersion_slope*(signal_wavelength - transmission_wavelength);
+  dispersion = dispersion_0 + dispersion_slope*(signal_central_wavelength - wavelength_0);
   
-  beta_2 = - dispersion * signal_wavelength^2 / (2*pi*c);
-  beta_3 = dispersion_slope * signal_wavelength^4 / (2*pi*c)^2;
+  beta_2 = - dispersion * signal_central_wavelength^2 / (2*pi*c);
+  beta_3 = dispersion_slope * signal_central_wavelength^4 / (2*pi*c)^2;
   
   beta = @(dw) (beta_2*dw^2)/2 + (beta_3*dw^3)/6;
   transfer_fun = @(dw) exp((-alpha -1j*beta(dw))*fiber_length);
@@ -41,5 +41,19 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, transmission_
   fiber_out_fft = signal_fft .* fiber_trans;
   
   fiber_out = ifft(ifftshift(fiber_out_fft));
+
+
+figure();
+subplot(2,1,1);
+plot(frequency_vector, abs(signal_fft));
+title('Input pulse')
+xlabel('frquency (THz)') 
+ylabel('I(f)') 
+
+subplot(2,1,2);
+plot(frequency_vector, abs(fiber_out_fft));
+title('Output pulse')
+xlabel('frquency (THz)') 
+ylabel('I(f)') 
 
 end
