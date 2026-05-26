@@ -1,4 +1,4 @@
-addpath(genpath('../../ref/D1-D4'))
+addpath(genpath('../../ref/D3'))
 
 set(groot,'DefaultLineLinewidth',2)
 set(groot,'DefaultAxesFontSize',16)
