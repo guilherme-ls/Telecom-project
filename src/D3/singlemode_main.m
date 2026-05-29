@@ -36,7 +36,7 @@ fprintf("DeltaTau Ana = %.2f ps\n", analitical_time_dispersion);
 
 %%%%%%%%%%% Pulse Signal Creation
 [pulse, t_vec, f_vec, f_sampling] = gaussian_pulse(fiber_config, signal_A0, pulse_T0,...
-                                       wavelength_0, signal_central_wavelength);
+                                       wavelength_0, signal_central_wavelength, true);
 
 %%%%%%%%%%% Simulated Dispersion
 
