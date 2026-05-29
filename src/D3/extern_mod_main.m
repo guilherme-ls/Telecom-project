@@ -2,8 +2,8 @@ clear;
 close all;
 
 %%%%%%%%%%%%%%%% Simulation Params
-bit_errors_min = 0;
-symbols_per_sim_step = 10;
+bit_errors_min = 1;
+symbols_per_sim_step = 100;
 max_symbols_per_sim_step = 1000;
 max_sim_step = 10000;
 
@@ -30,7 +30,7 @@ wavelength_0 = 1550; % nm
 signal_central_wavelength = 1554; % nm
 
 bit_rates = [2.5, 10]; % Gb/s
-laser_powers = -20:0.1:-17; % dbm
+laser_powers = -25:0.5:-10; % dbm
 
 figure();
 semilog_plot_args = cell(2, length(bit_rates));
@@ -47,13 +47,15 @@ for jj = 1:length(bit_rates)
     fprintf("----------------------\n");
     fprintf("Bit Rate = %d GB/s\n", bit_rate);
     bers = zeros(1, length(laser_powers));
+    last_bit_errors = 1;
     %%%% LASER
     for ii = 1:length(laser_powers)
         fprintf("\tLaser Power = %.2f dBm\n", laser_powers(ii));
         bit_errors = 0;
         total_sent_bits = 0;
         sim_steps_taken = 0;
-        while bit_errors < bit_errors_min && sim_steps_taken < max_sim_step
+        while bit_errors < bit_errors_min && sim_steps_taken < max_sim_step ...
+                && last_bit_errors > 0
             laser_config = make_emlaser('P_opt_dBm', laser_powers(ii));
 
             %%%% PHOTO DETECTOR
@@ -109,6 +111,7 @@ for jj = 1:length(bit_rates)
                 bit_errors, total_sent_bits,...
                 sim_steps_taken, max_sim_step);
         end
+        last_bit_errors = bit_errors;
         bers(ii) = bit_errors / total_sent_bits;
     end
     semilog_plot_args(:, jj) = {laser_powers; bers};
