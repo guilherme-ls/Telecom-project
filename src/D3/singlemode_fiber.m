@@ -21,7 +21,7 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, ...
   
   %%%%%%%%%%%%%%%% Physical Constants
   
-  c = 3e8; % physconst("LightSpeed");
+  c = 3e5; % physconst("LightSpeed") / 1000; % nm/ps
   
   %%%%%%%%%% Dispersion Transfer Function
   
@@ -37,7 +37,7 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, ...
   N_total = length(signal_in);
   N_half = N_total / 2;
   frequency_vector = (-N_half + 1:1:N_half) * f_sampling / N_total;
-
+c = 3e8; % physconst("LightSpeed"); % m/s
   fiber_trans = arrayfun(transfer_fun, frequency_vector * 2 * pi); 
   
   signal_fft = fftshift(fft(signal_in));
@@ -47,19 +47,19 @@ function [fiber_out, fiber_trans] = singlemode_fiber(fiber_config, ...
   fiber_out = ifft(ifftshift(fiber_out_fft));
 
 
-%figure();
-%subplot(2,1,1);
-%plot(frequency_vector, abs(signal_fft));
-%title('Input pulse')
-%xlabel('frquency (THz)') 
-%ylabel('I(f)') 
+figure();
+subplot(2,1,1);
+plot(frequency_vector, abs(signal_fft));
+title('Input pulse')
+xlabel('ferquency (THz)') 
+ylabel('I(f)') 
 
-%subplot(2,1,2);
-%plot(frequency_vector, abs(fiber_out_fft));
-%title('Output pulse')
-%xlabel('frquency (THz)') 
-%ylabel('I(f)') 
+subplot(2,1,2);
+plot(frequency_vector, abs(fiber_out_fft));
+title('Output pulse')
+xlabel('frquency (THz)') 
+ylabel('I(f)') 
 
-%fprintf("Bandwidth Sim In = %.2f GHz\n", pulsewidth(abs(signal_fft), frequency_vector) * 1000);
+fprintf("Bandwidth Sim In = %.2f GHz\n", pulsewidth(abs(signal_fft), frequency_vector) * 1000);
 
 end
