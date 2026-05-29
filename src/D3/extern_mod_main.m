@@ -2,8 +2,8 @@ clear;
 close all;
 
 %%%%%%%%%%%%%%%% Simulation Params
-bit_errors_min = 20;
-symbols_per_sim_step = 1000;
+bit_errors_min = 0;
+symbols_per_sim_step = 10;
 max_symbols_per_sim_step = 10000;
 max_sim_step = 10000;
 
@@ -26,8 +26,13 @@ photo_detector.optical_bw = 125e9;
 photo_detector.r_load = 50;
 photo_detector.n_th = 2e-20;
 
-bit_rates = [2.5, 10]; % Gb/s
-laser_powers = -20:0.1:-17; % dbm
+wavelength_0 = 1550; % nm
+signal_central_wavelength = 1554; % nm
+
+%bit_rates = [2.5, 10]; % Gb/s
+bit_rates = [2.5]; % Gb/s
+%laser_powers = -20:0.1:-17; % dbm
+laser_powers = [-10]; % dbm
 
 figure();
 semilog_plot_args = cell(2, length(bit_rates));
@@ -50,7 +55,7 @@ for jj = 1:length(bit_rates)
         bit_errors = 0;
         total_sent_bits = 0;
         sim_steps_taken = 0;
-        while bit_errors < bit_errors_min && sim_steps_taken < max_sim_step
+        %while bit_errors < bit_errors_min && sim_steps_taken < max_sim_step
             laser_config = make_emlaser('P_opt_dBm', laser_powers(ii));
 
             %%%% PHOTO DETECTOR
@@ -72,18 +77,28 @@ for jj = 1:length(bit_rates)
 
             [tx_optical_field, tx_sampling_period, ~] = ...
                 TX_optical_eml(tx_symbols, symbol_period, laser_config);
+            disp(tx_optical_field);
+
+            %% TODO OVERSAMPLING OF tx_optical_field
+
+            %%%% TX PULSE CREATION %%%%
+            [pulse, t_vec, f_vec, f_sampling] = gaussian_pulse(fiber_config, 1, symbol_period,...
+                                       wavelength_0, signal_central_wavelength);
+
+            %% TODO CONVOLUTION WITH PULSE
 
             %%%% FIBER TRANSMISSION %%%%
 
             rx_optical_field = tx_optical_field;
-
 
             %%%% RX PHOTO CURRENT %%%%
             [rx_photo_current, rx_sampling_period, ~, rx_eletrical_snr] = ...
                 RX_photodetector(rx_optical_field, tx_sampling_period, ...
                 photo_detector.n_th, photodetector_config);
 
-            %%%% RX SYMBOLS %%%%
+            %% TODO 'SAMPLING' OF RX GAUSSIAN 
+
+            %%%% RX SYMBOL DETECTION %%%%
             rx_symbols = rx_photo_current > mean(rx_photo_current);
 
             %%%% CHAIN PERFORMANCE %%%%
@@ -93,13 +108,16 @@ for jj = 1:length(bit_rates)
             fprintf("\t\tBit Errors %d / %d (%d / %d)\n",...
                 bit_errors, total_sent_bits,...
                 sim_steps_taken, max_sim_step);
-        end
+        %end
         bers(ii) = bit_errors / total_sent_bits;
     end
     semilog_plot_args(:, jj) = {laser_powers; bers};
     legend_args(:, jj) = {sprintf("Rb = %.1f Gb/s", bit_rate)};
 end
 semilogy(semilog_plot_args{:});
+title('BER for different rates');
+xlabel('Laser Power (dBm)');
+ylabel('BER');
 legend(legend_args{:}, 'Location','southwest');
 
 
