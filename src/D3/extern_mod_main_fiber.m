@@ -9,7 +9,7 @@ max_sim_step = 100;
 
 %%%%%%%%%%%%%%%% Fiber Constants
 
-fiber_config.alpha = 0.2; % db/km
+fiber_config.alpha = 0; %0.2; % db/km
 fiber_config.dispersion_0 = 17; % ps/nm/km
 fiber_config.dispersion_slope = 0.09; % ps/nm2/km
 
@@ -30,7 +30,7 @@ signal_central_wavelength = 1554; % nm
 
 bit_rates = [2.5, 10]; % Gb/s
 fiber_lengths = 0:10:100; % Km
-laser_powers = -25:5:-10; % dbm
+laser_powers = -25:5:0; % dbm
 
 figure();
 semilog_plot_args = cell(2, length(bit_rates), length(fiber_lengths));
