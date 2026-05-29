@@ -4,7 +4,7 @@ close all;
 %%%%%%%%%%%%%%%% Simulation Params
 bit_errors_min = 0;
 symbols_per_sim_step = 10;
-max_symbols_per_sim_step = 10000;
+max_symbols_per_sim_step = 1000;
 max_sim_step = 10000;
 
 %%%%%%%%%%%%%%%% Fiber Constants
@@ -29,10 +29,8 @@ photo_detector.n_th = 2e-20;
 wavelength_0 = 1550; % nm
 signal_central_wavelength = 1554; % nm
 
-%bit_rates = [2.5, 10]; % Gb/s
-bit_rates = [2.5]; % Gb/s
-%laser_powers = -20:0.1:-17; % dbm
-laser_powers = [-10]; % dbm
+bit_rates = [2.5, 10]; % Gb/s
+laser_powers = -20:0.1:-17; % dbm
 
 figure();
 semilog_plot_args = cell(2, length(bit_rates));
@@ -55,7 +53,7 @@ for jj = 1:length(bit_rates)
         bit_errors = 0;
         total_sent_bits = 0;
         sim_steps_taken = 0;
-        %while bit_errors < bit_errors_min && sim_steps_taken < max_sim_step
+        while bit_errors < bit_errors_min && sim_steps_taken < max_sim_step
             laser_config = make_emlaser('P_opt_dBm', laser_powers(ii));
 
             %%%% PHOTO DETECTOR
@@ -77,29 +75,31 @@ for jj = 1:length(bit_rates)
 
             [tx_optical_field, tx_sampling_period, ~] = ...
                 TX_optical_eml(tx_symbols, symbol_period, laser_config);
-            disp(tx_optical_field);
-
-            %% TODO OVERSAMPLING OF tx_optical_field
 
             %%%% TX PULSE CREATION %%%%
-            [pulse, t_vec, f_vec, f_sampling] = gaussian_pulse(fiber_config, 1, symbol_period,...
+            [tx_pulse, ~, ~, f_sampling] = gaussian_pulse(fiber_config, 1, symbol_period,...
                                        wavelength_0, signal_central_wavelength);
 
-            %% TODO CONVOLUTION WITH PULSE
+            %%%% UPSAMPLING OF tx_optical_field
+            tx_upsampling_ratio = 2* ceil(symbol_period * f_sampling);
+            tx_upsampled_optical_field = upsample(tx_optical_field, tx_upsampling_ratio);
+
+            %%%% CONVOLUTION WITH PULSE
+            tx_symbol_pulses = conv(tx_pulse, tx_upsampled_optical_field);
+            tx_pulse_period = length(tx_pulse);
 
             %%%% FIBER TRANSMISSION %%%%
-
-            rx_optical_field = tx_optical_field;
+            rx_symbol_pulses = tx_symbol_pulses;
 
             %%%% RX PHOTO CURRENT %%%%
             [rx_photo_current, rx_sampling_period, ~, rx_eletrical_snr] = ...
-                RX_photodetector(rx_optical_field, tx_sampling_period, ...
+                RX_photodetector(rx_symbol_pulses, tx_sampling_period, ...
                 photo_detector.n_th, photodetector_config);
 
-            %% TODO 'SAMPLING' OF RX GAUSSIAN 
-
+            %%%% DOWNSAMPLING RX GAUSSIAN 
+            rx_sampled_photo_current = rx_photo_current(tx_pulse_period/2:tx_upsampling_ratio:end-tx_pulse_period/2);
             %%%% RX SYMBOL DETECTION %%%%
-            rx_symbols = rx_photo_current > mean(rx_photo_current);
+            rx_symbols = rx_sampled_photo_current > mean(rx_sampled_photo_current);
 
             %%%% CHAIN PERFORMANCE %%%%
             bit_errors = bit_errors + sum(rx_symbols ~= tx_symbols);
@@ -108,7 +108,7 @@ for jj = 1:length(bit_rates)
             fprintf("\t\tBit Errors %d / %d (%d / %d)\n",...
                 bit_errors, total_sent_bits,...
                 sim_steps_taken, max_sim_step);
-        %end
+        end
         bers(ii) = bit_errors / total_sent_bits;
     end
     semilog_plot_args(:, jj) = {laser_powers; bers};

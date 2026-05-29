@@ -5,7 +5,7 @@ close all;
 fiber_config.alpha = 0.2; % db/km
 fiber_config.dispersion_0 = 17; % ps/nm/km
 fiber_config.dispersion_slope = 0.09; % ps/nm2/km
-fiber_config.fiber_length = 1; % km
+fiber_config.fiber_length = 10; % km
 
 %%%%%%%%%%%%%%%% Physical Constants
   
@@ -24,7 +24,7 @@ signal_central_wavelength = 1554; % nm
 dispersion = fiber_config.dispersion_0 + fiber_config.dispersion_slope*(signal_central_wavelength - wavelength_0);
 
 %%%%%%%%%%% Pulse Signal Creation
-pulse_T0 = 1; % ps
+pulse_T0 = 10; % ps
 pulse_a = log(2) / (2 * (pulse_T0 / 2)^2);
 pulse_FWHM = 2 * sqrt(2 * log(2)) * pulse_T0;
 

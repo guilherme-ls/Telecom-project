@@ -25,7 +25,7 @@ pulse_bw = 2 * sqrt(2 * pulse_a * log(1 / sqrt(bw_cutoff))); % THz
 
 f_sampling = max(dispersed_pulse_bw, pulse_bw) * 2; % THz 
 
-N_total = ceil(2* max(pulse_T0_dispersed, pulse_T0) * f_sampling);
+N_total = ceil(4 * max(pulse_T0_dispersed, pulse_T0) * f_sampling);
 N_total = 2^ceil(log2(N_total));
 
 N_half = N_total / 2;
