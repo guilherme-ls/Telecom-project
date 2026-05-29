@@ -5,7 +5,7 @@ close all;
 fiber_config.alpha = 0.2; % db/km
 fiber_config.dispersion_0 = 17; % ps/nm/km
 fiber_config.dispersion_slope = 0.09; % ps/nm2/km
-fiber_config.fiber_length = 10; % km
+fiber_config.fiber_length = 1; % km
 
 %%%%%%%%%%%%%%%% Physical Constants
   
@@ -25,8 +25,6 @@ dispersion = fiber_config.dispersion_0 + fiber_config.dispersion_slope*(signal_c
 
 %%%%%%%%%%% Pulse Signal Creation
 pulse_T0 = 10; % ps
-pulse_a = log(2) / (2 * (pulse_T0 / 2)^2);
-pulse_FWHM = 2 * sqrt(2 * log(2)) * pulse_T0;
 
 pulse_freq_width =  0.44 / pulse_T0; % 0.44 / pulse_FWHM; % THz ; % sqrt(2 * log(2)) / pulse_T0; % THz 
 pulse_delta_lambda = pulse_freq_width * signal_central_wavelength^2 / c; % nm
@@ -36,12 +34,12 @@ fprintf("DeltaTau Ana = %.2f ps\n", analitical_time_dispersion);
 
 %%%%%%%%%%% Pulse Signal Creation
 [pulse, t_vec, f_vec, f_sampling] = gaussian_pulse(fiber_config, signal_A0, pulse_T0,...
-                                       wavelength_0, signal_central_wavelength, true);
+                                       wavelength_0, signal_central_wavelength);
 
 %%%%%%%%%%% Simulated Dispersion
 
 [pulse_out, fiber_trans] = singlemode_fiber(fiber_config, wavelength_0, signal_central_wavelength, ...
-                                            pulse, f_sampling);
+                                            pulse, f_sampling, true);
 
 input_pulse_width = pulsewidth(abs(pulse), t_vec);
 exit_pulse_width = pulsewidth(abs(pulse_out), t_vec);
