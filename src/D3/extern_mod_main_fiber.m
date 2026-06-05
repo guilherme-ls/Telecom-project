@@ -35,7 +35,7 @@ laser_powers = -25:5:0; % dbm
 figure();
 semilog_plot_args = cell(2, length(bit_rates), length(fiber_lengths));
 legend_args = cell(1, length(bit_rates), length(fiber_lengths));
-title('External modulation back-to-back performance');
+title('External modulation performance');
 xlabel('P_opt (dBm)');
 ylabel('BER');
 
