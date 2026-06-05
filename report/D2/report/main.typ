@@ -323,7 +323,7 @@ $ "P"_"LNA" = 10^(-2)/(10^("NF"_"LNA"/10) - 1) $ <eq:LNA_power>
 
 At last, the IIP3 value of 0 dBm was adopted, such that the LNA operates in its linear region.
 
-== Down Sampling Mixer
+=== Down Sampling Mixer
 
 To determine the down sampling mixer's impact in the system, we consider a modulated signal $v_"in"(t)$ as input of the mixer and analyse its I and Q outputs. Let us consider the following input signal, where $omega_"LO"$ is the frequency of the local oscillator:
 
@@ -350,7 +350,7 @@ Thus we conclude that on average, and especially in the case where $v_"in" (t) =
 
 Therefore, this $6 "dB"$ loss in each arm must be considered in our chain gain calculations.
 
-== Anti-Alias Filter
+=== Anti-Alias Filter
 
 After the down-mixer the signal passes through a low-pass filter, which seeks to attenuate the replica of the signal at $2 f_("LO")$ and the noise outside the useful band, preventing both from being aliased into the useful signal when passing through the ADC.
 
@@ -376,7 +376,7 @@ The useful band of the signal has $20 "MHz"$, which justifies the choice of $f_1
 
 The filter is again implemented as a FIR filter to avoid non-constant group delay. It is also ideal and should not have a noticeable impact in the power and noise of the useful signal.
 
-== Baseband Amplifier
+=== Baseband Amplifier
 
 After the filter, we have the baseband amplifier, which provides a final amplification step to ensure the signal amplitude meets the ADC full scale. We can easily determine its theoretical gain through the following equation which sums all the gains in the chain:
 
@@ -390,7 +390,7 @@ In practice, a slightly lower value of $G_"BBamp,dB" = 23.5 "dB"$ was employed i
 
 In terms of noise factor, the system specifications define a fixed value of $N F_"BBamp" = 10 "dB"$, which is employed in the simulations. Since no limitations are outlined in terms of IIP3, we decided to employ the default value in the provided code.
 
-== Analog to Digital Converter
+=== Analog to Digital Converter
 
 This last step in the reception chain is extremely relevant to the noise calculations, as the choice of the number of bits used by the ADC will determine the quantization noise it adds to the signal. Therefore, we must balance how much power it consumes and how much quantization noise it adds to the signal (@eq:SQNR), both controlled by its number of bits (@eq:PADC). Observe that in the provided equations, $N$ represents the number of bits, ENOB the effective number of bits (which we adopt as equal to $N$ for practical purposes), and $C$ a constant that incorporates parameters not immediately relevant to the analysis.
 
