@@ -14,6 +14,11 @@ carry_frequency = 2.4e9; % Hz
 carry_lamdba = c / carry_frequency;
 Pmax = 20; % dBm
 
+noise_spectral_density = -174; % dBm / Hz
+noise_power = noise_spectral_density * available_bandwidth; % dBm
+
+snr_tx_max = Pmax - noise_power; %dB
+
 
 MC=1000; %%number of Monte-Carlo simulations
 
@@ -41,14 +46,14 @@ for rate=user_rates
             aux=0;
 
             for mm=1:MC
-            	xx= rand(K(kk),1) * Dmax; % Distribution of users in the x-axis
-            	yy= rand(K(kk),1) * Dmax; % Distribution of users in the y-axis
+            	xx= rand(K(kk), 1) * Dmax; % Distribution of users in the x-axis
+            	yy= rand(K(kk), 1) * Dmax; % Distribution of users in the y-axis
 
             	d2=xx.^2+yy.^2;%% square-distance from the origin
                 friss_attenuation_factor = carry_lamdba^2 / (4*pi)^2;
             	a2 = min(1, friss_attenuation_factor/d2);% square magnitude attenuation in Friis equation 
             	a2_dB = 10*log10(a2);
-            	SNR_rx_max = a2_dB + 1; %calculate ??? : SNRmax at TX in dB
+            	SNR_rx_max = a2_dB + snr_tx_max; 
 
             	SNR_min= eq_mode.m16qam.snr_min; %%ZF or DFE/16QAM: channel 1, channel 2, channel 3
             	if(R*Ts*K(kk)<3)  SNR_min = eq_mode.m8qam.snr_min; end%%ZF or DFE/8QAM: channel 1, channel 2, channel 3
