@@ -323,7 +323,7 @@ $ "P"_"LNA" = 10^(-2)/(10^("NF"_"LNA"/10) - 1) $ <eq:LNA_power>
 
 At last, the IIP3 value of 0 dBm was adopted, such that the LNA operates in its linear region.
 
-== Down Sampling Mixer
+=== Down Sampling Mixer
 
 To determine the down sampling mixer's impact in the system, we consider a modulated signal $v_"in"(t)$ as input of the mixer and analyse its I and Q outputs. Let us consider the following input signal, where $omega_"LO"$ is the frequency of the local oscillator:
 
@@ -350,7 +350,7 @@ Thus we conclude that on average, and especially in the case where $v_"in" (t) =
 
 Therefore, this $6 "dB"$ loss in each arm must be considered in our chain gain calculations.
 
-== Anti-Alias Filter
+=== Anti-Alias Filter
 
 After the down-mixer the signal passes through a low-pass filter, which seeks to attenuate the replica of the signal at $2 f_("LO")$ and the noise outside the useful band, preventing both from being aliased into the useful signal when passing through the ADC.
 
@@ -376,7 +376,7 @@ The useful band of the signal has $20 "MHz"$, which justifies the choice of $f_1
 
 The filter is again implemented as a FIR filter to avoid non-constant group delay. It is also ideal and should not have a noticeable impact in the power and noise of the useful signal.
 
-== Baseband Amplifier
+=== Baseband Amplifier
 
 After the filter, we have the baseband amplifier, which provides a final amplification step to ensure the signal amplitude meets the ADC full scale. We can easily determine its theoretical gain through the following equation which sums all the gains in the chain:
 
@@ -390,7 +390,7 @@ In practice, a slightly lower value of $G_"BBamp,dB" = 23.5 "dB"$ was employed i
 
 In terms of noise factor, the system specifications define a fixed value of $N F_"BBamp" = 10 "dB"$, which is employed in the simulations. Since no limitations are outlined in terms of IIP3, we decided to employ the default value in the provided code.
 
-== Analog to Digital Converter
+=== Analog to Digital Converter
 
 This last step in the reception chain is extremely relevant to the noise calculations, as the choice of the number of bits used by the ADC will determine the quantization noise it adds to the signal. Therefore, we must balance how much power it consumes and how much quantization noise it adds to the signal (@eq:SQNR), both controlled by its number of bits (@eq:PADC). Observe that in the provided equations, $N$ represents the number of bits, ENOB the effective number of bits (which we adopt as equal to $N$ for practical purposes), and $C$ a constant that incorporates parameters not immediately relevant to the analysis.
 
@@ -502,6 +502,49 @@ Comparing these results to the datasheet, they are entirely reasonable, close to
 #create-lna-figure("data/PA-measurements/s11.csv", [S21], [Measured $S_"21"$ curve for the TB-432-8A+ LNA.],
                    [Frequency (MHz)], [Power (dB)], 6) <lna-s21>
 
+== First Using Pluto
+
+@tab:code_information provides a comparative characterization of both the ADALM-PLUTO and the AD9363 transceiver it uses. There are only small differences that can be associated to the fact that ADALM-PLUTO is a teaching ressource rather than a commercial system.
+
+#figure(
+    caption: [Comparison between the ADALM-PLUTO and the base AD9363 circuit.],
+    table(
+      columns: 3,
+      align: center,
+
+      table.header(
+        [],[AD9363],[ADALM-Pluto],
+      ),
+
+      table.hline(),
+
+      [Transmitters],
+      [$2$],[$1$],
+
+      table.hline(),
+
+      [Receivers],
+      [2],[1],
+
+      table.hline(),
+
+      [Local Oscillator Freq.],
+      table.cell(colspan: 2, $325 "MHz to" 3.8 "GHz"$),
+
+      table.hline(),
+
+      [Sampling Frequency],
+      table.cell(colspan: 2, $65.2 "kSPS to" 61.44 "MSPS"$),
+
+      table.hline(),
+
+      [Transmitted Power],
+      [$7.5 "dBm"$],[$7 "dBm"$],
+
+      table.hline(),
+
+    ),
+  ) <tab:code_information>
 
 == Power Amplifier Measurements
 
@@ -553,27 +596,27 @@ From these values, more static values were calculated and can be found in the le
 
 We also measured, using the pocket spectrum analyser TinySA, how the amplifier impacted different signal types (one tone, two tone, modulated).
 In @fig:pa-one-in you can see how the one tone signal was before entering the PA, and in @fig:pa-one-out how it looks like after. It's important to note the 
-existance of a second smaller peak at $2.39 "GHz"$, it comes from the local oscilator used by the ADALM-Pluto.
+existance of a second smaller peak at $2.39 "GHz"$, it comes from the local oscilator used by the ADALM-Pluto. We see that its HD3 is $-45 "dBc"$
 
 #figure(
-  image("./data/tinySA/ONE-TONE.bmp", width: 95%),
+  image("./data/tinySA/ONE-TONE.jpg", width: 70%),
   caption: [Harmonic signal at the input of the PA.]
 ) <fig:pa-one-in>
 
 #figure(
-  image("./data/tinySA/ONE-PA.bmp", width: 95%),
+  image("./data/tinySA/ONE-PA.jpg", width: 70%),
   caption: [Harmonic signal at the output of the PA.]
 ) <fig:pa-one-out>
 
-Meanwhile, if we introduce a two tone signal (@fig:pa-two-in), we can see how the intermodulation products appear from the PA non linearities in @fig:pa-two-out.
+Meanwhile, if we introduce a two tone signal (@fig:pa-two-in), we can see how the intermodulation products appear from the PA non-linearities in @fig:pa-two-out. We can quickly determine from the figure its IM3 as $-50 "dBc"$ and the IIP3 as close to $18 "dB"$, which agrees with its datasheet.
 
 #figure(
-  image("./data/tinySA/TWO-TONE.bmp", width: 95%),
+  image("./data/tinySA/TWO-TONE.jpg", width: 70%),
   caption: [Two tone signal at the input of the PA.]
 )<fig:pa-two-in>
 
 #figure(
-  image("./data/tinySA/TWO-PA.bmp", width: 95%),
+  image("./data/tinySA/TWO-PA.jpg", width: 70%),
   caption: [Two tone signal at the output of the PA.]
 ) <fig:pa-two-out>
 
@@ -593,22 +636,22 @@ producing different ACPR values, given in @tab:pa-mod-acpr.
 ) <tab:pa-mod-acpr>
 
 #figure(
-  image("./data/tinySA/MOD-10.bmp", width: 95%),
+  image("./data/tinySA/MOD-10.jpg", width: 70%),
   caption: [Modulated signal input of $-10 "dBm"$ at the output of the PA.]
 ) <fig:pa-mod-10>
 
 #figure(
-  image("./data/tinySA/MOD-15.bmp", width: 95%),
+  image("./data/tinySA/MOD-15.jpg", width: 70%),
   caption: [Modulated signal input of $-15 "dBm"$ at the output of the PA.]
 ) <fig:pa-mod-15>
 
 #figure(
-  image("./data/tinySA/MOD-17.bmp", width: 95%),
+  image("./data/tinySA/MOD-17.jpg", width: 70%),
   caption: [Modulated signal input of $-17 "dBm"$ at the output of the PA.]
 ) <fig:pa-mod-17>
 
 #figure(
-  image("./data/tinySA/MOD-20.bmp", width: 95%),
+  image("./data/tinySA/MOD-20.jpg", width: 70%),
   caption: [Modulated signal input of $-20 "dBm"$ at the output of the PA.]
 )<fig:pa-mod-20>
 
@@ -652,46 +695,4 @@ We can specially highlight the Automatic Gain Control in the board, which permit
 To finalize the analysis, even if the simulation implemented many non-linearities of different components, it was still mostly idealized in terms of the transmission channel and the noise modelling. This is great when theoretically parametrizing the components of the chain to achieve the desired performance, but also fails to capture many difficulties that were only seen when using the pluto board. Thus, both approaches have its merits.
 
 Besides the communication chain aspects discussed until now, many measuring sessions were conducted during the project, characterizing PAs and LNAs. This permitted an experimental view on how to determine gain, IIP3, IM3, ACPR, and noise figure from different components using tools such as a VNA and an SDR.
-
-#figure(
-    caption: [Comparison between the ADALM-PLUTO and the base AD9363 circuit.],
-    table(
-      columns: (1fr, 1fr, 1fr),
-      inset: 12pt,
-      align: center,
-      stroke: 0.6pt,
-
-      table.header(
-        [],[AD9363],[ADALM-Pluto],
-      ),
-
-      table.hline(),
-
-      [Transmitters],
-      [$2$],[$1$],
-
-      table.hline(),
-
-      [Receivers],
-      [2],[1],
-
-      table.hline(),
-
-      [Local Oscillator Freq.],
-      table.cell(colspan: 2, $325 "MHz to" 3.8 "GHz"$),
-
-      table.hline(),
-
-      [Sampling Frequency],
-      table.cell(colspan: 2, $65.2 "kSPS to" 61.44 "MSPS"$),
-
-      table.hline(),
-
-      [Transmitted Power],
-      [$7.5 "dBm"$],[$7 "dBm"$],
-
-      table.hline(),
-
-    ),
-  ) <tab:code_information>
 
