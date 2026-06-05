@@ -23,14 +23,14 @@ snr_tx_max = Pmax - noise_power; %dB
 MC=1000; %%number of Monte-Carlo simulations
 
 user_rates = [40e3 400e3 4e6 40e6]; % bit/s
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CH1 CH2 CH3
+equalization_modes.zf.bpsk.snr_min    = [000 000 000]; % Es/N0
+equalization_modes.zf.m8qam.snr_min   = [000 000 000]; % Es/N0
+equalization_modes.zf.m16qam.snr_min  = [000 000 000]; % Es/N0
 
-equalization_modes.zf.bpsk.snr_min = []; % Es/N0
-equalization_modes.zf.m8qam.snr_min = []; % Es/N0
-equalization_modes.zf.m16qam.snr_min = []; % Es/N0
-
-equalization_modes.dfe.bpsk.snr_min = []; % Es/N0
-equalization_modes.dfe.m8qam.snr_min = []; % Es/N0
-equalization_modes.dfe.m16qam.snr_min = []; % Es/N0
+equalization_modes.dfe.bpsk.snr_min   = [000 000 000]; % Es/N0
+equalization_modes.dfe.m8qam.snr_min  = [000 000 000]; % Es/N0
+equalization_modes.dfe.m16qam.snr_min = [000 000 000]; % Es/N0
 
 for rate=user_rates
     Kmax = system_total_rate / user_rates;
