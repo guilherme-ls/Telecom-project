@@ -79,7 +79,7 @@ for jj = 1:length(bit_rates)
 
                 tx_symbols = randi([0, 1], symbols_amount, 1);
 
-                tx_symbols = laser_current(ii) / 1000 * tx_symbols / mean(tx_symbols);
+                tx_symbols = laser_current(ii) / 1000 * tx_symbols;
 
                 %%%% TX OPTICAL FIELD %%%%
 
