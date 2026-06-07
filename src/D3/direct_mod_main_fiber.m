@@ -26,18 +26,13 @@ wavelength_0 = 1550; % nm
 signal_central_wavelength = 1554; % nm
 
 bit_rates = [1]; % Gb/s
-fiber_lengths = [20]; % Km
-laser_current = [0.0070*10]; % A
+fiber_lengths = [0, 20]; % Km
+laser_current = 0.007 * [10, 100, 1000]; % A
 
 laser_config = make_laser_simple('v', c_nm / signal_central_wavelength);
 
-%figure();
-semilog_plot_args = cell(2, length(bit_rates), length(fiber_lengths));
-legend_args = cell(1, length(bit_rates), length(fiber_lengths));
-%title('Direct modulation performance');
-%xlabel('P_opt (dBm)');
-%ylabel('BER');
-
+eye_diagram_plot_args = cell(4, length(bit_rates), length(fiber_lengths), length(laser_current));
+plot_titles = cell(1, length(bit_rates), length(fiber_lengths), length(laser_current));
 
 for jj = 1:length(bit_rates)
     bit_rate = bit_rates(jj);
@@ -66,7 +61,7 @@ for jj = 1:length(bit_rates)
                     );
 
                 %%%% INPUT GENERATION %%%%
-                tx_symbols = [0, 1, 0, 0, 0, 0, 0] ; %randi([0, 1], symbols_to_simulate, 1);
+                tx_symbols = repmat([1, 0, 0, 1, 0 , 1, 1, 0], 1,  ceil(symbols_to_simulate/8));
 
                 tx_symbols = laser_current(ii) * tx_symbols;
 
@@ -88,22 +83,21 @@ for jj = 1:length(bit_rates)
                 rx_photo_current = rx_photo_current';
 
                 %%%% DOWNSAMPLING RX GAUSSIAN
-                figure()
-                plot(abs(tx_optical_field));
-                hold on;
-                plot(abs(rx_symbol_pulses));
+                symbol_period_samples = length(rx_photo_current) / length(tx_symbols);
+                eye_diagram_plot_args(:, jj, kk, ii) = {rx_photo_current, round(symbol_period_samples*2), symbol_period_samples, round(symbol_period_samples/2) };
+                plot_titles(:, jj, kk, ii) = {sprintf("Rb = %.1f Gb/s, L = %.1f Km, I = %.2f mA", bit_rate, fiber_length, laser_current(ii))};
         end
-        semilog_plot_args(:, jj, kk) = {laser_current; bers};
-        legend_args(:, jj, kk) = {sprintf("Rb = %.1f Gb/s, L %.1f Km", bit_rate, fiber_length)};
     end
 end
-%semilogy(semilog_plot_args{:});
-%title('BER for different rates');
-%xlabel('Laser Mean Current (mA)');
-%ylabel('BER');
-%ax = gca;
-%ax.LineStyleOrder = ["-"; "--"; "-o"];
-%legend(legend_args{:}, 'Location','southwest');
+
+for jj = 1:length(bit_rates)
+    for kk=1:length(fiber_lengths)
+        for ii = 1:length(laser_current)
+          eyediagram(eye_diagram_plot_args{:, jj, kk, ii});
+          title(plot_titles{:, jj, kk, ii});
+        end 
+    end 
+end
 
 
 
