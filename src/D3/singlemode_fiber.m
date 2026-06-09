@@ -50,15 +50,18 @@ if plot_en
     subplot(2,1,1);
     plot(frequency_vector, abs(signal_fft));
     title('Input pulse')
-    xlabel('ferquency (THz)')
+    xlabel('Frequency (THz)')
     ylabel('I(f)')
 
     subplot(2,1,2);
     plot(frequency_vector, abs(fiber_out_fft));
     title('Output pulse')
-    xlabel('frquency (THz)')
+    xlabel('Frequency (THz)')
     ylabel('I(f)')
 
-    fprintf("Bandwidth Sim In = %.2f GHz\n", pulsewidth(abs(signal_fft), frequency_vector) * 1000);
+    figure();
+    wid = pulsewidth(abs(signal_fft).^2, frequency_vector) * 1000;
+    pulsewidth(abs(signal_fft).^2, frequency_vector);
+    fprintf("Bandwidth Sim In = %.2f GHz\n", wid);
 end
 end

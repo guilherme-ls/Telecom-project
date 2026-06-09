@@ -2,16 +2,16 @@ clear;
 close all;
 
 %%%%%%%%%%%%%%%% Simulation Params
-bit_errors_min = 1;
+bit_errors_min = 300;
 symbols_per_sim_step = 100;
 max_symbols_per_sim_step = 1000;
-max_sim_step = 100;
+max_sim_step = 10000;
 
 %%%%%%%%%%%%%%%% Fiber Constants
 
 fiber_config.alpha = 0; %0.2; % db/km
 fiber_config.dispersion_0 = 17; % ps/nm/km
-fiber_config.dispersion_slope = 0.09; % ps/nm2/km
+fiber_config.dispersion_slope = 0.056; % ps/nm2/km
 
 %%%%%%%%%%%%%%%% Physical Constants
 
@@ -29,8 +29,8 @@ wavelength_0 = 1550; % nm
 signal_central_wavelength = 1554; % nm
 
 bit_rates = [2.5, 10]; % Gb/s
-fiber_lengths = 0:10:100; % Km
-laser_powers = -25:5:0; % dbm
+fiber_lengths = 100; %0:10:100; % Km
+laser_powers = -25:2:-15; % dbm
 
 figure();
 semilog_plot_args = cell(2, length(bit_rates), length(fiber_lengths));
@@ -87,7 +87,7 @@ for jj = 1:length(bit_rates)
                     wavelength_0, signal_central_wavelength);
 
                 %%%% UPSAMPLING OF tx_optical_field
-                tx_upsampling_ratio = 2* ceil(symbol_period * f_sampling);
+                tx_upsampling_ratio = ceil(symbol_period * f_sampling);
                 tx_upsampled_optical_field = upsample(tx_optical_field, tx_upsampling_ratio);
 
                 %%%% CONVOLUTION WITH PULSE
@@ -114,9 +114,11 @@ for jj = 1:length(bit_rates)
                 bit_errors = bit_errors + sum(rx_symbols ~= tx_symbols);
                 total_sent_bits = total_sent_bits + length(rx_symbols);
                 sim_steps_taken = sim_steps_taken + 1;
-                fprintf("\t\t\tBit Errors %d / %d (%d / %d)\n",...
+                %{
+                    fprintf("\t\t\tBit Errors %d / %d (%d / %d)\n",...
                     bit_errors, total_sent_bits,...
                     sim_steps_taken, max_sim_step);
+                %}
             end
 
             last_bit_errors = bit_errors;
