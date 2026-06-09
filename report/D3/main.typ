@@ -40,7 +40,7 @@ In this report, we develop a fiber-link simulator for the communication between 
 
 $
 H_"CD" (Delta omega)
-= exp(-i (alpha + (beta_2 Delta omega^2)/2 + (beta_3 Delta omega^3)/6) L)
+= exp(-alpha L -i ((beta_2 Delta omega^2)/2 + (beta_3 Delta omega^3)/6) L)
 $ <eq:transfer>
 
 In this equation, $alpha$ is the attenuation constant, $beta_2$ and $beta_3$ are the second and third order terms of the Taylor expansion of the propagation constant of the fiber around $Delta omega$ (@eq:b_exp), $Delta omega$ is the frequency offset (@eq:omega) and $L$ is the fiber length.
@@ -56,7 +56,7 @@ $ <eq:omega>
 And $beta_2$ and $beta_3$ are given by @eq:b2 and @eq:b3, respectively.
 
 $
-beta_2 = - (D lambda^2)/(2 pi c)
+beta_2 = - (D_lambda lambda^2)/(2 pi c)
 $ <eq:b2>
 
 $
@@ -93,9 +93,31 @@ $
 Delta tau = L D Delta lambda
 $ <eq:disp_ana>
 
-To determine the spectral occupation $Delta lambda$, we must first define which pulse to emit with the laser. In this section, we consider a Gaussian pulse of full width half power $T$ in the time domain. Then, calculating its full width half power in the frequency domain, it is found to be $Delta f = 0.44 / T_0$.
+To determine the spectral occupation $Delta lambda$, we must first define which pulse to emit with the laser. In this section, we consider a Gaussian pulse of full width half maximum (FWHM) $T$ in the time domain. Then, calculating its FWHM in the frequency domain, it is found to be $Delta f = 0.44 / T_0$. The FWHM is measured from the intensity profiles.
 
 Using this result, the spectral occupation can be calculated as $Delta lambda = (Delta f lambda^2) / c$. Letting us determine the expected pulse spread.
+
+Continuing with the description of the code, we implemented a function that generates a vector of samples of a Gaussian with its intensity FWHM as a chosen $T_0$, also calculating a sampling frequency that leads to minimal amount of aliasing. This Gaussian vector is then passed to the fiber simulation function, which performs an FFT to get its baseband frequency domain representation.
+
+Then, it calculates the transfer function (described in @eq:transfer) value at every frequency bin of the resulting vector, considering that the Gaussian is centered at $lambda = 1554 "nm"$. Lastly, it multiplies the frequency domain Gaussian by the transfer function, performing the IFFT and obtaining the output pulse, which can then be measured to determine the pulse spread.
+
+Thus, we test the code first considering a Gaussian pulse of width $2 "ps"$ transmitted over a fiber of $1 "km"$, with the same physical properties as detailed in the beginning of the section. @fig:fiber_2ps shows the input and output pulses, where we can clearly notice the effects of chromatic dispersion. 
+
+#figure(
+  image("./assets/fiber_2ps.png", width: 95%),
+  caption: [Complete optical transmission chain.]
+) <fig:fiber_2ps>
+
+Comparing the pulse spreads, we get that the expected spread determined analytically is $Delta tau_a = 30.5 "ps"$, while the one measured in the simulation is $Delta tau_s = 30.65 "ps"$. The difference is less than $1\%$, showing that the simulated fiber performs as predicted in theory.
+
+Testing again with a pulse width of $5 "ps"$, the resulting pulses can be seen in @fig:fiber_5ps. Comparing the spreads, we expected from theory $Delta tau_a = 12.2 "ps"$ and got $Delta tau_s = 13.2 "ps"$. This increase can be explained by the influence of the input pulse's own width, which is not negligible compared to the spread in this case.
+
+#figure(
+  image("./assets/fiber_5ps.png", width: 95%),
+  caption: [Complete optical transmission chain.]
+) <fig:fiber_5ps>
+
+Therefore, we can conclude that the fiber simulation is properly implemented and proceed with the system simulation.
 
 == Back-to-back performance with external modulation
 
