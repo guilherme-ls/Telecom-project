@@ -15,8 +15,9 @@
 // LTeX: statusBatItem=true 
 
 #show: project.with(
-  title: "Radio-frequency system and hardware modeling",
-  subtitle: "Optical point-to-point system performance",
+  title: "Optical point-to-point system performance",
+  subtitle: "Performance Analysis of a realistic
+Cloud Radio Access Network (C-RAN)",
   authors: (
     "LOUROSA RECH Bernardo",
     "LORETE SCHMIDT Guilherme",
@@ -35,14 +36,62 @@
 
 = Introduction
 
-In this report, we develop a fiber-link simulator for the communication between servers and a basestation. In this context, we start by modelling a standard singlemode fiber (SSF), considering the loss and chromatic dispersion it introduces in the signals that propagate through it.
+In this report, we develop a fiber-link simulator for the communication between servers and a basestation. Given this context, we start by modelling a standard singlemode fiber (SSF), considering the loss and chromatic dispersion it introduces in the signals that propagate through it. Therefore, we start by defining the transfer function of the fiber, given by equation @eq:transfer.
 
-Given this context, we study the system performance simulating the whole transmission chain
+$
+H_"CD" (Delta omega)
+= exp(-i (alpha + (beta_2 Delta omega^2)/2 + (beta_3 Delta omega^3)/6) L)
+$ <eq:transfer>
+
+In this equation, $alpha$ is the attenuation constant, $beta_2$ and $beta_3$ are the second and third order terms of the Taylor expansion of the propagation constant of the fiber around $Delta omega$ (@eq:b_exp), $Delta omega$ is the frequency offset (@eq:omega) and $L$ is the fiber length.
+
+$
+beta(omega) = beta_0 + beta_1 Delta omega + beta_2 / 2 Delta omega^2 + beta_3 / 6 Delta omega^3 + ...
+$ <eq:b_exp>
+
+$
+Delta omega = omega - omega_0 = 2 pi Delta f
+$ <eq:omega>
+
+And $beta_2$ and $beta_3$ are given by @eq:b2 and @eq:b3, respectively.
+
+$
+beta_2 = - (D lambda^2)/(2 pi c)
+$ <eq:b2>
+
+$
+beta_3 = (S lambda^4)/(4 pi^2 c^2)
+$ <eq:b3>
+
+Now, $lambda$ is the wavelength, $c$ is the speed of light, $D$ is the dispersion at a given wavelength and $S$ is the dispersion slope. The dispersion $D$ can be calculated by @eq:D.
+
+$
+D_(lambda) = D_(lambda_0) + S(lambda - lambda_0)
+$ <eq:D>
+
+Implementing the fiber simulation through this set of equations, we proceed to study the system performance simulating the section marked in red in the transmission chain in @fig:chain. We perform tests considering external modulation and direct modulation, using different data rates, distinct fiber lengths, and varying the polarization current of the laser.
 
 #figure(
   image("./assets/chain.png", width: 95%),
   caption: [Complete optical transmission chain.]
-) <fig:SNR_dist>
+) <fig:chain>
+
+We then finalize our analysis by suggesting different solutions to transmit at $10$ Gbit/s over $100$ km with an uncorrected BER lower than $10^(-3)$.
+
+
+= System Implementation
+
+== Simulation of linear propagation in a lossy and dispersive fiber
+
+We start by implementing the equations detailed in the previous section.
+
+== Back-to-back performance with external modulation
+
+== Transmission performance with external modulation
+
+== Performance with direct modulation
+
+== Solutions for higher datarates and reach
 
 = Conclusion
 
