@@ -83,7 +83,19 @@ We then finalize our analysis by suggesting different solutions to transmit at $
 
 == Simulation of linear propagation in a lossy and dispersive fiber
 
-We start by implementing the equations detailed in the previous section.
+We start by implementing the equations detailed in the previous section. Considering values for a standard singlemode fiber (described in the G.652 specification) in the reference wavelength $lambda_0 = 1550 "nm"$ , we have that $alpha = 0.2 "dB/km"$, $D_(lambda_0) = 17 "ps/nm/km"$ and $S = 0.056 " ps/nm"^2"/km"$.
+
+Effectively, according to our laboratory measurements, the laser emits at the wavelength $lambda = 1554 "nm"$, which lets us determine $D_lambda$, $beta_2$ and $beta_3$ using the equations in the introduction. This is implemented in the simulation code.
+
+This is sufficient to simulate the optical fiber behavior. However, we seek to compare the simulation results with an analytical solution of the pulse spread $Delta tau$ (through @eq:disp_ana), to validate the code.
+
+$
+Delta tau = L D Delta lambda
+$ <eq:disp_ana>
+
+To determine the spectral occupation $Delta lambda$, we must first define which pulse to emit with the laser. In this section, we consider a Gaussian pulse of full width half power $T$ in the time domain. Then, calculating its full width half power in the frequency domain, it is found to be $Delta f = 0.44 / T_0$.
+
+Using this result, the spectral occupation can be calculated as $Delta lambda = (Delta f lambda^2) / c$. Letting us determine the expected pulse spread.
 
 == Back-to-back performance with external modulation
 
