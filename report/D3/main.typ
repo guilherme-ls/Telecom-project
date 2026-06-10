@@ -105,7 +105,7 @@ Thus, we test the code first considering a Gaussian pulse of width $2 "ps"$ tran
 
 #figure(
   image("./assets/fiber_2ps.png", width: 95%),
-  caption: [Complete optical transmission chain.]
+  caption: [Gaussian pulse intensity as a function of time at the input of the fiber and at its output. Considers a pulse of width $T_0 = 2 "ps"$.]
 ) <fig:fiber_2ps>
 
 Comparing the pulse spreads, we get that the expected spread determined analytically is $Delta tau_a = 30.5 "ps"$, while the one measured in the simulation is $Delta tau_s = 30.65 "ps"$. The difference is less than $1\%$, showing that the simulated fiber performs as predicted in theory.
@@ -114,18 +114,126 @@ Testing again with a pulse width of $5 "ps"$, the resulting pulses can be seen i
 
 #figure(
   image("./assets/fiber_5ps.png", width: 95%),
-  caption: [Complete optical transmission chain.]
+  caption: [Gaussian pulse intensity as a function of time at the input of the fiber and at its output. Considers a pulse of width $T_0 = 5 "ps"$.]
 ) <fig:fiber_5ps>
 
 Therefore, we can conclude that the fiber simulation is properly implemented and proceed with the system simulation.
 
 == Back-to-back performance with external modulation
 
+Now, we proceed with the testing of the back to back performance of the system, considering an externally modulated laser transmitting directly into a photodiode. In this setup, the transmission link does not employ optical fiber, such that the signal experiences neither optical attenuation nor chromatic dispersion (and consequently, no Inter-Symbol Interference). The emitter uses a Non Return to Zero (NRZ) On Off Keying (OOK) modulation scheme. 
+
+The simulations will be performed considering datarates of $R_b = 2.5 "Gb/s"$ and $R_b = 10 "Gb/s"$. The aim is to determine the minimum necessary optical power $P_"min"$ to achieve a BER of $10^(-3)$ and $10^(-6)$ in each case.
+
+=== Analytical Considerations
+
+Under this project's conditions, the Bit Error Rate (BER) is directly related to the noise added at the receiver. For a PIN photodiode without optical pre-amplification operating at low received optical powers, as is the case here, the dominant noise source is the thermal noise of the receiver photodiode.
+
+Therefore, the thermal noise added by the photodiode has variance $sigma_"th"^2$, given by @eq:thermal_noise.
+
+$
+sigma_"th"^2 = (N_"th" dot B_e) / R_"load"
+$ <eq:thermal_noise>
+
+In this equation, $N_"th" = 4 k_B T$ is the thermal noise power spectral density, $B_e$ is the electrical bandwidth of the receiver filter, and $R_"load"$ is the load resistance. To limit the thermal noise, $B_e$ is set equal to the bit rate $R_b$ in each simulation. The temperature is considered $T = 290 "K"$ and the load resistance is $R_"load" = 50 space Omega$.
+
+Continuing the analysis, the binary error rate can be calculated through @eq:ber, where the factor Q can be determined from @eq:Q_factor. Observe that $I_1$ is the photocurrent and $sigma_1$ is the noise standard deviation when a bit 1 is transmitted, while $I_0$ and $sigma_0$ correspond to a bit 0.
+
+$
+"BER" = 1/2 text("erfc")(Q / sqrt(2))
+$ <eq:ber>
+
+$
+Q = (I_1 - I_0) / (sigma_1 + sigma_0)
+$ <eq:Q_factor>
+
+Since we employ OOK modulation, we may consider $I_1 = S P_"peak"$ and $I_0 = 0$, where $S = 1 "A/W"$ is the photodiode's sensitivity and $P_"peak"$ is the peak optical power. Similarly, we consider that the thermal noise acts symmetrically on both bits, such that $sigma_0 = sigma_1 = sigma_"th"$.
+
+Since we search the minimum optical power necessary to achieve a certain BER, we rewrite everything as @eq:optical_power.
+
+$ P_"peak" = (2 Q) / S sqrt((4 k_B T B_e) / R_"load") $ <eq:optical_power>
+
+Now, we proceed to analytically find the necessary powers. From @eq:ber we determine that the necessary Q factor to achieve a $10^(-3)$ error rate is $Q approx 3.09$, while to achieve a $10^(-6)$ error rate we need $Q approx 4.75$.
+
+Then, solving @eq:optical_power for both datarates and BERs, we get @tab:power_solve.
+
+#figure(
+  caption: [Minimum necessary power to achieve the desired BER at each datarate.],
+  table(
+    columns: (auto, auto, auto, auto),
+    inset: 7pt,
+    align: center,
+    stroke: 0.6pt,
+
+    table.header(
+      [$R_b space ("Gbps")$],
+      [$"BER"$],
+      [$P_"peak" (mu W)$],
+      [$P_"peak" ("dBm")$],
+    ),
+
+    table.hline(),
+
+    [$2.5$],
+    [$10^(-3)$],
+    [$5.45$],
+    [$-22.6$],
+
+    table.hline(),
+
+    [$2.5$],
+    [$10^(-6)$],
+    [$8.50$],
+    [$-20.7$],
+
+    table.hline(),
+
+    [$10$],
+    [$10^(-3)$],
+    [$10.9$],
+    [$-19.6$],
+
+    table.hline(),
+
+    [$10$],
+    [$10^(-6)$],
+    [$16.7$],
+    [$-17.8$],
+
+    table.hline(),
+  ),
+) <tab:power_solve>
+
+=== Simulation
+
+Having determined the expected values from theory, we now implement the simulation that will calculate the BER for a series of power levels, permitting us to determine the necessary power for the desired BERs.
+
+The simulation is conducted by generating a random vector of bits, inputting it into the `TX_optical_eml` to generate the modulated OOK optical signal, and upsampling the signal such that it better approximates a continuous signal. Then, we convolve the result with a rectangle function with the same size as the upsampling factor (guaranteeing NRZ), representing the pulses sent when the bit is 1. At last, this transmitted signal passes onto the `RX_photodetector` function, generating an electrical signal vector, which is sampled to determine the received bits.
+
+At last, the sent and received bits are compared, and the errors measured. A loop repeats the process until the BER measure is sufficiently precise, and for each desired power level. The respective code is in the `extern_mod_main` file.
+
+The graph of BER per Power generated by the algorithm is shown in @fig:BER_power.
+
+#figure(
+  image("./assets/BER_power.png", width: 95%),
+  caption: [BER as a function of the laser power in dBm, considering datarates of $R_b = 2.5 "Gb/s"$, in blue, and $R_b = 10 "Gb/s"$, in orange.]
+) <fig:BER_power>
+
+Analyzing the simulation results, they largely agree with the expected analytical values. The maximum power level difference is of around $0.2 "dB"$, between those seen in the graph for BERs of $10^(-3)$ and $10^(-6)$, and those previously calculated.
+
+Thus, we may conclude that the optical system was accurately implemented in the code.
+
 == Transmission performance with external modulation
+
+
 
 == Performance with direct modulation
 
+
+
 == Solutions for higher datarates and reach
+
+
 
 = Conclusion
 
