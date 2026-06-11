@@ -26,27 +26,27 @@ dispersion = fiber_config.dispersion_0 + fiber_config.dispersion_slope*(signal_c
 %%%%%%%%%%% Pulse Signal Creation
 pulse_T0 = 100; % ps
 
-pulse_freq_width =  0.44 / pulse_T0; % 0.44 / pulse_FWHM; % THz ; % sqrt(2 * log(2)) / pulse_T0; % THz 
+%%%%%%%%%%% Pulse Signal Creation
+[pulse, t_vec, f_vec, f_sampling, pulse_freq_width] = gaussian_pulse(fiber_config, signal_A0, pulse_T0,...
+                                       wavelength_0, signal_central_wavelength);
+[pulse, t_vec, f_vec, f_sampling, pulse_freq_width] = square_pulse(fiber_config, signal_A0, pulse_T0,...
+                                       wavelength_0, signal_central_wavelength);
+
 pulse_delta_lambda = pulse_freq_width * signal_central_wavelength^2 / c; % nm
 analitical_time_dispersion = dispersion * pulse_delta_lambda * fiber_config.fiber_length; % ps
-
 fprintf("DeltaTau Ana = %.2f ps\n", analitical_time_dispersion);
-
-%%%%%%%%%%% Pulse Signal Creation
-[pulse, t_vec, f_vec, f_sampling] = gaussian_pulse(fiber_config, signal_A0, pulse_T0,...
-                                       wavelength_0, signal_central_wavelength);
 
 %%%%%%%%%%% Simulated Dispersion
 
 [pulse_out, fiber_trans] = singlemode_fiber(fiber_config, wavelength_0, signal_central_wavelength, ...
-                                            pulse, f_sampling, true);
+                                            pulse, f_sampling, 'True');
 
 signal_in = abs(pulse).^2;
 lower_state_in = min(signal_in); 
 upper_state_in = max(signal_in);
 input_pulse_width = pulsewidth(signal_in, t_vec, 'StateLevels', [lower_state_in, upper_state_in]);
 signal_out = abs(pulse_out).^2;
-lower_state_out = min(signal_out); 
+lower_state_out = min(signal_out);
 upper_state_out = max(signal_out);
 exit_pulse_width = pulsewidth(signal_out, t_vec, 'StateLevels', [lower_state_out, upper_state_out]);
 
@@ -58,6 +58,7 @@ pulsewidth(signal_out, t_vec, 'StateLevels', [lower_state_out, upper_state_out])
 
 fprintf("DeltaTau Sim In = %.2f ps\n", input_pulse_width);
 fprintf("DeltaTau Sim Out= %.2f ps\n", exit_pulse_width);
+
 
 figure();
 subplot(2,1,1);

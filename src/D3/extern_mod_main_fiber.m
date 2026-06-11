@@ -42,8 +42,10 @@ ylabel('BER');
 
 for jj = 1:length(bit_rates)
     bit_rate = bit_rates(jj);
+    photo_detector.electrical_bw = 1e9 * bit_rate;
     symbol_rate = bit_rate; % GSymbols/s
     symbol_period = 1000 / symbol_rate; % ps
+    symbol_period_seconds = symbol_period / 1e12; % s    
     fprintf("----------------------\n");
     fprintf("Bit Rate = %d GB/s\n", bit_rate);
     for kk=1:length(fiber_lengths)
@@ -80,7 +82,7 @@ for jj = 1:length(bit_rates)
                 %%%% TX OPTICAL FIELD %%%%
 
                 [tx_optical_field, tx_sampling_period, ~] = ...
-                    TX_optical_eml(tx_symbols, symbol_period, laser_config);
+                    TX_optical_eml(tx_symbols, symbol_period_seconds, laser_config);
 
                 %%%% TX PULSE CREATION %%%%
                 [tx_pulse, ~, ~, f_sampling] = gaussian_pulse(fiber_config, 1, symbol_period,...
@@ -91,7 +93,7 @@ for jj = 1:length(bit_rates)
                 tx_upsampled_optical_field = upsample(tx_optical_field, tx_upsampling_ratio);
 
                 %%%% CONVOLUTION WITH PULSE
-                tx_symbol_pulses = conv(tx_pulse, tx_upsampled_optical_field);
+                tx_symbol_pulses = conv(tx_upsampled_optical_field, tx_pulse, 'same');
                 tx_pulse_period = length(tx_pulse);
 
                 %%%% FIBER TRANSMISSION %%%%
@@ -106,7 +108,7 @@ for jj = 1:length(bit_rates)
                 rx_photo_current = rx_photo_current';
 
                 %%%% DOWNSAMPLING RX GAUSSIAN
-                rx_sampled_photo_current = rx_photo_current(tx_pulse_period/2:tx_upsampling_ratio:end-tx_pulse_period/2);
+                rx_sampled_photo_current = rx_photo_current(1:tx_upsampling_ratio:end);
                 %%%% RX SYMBOL DETECTION %%%%
                 rx_symbols = rx_sampled_photo_current > mean(rx_sampled_photo_current);
 

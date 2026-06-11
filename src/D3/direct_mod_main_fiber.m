@@ -8,7 +8,7 @@ symbols_to_simulate = 10;
 
 fiber_config.alpha = 0; %0.2; % db/km
 fiber_config.dispersion_0 = 17; % ps/nm/km
-fiber_config.dispersion_slope = 0.09; % ps/nm2/km
+fiber_config.dispersion_slope = 0.056; % ps/nm2/km
 
 %%%%%%%%%%%%%%%% Physical Constants
 

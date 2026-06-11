@@ -78,12 +78,14 @@ for jj = 1:length(bit_rates)
 
             [tx_optical_field, tx_sampling_period, ~] = ...
                 TX_optical_eml(tx_symbols, symbol_period_seconds, laser_config);
+            
+            %%%% TX PULSE CREATION %%%%
+            [tx_pulse, ~, ~, f_sampling, ~] = square_pulse(fiber_config, 1, symbol_period,...
+                wavelength_0, signal_central_wavelength);
 
             %%%% UPSAMPLING OF tx_optical_field and PULSE CREATION
-            f_sampling = 10 / symbol_period;
             tx_upsampling_ratio = ceil(symbol_period * f_sampling);
             tx_upsampled_optical_field = upsample(tx_optical_field, tx_upsampling_ratio, floor(tx_upsampling_ratio/2));
-            tx_pulse = ones(tx_upsampling_ratio, 1);
 
             %%%% CONVOLUTION WITH PULSE
             tx_symbol_pulses = conv(tx_upsampled_optical_field, tx_pulse, 'same');
@@ -118,6 +120,7 @@ for jj = 1:length(bit_rates)
             bit_errors = bit_errors + sum(rx_symbols ~= tx_symbols);
             total_sent_bits = total_sent_bits + length(rx_symbols);
             sim_steps_taken = sim_steps_taken + 1;
+            %return;
         end
         
         fprintf("\t\tBit Errors %d / %d\n",...
