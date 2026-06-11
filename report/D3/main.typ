@@ -281,7 +281,23 @@ $I_"laser" = 0.3 I_"DC"$ for the symbol '01', and finally $I_"laser" = 0$ for '0
 
 By doing this, we can increase the data rate, while only requiring a more complex symbol coding and decoding schema.
 
-== Longer Reach
+=== Longer Reach
+
+As we have seen in the studied systems, as the length of our fiber increases, we end up having a worse reception in the
+receiver end, be it because of symbol being lost by attenuation, or by chromatic dispersion, causing Inter-Symbol Interference (ISI).
+
+To mitigate the first case (attenuation), a simple combo of an amplifier following some length of fiber can make sure that the receiver will
+receive the photon pulses inside an expected attenuation level.
+
+Meanwhile, to fix chromatic dispersion, there are a multitude of ways. The first, and most "unrealistic" one, is to use "zero dispersion" fibers.
+While they do "exist", they present other problems that make their use impractical, but they would eliminate the dispersion.
+
+The second way would be to numerically revert the effects of the dispersion, but that adds some overhead to the receiver.
+
+The third way is by using negative dispersion fibers to compensate the dispersion caused by the "main" transmission fiber. This way,
+from the point of view of the receiver, the pulse doesn't have any major dispersion, not requiring this addition overhead from the previous solution.
+But, these types of fibers may not integrate well into the system in place, and attention needs to be taken to make sure there is good coupling
+when going from the "main" fiber to the "compensation" one.
 
 
 = Conclusion
