@@ -12,7 +12,7 @@
 )
 
 // LTeX: language=en-US
-// LTeX: statusBatItem=true 
+// LTeX: statusBatItem=true
 
 #show: project.with(
   title: "Optical point-to-point system performance",
@@ -21,9 +21,9 @@ Cloud Radio Access Network (C-RAN)",
   authors: (
     "LOUROSA RECH Bernardo",
     "LORETE SCHMIDT Guilherme",
-    "PANCHENIAK FILHO Ivan Roberto Wagner"
+    "PANCHENIAK FILHO Ivan Roberto Wagner",
   ),
-  school-logo: image("./assets/logo_telecom_ipparis.png", width: 8cm, height:4.0cm), 
+  school-logo: image("./assets/logo_telecom_ipparis.png", width: 8cm, height: 4.0cm),
   company-logo: [],
   mentors: (
     "NIOTAKI Kyriaki",
@@ -39,41 +39,41 @@ Cloud Radio Access Network (C-RAN)",
 In this report, we develop a fiber-link simulator for the communication between servers and a basestation. Given this context, we start by modelling a standard singlemode fiber (SSF), considering the loss and chromatic dispersion it introduces in the signals that propagate through it. Therefore, we start by defining the transfer function of the fiber, given by equation @eq:transfer.
 
 $
-H_"CD" (Delta omega)
-= exp(-alpha L -i ((beta_2 Delta omega^2)/2 + (beta_3 Delta omega^3)/6) L)
+  H_"CD" (Delta omega)
+  = exp(-alpha L -i ((beta_2 Delta omega^2)/2 + (beta_3 Delta omega^3)/6) L)
 $ <eq:transfer>
 
 In this equation, $alpha$ is the attenuation constant, $beta_2$ and $beta_3$ are the second and third order terms of the Taylor expansion of the propagation constant of the fiber around $Delta omega$ (@eq:b_exp), $Delta omega$ is the frequency offset (@eq:omega) and $L$ is the fiber length.
 
 $
-beta(omega) = beta_0 + beta_1 Delta omega + beta_2 / 2 Delta omega^2 + beta_3 / 6 Delta omega^3 + ...
+  beta(omega) = beta_0 + beta_1 Delta omega + beta_2 / 2 Delta omega^2 + beta_3 / 6 Delta omega^3 + ...
 $ <eq:b_exp>
 
 $
-Delta omega = omega - omega_0 = 2 pi Delta f
+  Delta omega = omega - omega_0 = 2 pi Delta f
 $ <eq:omega>
 
 And $beta_2$ and $beta_3$ are given by @eq:b2 and @eq:b3, respectively.
 
 $
-beta_2 = - (D_lambda lambda^2)/(2 pi c)
+  beta_2 = - (D_lambda lambda^2)/(2 pi c)
 $ <eq:b2>
 
 $
-beta_3 = (S lambda^4)/(4 pi^2 c^2)
+  beta_3 = (S lambda^4)/(4 pi^2 c^2)
 $ <eq:b3>
 
 Now, $lambda$ is the wavelength, $c$ is the speed of light, $D$ is the dispersion at a given wavelength and $S$ is the dispersion slope. The dispersion $D$ can be calculated by @eq:D.
 
 $
-D_(lambda) = D_(lambda_0) + S(lambda - lambda_0)
+  D_(lambda) = D_(lambda_0) + S(lambda - lambda_0)
 $ <eq:D>
 
 Implementing the fiber simulation through this set of equations, we proceed to study the system performance simulating the section marked in red in the transmission chain in @fig:chain. We perform tests considering external modulation and direct modulation, using different data rates, distinct fiber lengths, and varying the polarization current of the laser.
 
 #figure(
   image("./assets/chain.png", width: 95%),
-  caption: [Complete optical transmission chain.]
+  caption: [Complete optical transmission chain.],
 ) <fig:chain>
 
 We then finalize our analysis by suggesting different solutions to transmit at $10$ Gbit/s over $100$ km with an uncorrected BER lower than $10^(-3)$.
@@ -90,7 +90,7 @@ Effectively, according to our laboratory measurements, the laser emits at the wa
 This is sufficient to simulate the optical fiber behavior. However, we seek to compare the simulation results with an analytical solution of the pulse spread $Delta tau$ (through @eq:disp_ana), to validate the code.
 
 $
-Delta tau = L D Delta lambda
+  Delta tau = L D Delta lambda
 $ <eq:disp_ana>
 
 To determine the spectral occupation $Delta lambda$, we must first define which pulse to emit with the laser. In this section, we consider a Gaussian pulse of full width half maximum (FWHM) $T$ in the time domain. Then, calculating its FWHM in the frequency domain, it is found to be $Delta f = 0.44 / T_0$. The FWHM is measured from the intensity profiles.
@@ -101,11 +101,11 @@ Continuing with the description of the code, we implemented a function that gene
 
 Then, it calculates the transfer function (described in @eq:transfer) value at every frequency bin of the resulting vector, considering that the Gaussian is centered at $lambda = 1554 "nm"$. Lastly, it multiplies the frequency domain Gaussian by the transfer function, performing the IFFT and obtaining the output pulse, which can then be measured to determine the pulse spread.
 
-Thus, we test the code first considering a Gaussian pulse of width $2 "ps"$ transmitted over a fiber of $1 "km"$, with the same physical properties as detailed in the beginning of the section. @fig:fiber_2ps shows the input and output pulses, where we can clearly notice the effects of chromatic dispersion. 
+Thus, we test the code first considering a Gaussian pulse of width $2 "ps"$ transmitted over a fiber of $1 "km"$, with the same physical properties as detailed in the beginning of the section. @fig:fiber_2ps shows the input and output pulses, where we can clearly notice the effects of chromatic dispersion.
 
 #figure(
-  image("./assets/fiber_2ps.png", width: 95%),
-  caption: [Gaussian pulse intensity as a function of time at the input of the fiber and at its output. Considers a pulse of width $T_0 = 2 "ps"$.]
+  image("./assets/Fiber_2ps.png", width: 95%),
+  caption: [Gaussian pulse intensity as a function of time at the input of the fiber and at its output. Considers a pulse of width $T_0 = 2 "ps"$.],
 ) <fig:fiber_2ps>
 
 Comparing the pulse spreads, we get that the expected spread determined analytically is $Delta tau_a = 30.5 "ps"$, while the one measured in the simulation is $Delta tau_s = 30.65 "ps"$. The difference is less than $1\%$, showing that the simulated fiber performs as predicted in theory.
@@ -113,8 +113,8 @@ Comparing the pulse spreads, we get that the expected spread determined analytic
 Testing again with a pulse width of $5 "ps"$, the resulting pulses can be seen in @fig:fiber_5ps. Comparing the spreads, we expected from theory $Delta tau_a = 12.2 "ps"$ and got $Delta tau_s = 13.2 "ps"$. This increase can be explained by the influence of the input pulse's own width, which is not negligible compared to the spread in this case.
 
 #figure(
-  image("./assets/fiber_5ps.png", width: 95%),
-  caption: [Gaussian pulse intensity as a function of time at the input of the fiber and at its output. Considers a pulse of width $T_0 = 5 "ps"$.]
+  image("./assets/Fiber_5ps.png", width: 95%),
+  caption: [Gaussian pulse intensity as a function of time at the input of the fiber and at its output. Considers a pulse of width $T_0 = 5 "ps"$.],
 ) <fig:fiber_5ps>
 
 Therefore, we can conclude that the fiber simulation is properly implemented and proceed with the system simulation.
@@ -123,12 +123,12 @@ As a final addendum, @fig:phase shows the phase and magnitude of the transfer fu
 
 #figure(
   image("./assets/phase.png", width: 95%),
-  caption: [Transfer function of the optical fiber.]
+  caption: [Transfer function of the optical fiber.],
 ) <fig:phase>
 
 == Back-to-back performance with external modulation
 
-Now, we proceed with the testing of the back to back performance of the system, considering an externally modulated laser transmitting directly into a photodiode. In this setup, the transmission link does not employ optical fiber, such that the signal experiences neither optical attenuation nor chromatic dispersion (and consequently, no Inter-Symbol Interference). The emitter uses a Non Return to Zero (NRZ) On Off Keying (OOK) modulation scheme. 
+Now, we proceed with the testing of the back to back performance of the system, considering an externally modulated laser transmitting directly into a photodiode. In this setup, the transmission link does not employ optical fiber, such that the signal experiences neither optical attenuation nor chromatic dispersion (and consequently, no Inter-Symbol Interference). The emitter uses a Non Return to Zero (NRZ) On Off Keying (OOK) modulation scheme.
 
 The simulations will be performed considering datarates of $R_b = 2.5 "Gb/s"$ and $R_b = 10 "Gb/s"$. The aim is to determine the minimum necessary optical power $P_"min"$ to achieve a BER of $10^(-3)$ and $10^(-6)$ in each case.
 
@@ -139,7 +139,7 @@ Under this project's conditions, the Bit Error Rate (BER) is directly related to
 Therefore, the thermal noise added by the photodiode has variance $sigma_"th"^2$, given by @eq:thermal_noise.
 
 $
-sigma_"th"^2 = (N_"th" dot B_e) / R_"load"
+  sigma_"th"^2 = (N_"th" dot B_e) / R_"load"
 $ <eq:thermal_noise>
 
 In this equation, $N_"th" = 4 k_B T$ is the thermal noise power spectral density, $B_e$ is the electrical bandwidth of the receiver filter, and $R_"load"$ is the load resistance. To limit the thermal noise, $B_e$ is set equal to the bit rate $R_b$ in each simulation. The temperature is considered $T = 290 "K"$ and the load resistance is $R_"load" = 50 space Omega$.
@@ -147,11 +147,11 @@ In this equation, $N_"th" = 4 k_B T$ is the thermal noise power spectral density
 Continuing the analysis, the binary error rate can be calculated through @eq:ber, where the factor Q can be determined from @eq:Q_factor. Observe that $I_1$ is the photocurrent and $sigma_1$ is the noise standard deviation when a bit 1 is transmitted, while $I_0$ and $sigma_0$ correspond to a bit 0.
 
 $
-"BER" = 1/2 text("erfc")(Q / sqrt(2))
+  "BER" = 1/2 text("erfc")(Q / sqrt(2))
 $ <eq:ber>
 
 $
-Q = (I_1 - I_0) / (sigma_1 + sigma_0)
+  Q = (I_1 - I_0) / (sigma_1 + sigma_0)
 $ <eq:Q_factor>
 
 Since we employ OOK modulation, we may consider $I_1 = S P_"peak"$ and $I_0 = 0$, where $S = 1 "A/W"$ is the photodiode's sensitivity and $P_"peak"$ is the peak optical power. Similarly, we consider that the thermal noise acts symmetrically on both bits, such that $sigma_0 = sigma_1 = sigma_"th"$.
@@ -172,12 +172,7 @@ Then, solving @eq:optical_power for both datarates and BERs, we get @tab:power_s
     align: center,
     stroke: 0.6pt,
 
-    table.header(
-      [$R_b space ("Gbps")$],
-      [$"BER"$],
-      [$P_"peak" (mu W)$],
-      [$P_"peak" ("dBm")$],
-    ),
+    table.header([$R_b space ("Gbps")$], [$"BER"$], [$P_"peak" (mu W)$], [$P_"peak" ("dBm")$]),
 
     table.hline(),
 
@@ -223,7 +218,7 @@ The graph of BER per Power generated by the algorithm is shown in @fig:BER_power
 
 #figure(
   image("./assets/BER_power2.png", width: 95%),
-  caption: [BER as a function of the laser power in dBm, considering datarates of $R_b = 2.5 "Gb/s"$, in blue, and $R_b = 10 "Gb/s"$, in orange.]
+  caption: [BER as a function of the laser power in dBm, considering datarates of $R_b = 2.5 "Gb/s"$, in blue, and $R_b = 10 "Gb/s"$, in orange.],
 ) <fig:BER_power>
 
 Analyzing the simulation results, they agree almost exactly with the expected analytical values.
@@ -242,15 +237,15 @@ $ <eq:length_max>
 
 Therefore, considering that a rectangle pulse has a spectral occupation $Delta f = 2/T$, and substituting the known values in the above equation, we may calculate $L_"max"$ for both datarates. Thus, for $10 "Gbps"$ we expect $L_"max" = 9 "km"$, while for $2.5 "Gbps"$ we expect $L_"max" = 146 "km"$, 16 times higher.
 
-However, Optical Networks: A Practical Perspective by Ramaswami, Sivarajan and Sasaki propose an empirical limit given by $R_b^2 L < 3607 space "Gbps"^2"km"$, considering a $2 "dB"$ power penalty with respect to the BER in an externally modulated NRZ OOK laser. This gives $L_"max" approx 36 "km"$ for 10 Gbps or $L_"max" approx 577 "km"$ for 2.5 Gbps. The calculation method is effectively the same, but considering that spectral occupation is the same as the datarate and that the upper limit for $Delta tau$ is $ approx T/2$ instead of $T/4$ for the 2 dB penalty.
+However, Optical Networks: A Practical Perspective by Ramaswami, Sivarajan and Sasaki propose an empirical limit given by $R_b^2 L < 3607 space "Gbps"^2"km"$, considering a $2 "dB"$ power penalty with respect to the BER in an externally modulated NRZ OOK laser. This gives $L_"max" approx 36 "km"$ for 10 Gbps or $L_"max" approx 577 "km"$ for 2.5 Gbps. The calculation method is effectively the same, but considering that spectral occupation is the same as the datarate and that the upper limit for $Delta tau$ is $approx T/2$ instead of $T/4$ for the 2 dB penalty.
 
-Finally, we can proceed with the simulations. The laser power is fixed at -21 dBm for the 2.5 Gbps datarate and -17 dBm for the 10 Gbps datarate. The fiber attenuation is set to 0, such that the laser power is conserved for all distances and does not influence the results. 
+Finally, we can proceed with the simulations. The laser power is fixed at -21 dBm for the 2.5 Gbps datarate and -17 dBm for the 10 Gbps datarate. The fiber attenuation is set to 0, such that the laser power is conserved for all distances and does not influence the results.
 
 In this context, the optical chain is simulated for fiber lengths between 0 and 100 km, calculating the BER at each. The results are shown in @fig:BER_length.
 
 #figure(
   image("./assets/BER_length2.png", width: 95%),
-  caption: [BER as a function of the fiber optic length in km, considering datarates of $R_b = 2.5 "Gb/s"$, in orange, and $R_b = 10 "Gb/s"$, in blue.]
+  caption: [BER as a function of the fiber optic length in km, considering datarates of $R_b = 2.5 "Gb/s"$, in orange, and $R_b = 10 "Gb/s"$, in blue.],
 ) <fig:BER_length>
 
 From the graph, we observe that the fiber length (within the 100 km bound) does not influence the 2.5 Gbps in any way, agreeing with the theoretical $L_"max"$ we previously calculated. However, for the 10 Gbps datarate, we observe that the BER pronouncedly starts to increase at 30 km, spiking upwards a few kilometers after.
@@ -263,12 +258,30 @@ Adopting the 2 dB penalty definition, $L_"max" approx 80 "km"$ in our simulation
 
 As the last simulation, we employ a direct modulation of the laser with an OOK signal of 1 Gbps, on a back to back configuration and using a 20 km fiber. The objective is to study how different bias currents $I_"DC"$ impact on the modulation and, consequently, on the system performance.
 
-To achieve this end, 
+To achieve this end,
 
 
 
-== Solutions for higher datarates and reach
+== Solutions for higher data rates and reach
 
+=== Higher Data Rates
+
+Until now, the studied system used a simple OOK modulation to transmit the data. While this is a solid
+modulation schema, producing a good BER for the range of SNR studied, it doesn't allow for a high data rate,
+unless we change other parameters like the symbol period.
+
+With that in mind, a better modulation type can be used. Ideally, modulations that can use phase an amplitude would be
+best, like a PSK or a QAM. But, coherent modulation at great distances isn't easy neither cheap, requiring both a
+external modulator to modulate phase, and a complex demodulator.
+
+Nevertheless, we can still modulate the amplitude to increase our throughput, without requiring hardware that much more complex.
+For example, instead of using $I_"laser" = I_"DC"$ for the bit '1' and $I_"laser" = 0$ for the bit '0', we could
+divide the range to package multiple bits in symbols, like $I_"laser" = I_"DC"$ for the symbol '11', $I_"laser" = 0.66 I_"DC"$ for the symbol '10',
+$I_"laser" = 0.3 I_"DC"$ for the symbol '01', and finally $I_"laser" = 0$ for '00'.
+
+By doing this, we can increase the data rate, while only requiring a more complex symbol coding and decoding schema.
+
+== Longer Reach
 
 
 = Conclusion
