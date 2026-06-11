@@ -302,5 +302,13 @@ when going from the "main" fiber to the "compensation" one.
 
 = Conclusion
 
-Throughout this report we discussed
+Throughout this report, we analyzed different properties and behaviors that appear in optical communication systems.
+In it, we studied the effects of chromatic dispersion, and created a fiber model that was later used to further study the
+effects of it in both direct and external modulation communication schemas. That resulted in us observing a greater BER degradation
+in higher data rates, as that would decrease the pulse period, which in turn increased the effects of chromatic dispersion, allowing
+for more Inter-Symbol Interference.
+
+Furthermore, we later discussed ways to reduce the effects of chromatic dispersion, and then how to take advantage of this higher BER's
+by using modulations that are more complex than OOK, but that don't use phase like PSK and QAM, allowing for higher data rates without
+raw decrease of pulse period.
 
