@@ -56,21 +56,17 @@ for jj=1:length(user_rates)
             	yy= rand(K(kk), 1) * Dmax / 2; % m, Distribution of users in the y-axis
 
             	d2=xx.^2+yy.^2;%% square-distance from the origin
-                friss_attenuation_factor = carry_lamdba^2 / (4*pi)^2;
-            	a2 = min(1, friss_attenuation_factor/d2);% square magnitude attenuation in Friis equation 
+              friss_attenuation_factor = carry_lamdba^2 / (4*pi)^2;
+            	a2 = min(1, friss_attenuation_factor ./ d2)';% square magnitude attenuation in Friis equation 
             	a2_dB = 10*log10(a2); % dB
 		
-		Es_max_tx = Pmax - 10*log10(available_bandwidth) ; % dBm / Hz 
-		snr_tx_max = Es_max_tx - noise_spectral_density; %dB
-            	SNR_rx_max = a2_dB + snr_tx_max;
+		          pr_rx = Pmax + a2_dB; % dBm 
+		          Es_rx = pr_rx - 10*log10(available_bandwidth); % dBm / Hz 
+		          SNR_rx_max = Es_rx - noise_spectral_density; %dB
 		
             	SNR_min= eq_mode.m16qam.snr_min; %%ZF or DFE/16QAM: channel 1, channel 2, channel 3
-            	if(rate*Ts*K(kk) < 3)
-		      	SNR_min = eq_mode.m8qam.snr_min; 
-		end%%ZF or DFE/8QAM: channel 1, channel 2, channel 3
-            	if(rate*Ts*K(kk) < 1) 
-			SNR_min = eq_mode.bpsk.snr_min;
-	       	end %%ZF or DFE/BPSK: channel 1, channel 2, channel 3
+            	if(rate*Ts*K(kk) < 3) SNR_min = eq_mode.m8qam.snr_min; end%%ZF or DFE/8QAM: channel 1, channel 2, channel 3
+            	if(rate*Ts*K(kk) < 1) SNR_min = eq_mode.bpsk.snr_min;	end %%ZF or DFE/BPSK: channel 1, channel 2, channel 3
 
             	SNR_rx_min = SNR_min(randi(3,K(kk),1));
             	aux = aux + sum(SNR_rx_min > SNR_rx_max);
@@ -88,7 +84,7 @@ for jj=1:length(user_rates)
 end
 
 %% Channel display
-plot(rejection_plot_args{:});
+semilogx(rejection_plot_args{:});
 grid;
 title("Rejection Rate per User Amount");
 legend(plot_label_args{:});
