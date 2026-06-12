@@ -256,11 +256,91 @@ Adopting the 2 dB penalty definition, $L_"max" approx 80 "km"$ in our simulation
 
 == Performance with direct modulation
 
-As the last simulation, we employ a direct modulation of the laser with an OOK signal of 1 Gbps, on a back to back configuration and using a 20 km fiber. The objective is to study how different bias currents $I_"DC"$ impact on the modulation and, consequently, on the system performance.
+As the last simulation, we employ a directly modulated laser (DML) with an OOK signal of 1 Gbps, on a back to back configuration and using a 20 km fiber. The objective is to study how different bias currents $I_"DC"$ impact on the modulation and, consequently, on the system performance.
 
-To achieve this end,
+To achieve this end, we simulate the transmission of random symbols using this configuration and generate an eye diagram with the output signal, letting us see how the bias current affects the signal modulation. Thus, the simulation consists of generating a vector of currents based on the symbols we wish to send, using the `TX_optical_dml` function then generate the optical signal, passing it through the fiber, and then detecting it with the `RX_photodetector`, generating the eye diagram at last.
 
+As a practical note, the threshold current in the laser employed is $approx 7 "mA"$. Therefore, we will use 4 currents in the analyses that cover a range from bellow the threshold to many times above it: 5 mA, 15 mA, 40 mA and 90 mA. The modulation current used is $I_"mod" = 30 "mA"$.
 
+Bellow we present the simulation results. @fig:eye_0_bef presents the eye diagram generated directly by the optical signal before entering the photodiode, letting us see its unfiltered version.
+
+#figure(
+  box(width: 70%)[
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 0pt,
+    image("./assets/eye/eye_5_0_bef.png", width: 100%),
+    image("./assets/eye/eye_15_0_bef.png", width: 100%),
+    image("./assets/eye/eye_40_0_bef.png", width: 100%),
+    image("./assets/eye/eye_90_0_bef.png", width: 100%),
+  )
+  ],
+  // Add your caption text directly inside the figure container
+  caption: [Simulated 1 Gbps DML eye diagrams under various DC bias currents on a back to back configuration. Before detection by photodiode.],
+) <fig:eye_0_bef>
+
+First, we can observe that each signal exhibits relaxation oscillations, characterized by the rapid variations after a rising edge before reaching a steady state. We observe that the oscillations are much smaller (dampened) when the bias current increases, as supported by the theory.
+
+Then, observing the $I_"DC" = 5 "mA"$, below the threshold current, its rising edge varies a lot in time and the signal has a significant amount of jitter. This effect may be explained by the fact that since the bias current is bellow threshold, it needs to first increase the carrier density before it starts to lase. This would generate a variable turn on delay for the DML.
+
+We proceed to observe @fig:eye_20_bef, which also shows the eye diagram generated directly by the optical signal before entering the photodiode, but considering that the signal travelled through 20 km of optical fiber (now with attenuation).
+
+#figure(
+  box(width: 70%)[
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 0pt,
+    image("./assets/eye/eye_5_20_bef.png", width: 100%),
+    image("./assets/eye/eye_15_20_bef.png", width: 100%),
+    image("./assets/eye/eye_40_20_bef.png", width: 100%),
+    image("./assets/eye/eye_90_20_bef.png", width: 100%),
+  )
+  ],
+  // Add your caption text directly inside the figure container
+  caption: [Simulated 1 Gbps DML eye diagrams under various DC bias currents with 20 km of fiber. Before detection by photodiode.],
+) <fig:eye_20_bef>
+
+The most interesting point to observe in this figure is the effect that chromatic dispersion has on the rising and falling edges. As the transient chirp occurring in these edges increase their spectral width, they become heavily affected by chromatic dispersion, with each frequency suffering different delays. This generates the great oscillating patterns we now observe at each edge. Since the effect is compounded by the relaxation oscillations, higher bias currents suffer less aggressive distortions.
+
+We now proceed to observe the eye diagram from the signal coming from the photodiode output, after the electrical filter it applies, and what is used in practice. @fig:eye_0_aft shows the signal from the back to back configuration.
+
+At first, we notice that all signals look much clearer without the high frequency components. However, we can still observe that the signal with bias current below threshold suffers from jitter, as seem by the variation in its rising and falling edges.
+
+On the other hand, all the other currents generate similar signals, differentiated only small increases in the aperture of the eye as the bias current increases. However, this comes at the cost of a big increase in average power.
+
+#figure(
+  box(width: 70%)[
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 0pt,
+    image("./assets/eye/eye_5_0_aft.png", width: 100%),
+    image("./assets/eye/eye_15_0_aft.png", width: 100%),
+    image("./assets/eye/eye_40_0_aft.png", width: 100%),
+    image("./assets/eye/eye_90_0_aft.png", width: 100%),
+  )
+  ],
+  // Add your caption text directly inside the figure container
+  caption: [Simulated 1 Gbps DML eye diagrams under various DC bias currents on a back to back configuration. After detection by photodiode.],
+) <fig:eye_0_aft>
+
+Proceeding with @fig:eye_20_aft, it shows the signal that passed through 20 km of fiber is attenuated but mostly unchanged in its shape. The only notable change is the degradation of the first low current signal, which had its jitter increased and its eye close further.
+
+#figure(
+  box(width: 70%)[
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 0pt,
+      image("./assets/eye/eye_5_20_aft.png", width: 100%),
+      image("./assets/eye/eye_15_20_aft.png", width: 100%),
+      image("./assets/eye/eye_40_20_aft.png", width: 100%),
+      image("./assets/eye/eye_90_20_aft.png", width: 100%),
+    )
+  ],
+  // Add your caption text directly inside the figure container
+  caption: [Simulated 1 Gbps DML eye diagrams under various DC bias currents with 20 km of fiber. After detection by photodiode.],
+) <fig:eye_20_aft>
+
+Therefore, we may conclude that a bias current below threshold is highly inadvisable, and that a bias current of 15 mA performs excellently for only a fraction of the power of the following signals.
 
 == Solutions for higher data rates and reach
 
@@ -294,21 +374,23 @@ While they do "exist", they present other problems that make their use impractic
 
 The second way would be to numerically revert the effects of the dispersion, but that adds some overhead to the receiver.
 
-The third way is by using negative dispersion fibers to compensate the dispersion caused by the "main" transmission fiber. This way,
-from the point of view of the receiver, the pulse doesn't have any major dispersion, not requiring this addition overhead from the previous solution.
-But, these types of fibers may not integrate well into the system in place, and attention needs to be taken to make sure there is good coupling
-when going from the "main" fiber to the "compensation" one.
+The third way is by using negative dispersion fibers to compensate the dispersion caused by the "main" transmission fiber. By adding a certain length of DCF fiber to the end o the "main" one, it effectively reverses the chromatic dispersion and eliminates the inter symbol interference. This way,
+from the point of view of the receiver, the pulse doesn't have any major dispersion, not requiring this additional overhead from the previous solution.
+But, these types of fibers may not integrate well into the system in place, and attention needs to be taken to make sure there is good coupling when going from the "main" fiber to the "compensation" one.
 
+As an example, we implemented the simulation `extern_mod_main_compensation` that sends a 10 Gbps NRZ OOK signal using an EML with -18 dBm of power through 100 km of ITU G.652 fiber, followed by 17 km of DCF with $D = -100 "ps/nm/km"$. The resulting BER is $2.8 times 10^(-6)$, showing that the concept indeed works in simulation.
 
 = Conclusion
 
 Throughout this report, we analyzed different properties and behaviors that appear in optical communication systems.
 In it, we studied the effects of chromatic dispersion, and created a fiber model that was later used to further study the
-effects of it in both direct and external modulation communication schemas. That resulted in us observing a greater BER degradation
-in higher data rates, as that would decrease the pulse period, which in turn increased the effects of chromatic dispersion, allowing
-for more Inter-Symbol Interference.
+effects of it in both direct and external modulation communication schemas. 
 
-Furthermore, we later discussed ways to reduce the effects of chromatic dispersion, and then how to take advantage of this higher BER's
+That resulted in us observing a greater BER degradation
+in higher data rates, as that would decrease the pulse period, which in turn increased the effects of chromatic dispersion, allowing
+for more Inter-Symbol Interference. In addition, we concluded that a bias current bellow threshold for a DML has catastrophic results for the signal integrity, while a current many times above it also has diminishing returns.
+
+Furthermore, we later discussed ways to reduce the effects of chromatic dispersion, and then how to take advantage of this higher BERs
 by using modulations that are more complex than OOK, but that don't use phase like PSK and QAM, allowing for higher data rates without
 raw decrease of pulse period.
 
