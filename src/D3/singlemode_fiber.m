@@ -29,9 +29,10 @@ dispersion = dispersion_0 + dispersion_slope*(signal_central_wavelength - wavele
 
 beta_2 = - dispersion * signal_central_wavelength^2 / (2*pi*c);
 beta_3 = dispersion_slope * signal_central_wavelength^4 / (2*pi*c)^2;
+alpha_nep = alpha / (10 * log10(exp(1))); % convert from dB to correct format
 
 beta = @(dw) (beta_2*dw^2)/2 + (beta_3*dw^3)/6;
-transfer_fun = @(dw) exp((-alpha -1j*beta(dw))*fiber_length);
+transfer_fun = @(dw) exp((-alpha_nep -1j*beta(dw))*fiber_length);
 
 %%%%%%%%%%% Simulated Dispersion
 N_total = length(signal_in);

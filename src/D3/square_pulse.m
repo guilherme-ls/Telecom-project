@@ -29,6 +29,7 @@ pulse = zeros(1, N_total);
 pulse(time_vec < pulse_T0 / 2) = signal_A0;
 pulse(time_vec < -pulse_T0 / 2) = 0;
 
+%% Pulse shaping filter
 F_tx = (-N_total/2 : N_total/2 - 1) * (f_sampling / N_total);
 tx_cutoff_THz = 1 * (1 / (pulse_T0 * 1e-12)) / 1e12;
 tx_filter = exp(-0.5 * (F_tx / tx_cutoff_THz).^2);
