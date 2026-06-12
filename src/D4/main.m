@@ -35,7 +35,7 @@ equalization_modes.dfe.m16qam.snr_min = [12.8 14.4 18.6]; % Eb/N0 dB
 equalization_modes.dfe.m16qam.snr_min  = equalization_modes.dfe.m16qam.snr_min+ 10*log10(log2(16)); % Es/N0 dB
 
 rejection_plot_args = cell(2, length(user_rates), numel(fieldnames(equalization_modes)));
-title_plot = cell(1, length(user_rates), numel(fieldnames(equalization_modes)));
+plot_label_args = cell(1, length(user_rates), numel(fieldnames(equalization_modes)));
 
 for jj=1:length(user_rates)
     rate = user_rates(jj);
@@ -79,21 +79,18 @@ for jj=1:length(user_rates)
         end
     	rejection_plot_args(:, jj, ii) = {K, rej};
     	if rate / 1e6 > 1 
-    		title_plot(:, jj, ii) = {sprintf("User Rate %d Mb/s - %s", rate / 1e6, eq_mode_name)};
+    		plot_label_args(:, jj, ii) = {sprintf("%d Mb/s - %s", rate / 1e6, eq_mode_name)};
     	else
-    		title_plot(:, jj, ii) = {sprintf("User Rate %d kb/s - %s", rate / 1e3, eq_mode_name)};
+    		plot_label_args(:, jj, ii) = {sprintf("%d kb/s - %s", rate / 1e3, eq_mode_name)};
     	end
     end
 
 end
+
 %% Channel display
-for jj=1:length(user_rates)
-   for ii=1:numel(fieldnames(equalization_modes))
-	figure();
-	plot(rejection_plot_args{:, jj, ii});
-	grid;
-	title(title_plot{:, jj, ii});
-	xlabel('User amount (K)');
-	ylabel('Rejection Rate');
-   end
-end
+plot(rejection_plot_args{:});
+grid;
+title("Rejection Rate per User Amount");
+legend(plot_label_args{:});
+xlabel('User amount (K)');
+ylabel('Rejection Rate');
