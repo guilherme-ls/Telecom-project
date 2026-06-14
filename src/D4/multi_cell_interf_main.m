@@ -41,8 +41,8 @@ for ii=1:length(powers)
     aux=0;
 
     for mm=1:MC
-    	xx= rand(1, 1) * Dmax / 2; 
-    	yy= rand(1, 1) * Dmax / 2;
+    	xx= Dmax/1000;% rand(1,1) * Dmax / 2; 
+    	yy= Dmax/1000;% rand(1,1) * Dmax / 2;
 
       adjacent_xx = rand(adjacent_cells, 1) * Dmax / 2;
       adjacent_xx = adjacent_xx + Dmax;
@@ -58,19 +58,20 @@ for ii=1:length(powers)
 
     	a2_dB = 10*log10(a2); % dB
 
-      pr_rx = P + a2_dB; % dBm 
-      Es_rx = pr_rx - 10*log10(available_bandwidth); % dBm / Hz 
+      Es_tx = P - 10*log10(available_bandwidth); % dBm / Hz, dB J 
       adjacent_power = 10^(P/10) .* adjacent_a2;
       
       total_noise_spectral_density = 10^(noise_spectral_density/10) ...
                                      + sum(adjacent_power) / available_bandwidth;
-      total_noise_spectral_density_dbm = 10*log10(total_noise_spectral_density);
+      %total_noise_spectral_density_dbm = 10*log10(total_noise_spectral_density);
 
       tx_bit_stream = randi([0, 1], N_symb, 1);
-      rx_bit_stream = tx_bit_stream * 10^(Es_rx/10) + randn(N_symb, 1) * total_noise_spectral_density;
+      tx_symbol_stream = tx_bit_stream * 10^(Es_tx/10);
+      noise = sqrt(total_noise_spectral_density/2) * randn(N_symb, 1);
+      rx_symbol_stream = tx_symbol_stream * a2 + noise;
 
       %%% Decoding
-      rx_bit_stream = rx_bit_stream > mean(rx_bit_stream);
+      rx_bit_stream = rx_symbol_stream > mean(rx_symbol_stream);
       
     	ber = sum(tx_bit_stream ~= rx_bit_stream) / N_symb;
     	aux = aux + ber;
