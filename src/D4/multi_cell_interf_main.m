@@ -61,7 +61,6 @@ for ii=1:length(powers)
 	for jj=1:cells_to_simulate
 		rx_bit_stream(:, jj) = channel_simulation(tx_bit_stream(:, jj), N0(jj), 'PSK', 2, 0, N_symb, 'none');
 	end
-    	%%% Decoding
     	ber = sum(tx_bit_stream ~= rx_bit_stream, 1)' / N_symb;
     	aux = aux + ber;
     end
