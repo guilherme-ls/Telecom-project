@@ -21,7 +21,8 @@ MC = 1000; %%number of Monte-Carlo simulations
 
 user_rate = 40e6; % bit/s
 
-adjacent_cells = 2;
+cells_to_simulate = 3;
+xx_cells_origins = ((0:1:(cells_to_simulate-1)) - floor(cells_to_simulate / 2)) * Dmax;
 
 ber_plot_args = cell(2, 1);
 plot_label_args = cell(1, 1);
@@ -30,49 +31,43 @@ Kmax = system_total_rate / user_rate;
 K = 1;
 
 powers = 0:1:Pmax;
-total_ber = zeros(1, length(powers));
+total_ber = zeros(cells_to_simulate, length(powers));
 for ii=1:length(powers)
     P = powers(ii);
-    aux=0;
+    aux = zeros(cells_to_simulate, 1);
 
     for mm=1:MC
-    	xx = rand(1,1) * Dmax / 2; 
-    	yy = rand(1,1) * Dmax / 2;
-
-    	adjacent_xx = rand(adjacent_cells, 1) * Dmax / 2;
-    	adjacent_xx = adjacent_xx + Dmax;
-    	adjacent_yy = rand(adjacent_cells, 1) * Dmax / 2;
-    	adjacent_yy = adjacent_yy;
-
-    	d2=xx.^2+yy.^2;%% square-distance from the origin
-    	adjacent_d2=adjacent_xx.^2+adjacent_yy.^2;
+    	xx = (rand(1, cells_to_simulate) - 0.5) * Dmax + xx_cells_origins; 
+	xx_to_cell = repmat(xx, cells_to_simulate, 1) - repmat(xx_cells_origins',  1, cells_to_simulate);
+    	yy_to_cell = repmat((rand(1, cells_to_simulate) - 0.5) * Dmax, cells_to_simulate, 1);
+	
+    	d2_to_cell = xx_to_cell.^2 + yy_to_cell.^2;%% square-distance from the origin
 
     	friss_attenuation_factor = carry_lamdba^2 / (4*pi)^2;
-    	a2 = min(1, friss_attenuation_factor ./ d2)';% square magnitude attenuation in Friis equation 
-    	adjacent_a2 = min(1, friss_attenuation_factor ./ adjacent_d2)';
+    	a2_to_cell = min(1, friss_attenuation_factor ./ d2_to_cell)';% square magnitude attenuation in Friis equation 
+    	a2_to_cell_dB = 10*log10(a2_to_cell); % dB
 
-    	a2_dB = 10*log10(a2); % dB
-
-    	Es_tx_dBm = P - 10*log10(available_bandwidth); % dBm / Hz, dB mJ 
-	Es_rx_dBm = Es_tx_dBm + a2_dB;
-	Es_rx = 10*log10(Es_rx_dBm / 10); % mJ
-    	adjacent_power = 10^(P/10) .* adjacent_a2; %mJ
+    	Es_tx_to_cell_dBm = P - 10*log10(available_bandwidth); % dBm / Hz, dB mJ 
+    	Es_rx_to_cell_dBm = Es_tx_to_cell_dBm + a2_to_cell_dB; % dBm / Hz, dB mJ 
+	Es_rx_to_cell = 10.^(Es_rx_to_cell_dBm / 10); % mJ
     	
-    	total_noise_spectral_density = 10^(noise_spectral_density/10) ...
-    	                               + sum(adjacent_power) / available_bandwidth; % mJ
+    	noise_per_cell = 10^(noise_spectral_density/10) + sum(Es_rx_to_cell, 2) - diag(Es_rx_to_cell); % mJ
 
-    	tx_bit_stream = randi([0, 1], N_symb, 1);
-	N0 = total_noise_spectral_density / Es_rx; % Noise normalized to the symbol energy
-	rx_bit_stream = channel_simulation(tx_bit_stream, N0, 'PSK', 2, 0, N_symb, 'none');
-	assert(0)
+    	tx_bit_stream = randi([0, 1], N_symb, cells_to_simulate);
 
+	N0 = noise_per_cell ./ diag(Es_rx_to_cell); % Noise normalized to the symbol energy
+	
+	rx_bit_stream = zeros(N_symb, cells_to_simulate);
+	for jj=1:cells_to_simulate
+		rx_bit_stream(:, jj) = channel_simulation(tx_bit_stream(:, jj), N0(jj), 'PSK', 2, 0, N_symb, 'none');
+	end
     	%%% Decoding
-    	ber = sum(tx_bit_stream ~= rx_bit_stream) / N_symb;
+    	ber = sum(tx_bit_stream ~= rx_bit_stream, 1)' / N_symb;
     	aux = aux + ber;
     end
-    total_ber(ii) = aux/MC;
+    total_ber(:, ii) = aux/MC;
 end
-ber_plot_args(:) = {powers, total_ber};
+ber_plot_args(:) = {powers, total_ber(2, :)};
 %if rate / 1e6 > 1 
 %	plot_label_args(:, jj, ii) = {sprintf("%d Mb/s - %s", rate / 1e6, eq_mode_name)};
 %else
