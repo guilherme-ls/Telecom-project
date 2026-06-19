@@ -23,11 +23,6 @@ user_rate = 40e6; % bit/s
 
 adjacent_cells = 2;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% CH1 CH2 CH3
-equalization_modes.zf.bpsk.snr_min    = [ 9.0 13.5 21]; % Es/N0 dB
-
-equalization_modes.dfe.bpsk.snr_min   = [ 8.6 11   13.5]; % Es/N0 dB
-
 ber_plot_args = cell(2, 1);
 plot_label_args = cell(1, 1);
 
@@ -41,38 +36,37 @@ for ii=1:length(powers)
     aux=0;
 
     for mm=1:MC
-    	xx= Dmax/1000;% rand(1,1) * Dmax / 2; 
-    	yy= Dmax/1000;% rand(1,1) * Dmax / 2;
+    	xx = rand(1,1) * Dmax / 2; 
+    	yy = rand(1,1) * Dmax / 2;
 
-      adjacent_xx = rand(adjacent_cells, 1) * Dmax / 2;
-      adjacent_xx = adjacent_xx + Dmax;
-      adjacent_yy = rand(adjacent_cells, 1) * Dmax / 2;
-      adjacent_yy = adjacent_yy + Dmax;
+    	adjacent_xx = rand(adjacent_cells, 1) * Dmax / 2;
+    	adjacent_xx = adjacent_xx + Dmax;
+    	adjacent_yy = rand(adjacent_cells, 1) * Dmax / 2;
+    	adjacent_yy = adjacent_yy;
 
     	d2=xx.^2+yy.^2;%% square-distance from the origin
     	adjacent_d2=adjacent_xx.^2+adjacent_yy.^2;
 
-      friss_attenuation_factor = carry_lamdba^2 / (4*pi)^2;
+    	friss_attenuation_factor = carry_lamdba^2 / (4*pi)^2;
     	a2 = min(1, friss_attenuation_factor ./ d2)';% square magnitude attenuation in Friis equation 
     	adjacent_a2 = min(1, friss_attenuation_factor ./ adjacent_d2)';
 
     	a2_dB = 10*log10(a2); % dB
 
-      Es_tx = P - 10*log10(available_bandwidth); % dBm / Hz, dB J 
-      adjacent_power = 10^(P/10) .* adjacent_a2;
-      
-      total_noise_spectral_density = 10^(noise_spectral_density/10) ...
-                                     + sum(adjacent_power) / available_bandwidth;
-      %total_noise_spectral_density_dbm = 10*log10(total_noise_spectral_density);
+    	Es_tx_dBm = P - 10*log10(available_bandwidth); % dBm / Hz, dB mJ 
+	Es_rx_dBm = Es_tx_dBm + a2_dB;
+	Es_rx = 10*log10(Es_rx_dBm / 10); % mJ
+    	adjacent_power = 10^(P/10) .* adjacent_a2; %mJ
+    	
+    	total_noise_spectral_density = 10^(noise_spectral_density/10) ...
+    	                               + sum(adjacent_power) / available_bandwidth; % mJ
 
-      tx_bit_stream = randi([0, 1], N_symb, 1);
-      tx_symbol_stream = tx_bit_stream * 10^(Es_tx/10);
-      noise = sqrt(total_noise_spectral_density/2) * randn(N_symb, 1);
-      rx_symbol_stream = tx_symbol_stream * a2 + noise;
+    	tx_bit_stream = randi([0, 1], N_symb, 1);
+	N0 = total_noise_spectral_density / Es_rx; % Noise normalized to the symbol energy
+	rx_bit_stream = channel_simulation(tx_bit_stream, N0, 'PSK', 2, 0, N_symb, 'none');
+	assert(0)
 
-      %%% Decoding
-      rx_bit_stream = rx_symbol_stream > mean(rx_symbol_stream);
-      
+    	%%% Decoding
     	ber = sum(tx_bit_stream ~= rx_bit_stream) / N_symb;
     	aux = aux + ber;
     end

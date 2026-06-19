@@ -10,3 +10,4 @@ if isOctave
 end
 
 addpath(genpath('../../ref/D1-D4'))
+addpath(genpath('../D1/'))
