@@ -51,16 +51,23 @@ for ii=1:length(powers)
     	Es_rx_to_cell_dBm = Es_tx_to_cell_dBm + a2_to_cell_dB; % dBm / Hz, dB mJ 
 	Es_rx_to_cell = 10.^(Es_rx_to_cell_dBm / 10); % mJ
     	
-    	noise_per_cell = 10^(noise_spectral_density/10) + sum(Es_rx_to_cell, 2) - diag(Es_rx_to_cell); % mJ
+    	noise_per_cell =  + sum(Es_rx_to_cell, 2) - diag(Es_rx_to_cell); % mJ
 
     	tx_bit_stream = randi([0, 1], N_symb, cells_to_simulate);
+	tx_symbol_stream = reshape(bits2symbols(tx_bit_stream(:), 'PSK', 2), N_symb, []);
+    	
+	noise = sqrt(10^(noise_spectral_density/10)/2) * (randn(size(tx_symbol_stream, 1),size(tx_symbol_stream, 2)) ...
+	                                          	+ 1i*randn(size(tx_symbol_stream, 1),size(tx_symbol_stream, 2)));
+        
+	H = eye(N_symb);
 
-	N0 = noise_per_cell ./ diag(Es_rx_to_cell); % Noise normalized to the symbol energy
-	
-	rx_bit_stream = zeros(N_symb, cells_to_simulate);
-	for jj=1:cells_to_simulate
-		rx_bit_stream(:, jj) = channel_simulation(tx_bit_stream(:, jj), N0(jj), 'PSK', 2, 0, N_symb, 'none');
-	end
+    	y = zeros(size(tx_symbol_stream, 1), size(tx_symbol_stream,2));
+    	y(1:end, :) = H*(tx_symbol_stream(1:end, :) * Es_rx_to_cell(1:end, :)) + noise(1:end, :);
+        
+	[s_hat_matrix, ~] = threshold_detector(y(:), 'PSK', 2);
+        s_hat = reshape(s_hat_matrix, N_symb, []);
+    	rx_bit_stream = reshape(symbols2bits(s_hat(:), 'PSK', 2)', N_symb, []);
+
     	ber = sum(tx_bit_stream ~= rx_bit_stream, 1)' / N_symb;
     	aux = aux + ber;
     end
