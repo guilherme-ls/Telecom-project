@@ -35,6 +35,7 @@ total_ber = zeros(cells_to_simulate, length(powers));
 for ii=1:length(powers)
     P = powers(ii);
     aux = zeros(cells_to_simulate, 1);
+    fprintf("P = %d dBm\n", P);
 
     for mm=1:MC
     	xx = (rand(1, cells_to_simulate) - 0.5) * Dmax + xx_cells_origins; 
@@ -58,11 +59,13 @@ for ii=1:length(powers)
       N0 = 10^(noise_spectral_density/10);
 	    noise = sqrt(N0 / 2) * randn(N_symb, cells_to_simulate);
       y = zeros(N_symb, cells_to_simulate);
-      for jj=1:cells_to_simulate
-        signal_ampl = sqrt(Es_rx_to_cell(jj, :) / 2);
-    	  y(:, jj) = tx_symbol_stream * signal_ampl' + noise(:, jj);
+      y_eq = zeros(N_symb, cells_to_simulate);
+      signal_ampl = sqrt(Es_rx_to_cell / 2);
+      for n=1:N_symb
+    	  y(n, :) = (signal_ampl * tx_symbol_stream(n, :)')' + noise(n, :);
+        y_eq(n, :) = (pinv(signal_ampl) * y(n, :)')';
       end
-	    [s_hat_matrix, ~] = threshold_detector(y(:), 'PSK', 2);
+	    [s_hat_matrix, ~] = threshold_detector(y_eq(:), 'PSK', 2);
       s_hat = reshape(s_hat_matrix, N_symb, cells_to_simulate);
     	rx_bit_stream = reshape(symbols2bits(s_hat(:), 'PSK', 2)', N_symb, cells_to_simulate);
 
