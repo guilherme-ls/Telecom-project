@@ -21,7 +21,7 @@ MC = 1000; %%number of Monte-Carlo simulations
 
 user_rate = 40e6; % bit/s
 
-cells_to_simulate = 3;
+cells_to_simulate = 3; %3;
 xx_cells_origins = ((0:1:(cells_to_simulate-1)) - floor(cells_to_simulate / 2)) * Dmax;
 
 ber_plot_args = cell(2, 1);
@@ -38,7 +38,7 @@ for ii=1:length(powers)
 
     for mm=1:MC
     	xx = (rand(1, cells_to_simulate) - 0.5) * Dmax + xx_cells_origins; 
-	xx_to_cell = repmat(xx, cells_to_simulate, 1) - repmat(xx_cells_origins',  1, cells_to_simulate);
+	    xx_to_cell = repmat(xx, cells_to_simulate, 1) - repmat(xx_cells_origins',  1, cells_to_simulate);
     	yy_to_cell = repmat((rand(1, cells_to_simulate) - 0.5) * Dmax, cells_to_simulate, 1);
 	
     	d2_to_cell = xx_to_cell.^2 + yy_to_cell.^2;%% square-distance from the origin
@@ -49,31 +49,29 @@ for ii=1:length(powers)
 
     	Es_tx_to_cell_dBm = P - 10*log10(available_bandwidth); % dBm / Hz, dB mJ 
     	Es_rx_to_cell_dBm = Es_tx_to_cell_dBm + a2_to_cell_dB; % dBm / Hz, dB mJ 
-	Es_rx_to_cell = 10.^(Es_rx_to_cell_dBm / 10); % mJ
+	    Es_rx_to_cell = 10.^(Es_rx_to_cell_dBm / 10); % mJ
     	
-    	noise_per_cell = 10^(noise_spectral_density/10) + sum(Es_rx_to_cell, 2) - diag(Es_rx_to_cell); % mJ
-
     	tx_bit_stream = randi([0, 1], N_symb, cells_to_simulate);
+	    tx_symbol_stream = reshape(bits2symbols(tx_bit_stream(:), 'PSK', 2), N_symb, cells_to_simulate);
+        
+	    %H = eye(N_symb); Channel 0
+      N0 = 10^(noise_spectral_density/10);
+      y = zeros(N_symb, cells_to_simulate);
+      for jj=1:cells_to_simulate
+	      noise = sqrt(N0 / 2) * randn(N_symb, cells_to_simulate);
+        signal_ampl = sqrt(Es_rx_to_cell(jj, :) / 2);
+    	  y(:, jj) = tx_symbol_stream * signal_ampl' + noise(:, jj);
+      end
+	    [s_hat_matrix, ~] = threshold_detector(y(:), 'PSK', 2);
+      s_hat = reshape(s_hat_matrix, N_symb, cells_to_simulate);
+    	rx_bit_stream = reshape(symbols2bits(s_hat(:), 'PSK', 2)', N_symb, cells_to_simulate);
 
-	N0 = noise_per_cell ./ diag(Es_rx_to_cell); % Noise normalized to the symbol energy
-	
-	rx_bit_stream = zeros(N_symb, cells_to_simulate);
-	for jj=1:cells_to_simulate
-		rx_bit_stream(:, jj) = channel_simulation(tx_bit_stream(:, jj), N0(jj), 'PSK', 2, 0, N_symb, 'none');
-	end
     	ber = sum(tx_bit_stream ~= rx_bit_stream, 1)' / N_symb;
     	aux = aux + ber;
     end
     total_ber(:, ii) = aux/MC;
 end
 ber_plot_args(:) = {powers, total_ber(2, :)};
-%if rate / 1e6 > 1 
-%	plot_label_args(:, jj, ii) = {sprintf("%d Mb/s - %s", rate / 1e6, eq_mode_name)};
-%else
-%	plot_label_args(:, jj, ii) = {sprintf("%d kb/s - %s", rate / 1e3, eq_mode_name)};
-%end
-
-
 
 %% Channel display
 semilogy(ber_plot_args{:});
