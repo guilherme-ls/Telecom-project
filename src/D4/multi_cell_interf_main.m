@@ -56,9 +56,9 @@ for ii=1:length(powers)
         
 	    %H = eye(N_symb); Channel 0
       N0 = 10^(noise_spectral_density/10);
+	    noise = sqrt(N0 / 2) * randn(N_symb, cells_to_simulate);
       y = zeros(N_symb, cells_to_simulate);
       for jj=1:cells_to_simulate
-	      noise = sqrt(N0 / 2) * randn(N_symb, cells_to_simulate);
         signal_ampl = sqrt(Es_rx_to_cell(jj, :) / 2);
     	  y(:, jj) = tx_symbol_stream * signal_ampl' + noise(:, jj);
       end
