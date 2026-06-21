@@ -1,4 +1,5 @@
 #import "template.typ": project
+#import "template.typ": project
 
 //#import "graph_plots.typ" : *
 
@@ -40,8 +41,12 @@ Cloud Radio Access Network (C-RAN)",
 In this report, we build a simulator to study the global performance of a cellular network in which the base station works as a relay toward a remote server. We start by modelling a standard cell, then we add the access control that decides which users can be served, and finally we study what happens when several cells interfere with each other. We first consider a standard cellular network. We place $K$ active users at random, with a uniform distribution, inside a square cell of side $D_"max"$, and we put the base station at the center. The users share the channel with Time-Division Multiple Access (TDMA), and each user has a fixed target rate that matches one of four technology modes, from 2G/GPRS at 40 kbit/s up to 4G at 40 Mbit/s. The quality of each link mainly depends on the path loss, which we compute with the Friis equation.
 In this equation, $P_t$ is the transmit power, $P_r$ is the received power,
 $lambda$ is the wavelength and $d$ is the distance between the user and the base station; the antenna gains are set to 1. On top of this path loss, we apply a frequency-selective channel chosen at random for each user. We then study the whole system as a Cloud Radio Access Network (C-RAN). The base station does not process the signal alone anymore: it relays it to a remote server over an optical fiber, either by decoding and re-encoding the user streams (Decode and Forward) or by quantizing the raw received signal (Quantize and Forward).
-Finally, we look at a three-cell case with BPSK transmission, where multi-cell interference raises the bit error rate of the central user. When the three base stations send their samples to the server without errors, the server collects the received vector given by Equation 1.
-$ bold(Y) = bold(H) bold(S) + bold(W) $
+Finally, we look at a three-cell case with BPSK transmission. We first measure the bit
+error rate of the central user when the inter-cell interference is left unmanaged and
+simply treated as noise, and then when the three base stations forward their samples to
+the server, which collects the received vector given by @eq-system and applies a joint
+Zero-Forcing receiver to separate the symbols.
+$ bold(Y) = bold(H) bold(S) + bold(W) $ <eq-system>
 In this model, $bold(Y) = [y_(-1), y_0, y_1]^T$ holds the samples of the three base stations, $bold(S) = [s_(-1), s_0, s_1]^T$ holds the BPSK symbols of the three users, $bold(H)$ contains the channel amplitude gains and $bold(W)$ is the noise. A Zero-Forcing receiver then inverts $bold(H)$ to separate the symbols. We finalize our analysis by computing the rejection rate against $K$ for eight mode–equalizer configurations, by comparing the data rate that the optical fiber needs for the DF and QF strategies, and by measuring the bit error rate of the central user with and without multi-cell processing, including the case of a stronger $1 \/ d^4$ path loss.
 
 = System Implementation
@@ -84,43 +89,62 @@ The rejection rate is the fraction of users in outage, averaged over many random
 
 == Inter-cell interference treated as noise
 
-We consider three cells $cal(C)_(-1)$, $cal(C)_0$, $cal(C)_1$ with one BPSK user each. The central basestation receives the signal of its own user plus the leakage from the two neighbours. Since channel 0 is flat, each link is described only by its amplitude gain $h_(0,j)$, which depends on the pathloss between user $j$ and basestation 0:
+We consider three cells $cal(C)_(-1)$, $cal(C)_0$, $cal(C)_1$ with one BPSK user each.
+The central basestation receives the signal of its own user plus the leakage from the
+two neighbours. Since channel 0 is flat, each link is described only by its amplitude
+gain $h_(0,j)$, which depends on the pathloss between user $j$ and basestation 0:
 
 $ y_0 = h_(0,0) s_0 + underbrace(h_(0,-1) s_(-1) + h_(0,1) s_1, "interference") + w_0 $
 
-If the interference is not managed and is treated as additional Gaussian noise, the effective signal-to-interference-plus-noise ratio for $s_0$ is:
+The interfering terms $s_(-1)$ and $s_1$ are BPSK symbols, so they take discrete values
+and are not Gaussian noise. For this reason we do not use a closed-form BER expression
+here. Instead, the interfering symbols are generated and added explicitly, exactly as
+written above, and the BER of the central user is measured by Monte-Carlo simulation
+over many random user positions.
 
-$ "SINR"_0 = (h_(0,0)^2 E_s) / (N_0 + (h_(0,-1)^2 + h_(0,1)^2) E_s) $
-
-and the BER for BPSK is:
-
-$ "BER"_0 approx Q(sqrt(2 "SINR"_0)) $
-
-The key point is that when the transmit power $P$ increases, both the useful term and the interference term grow together. The SINR therefore saturates at a ceiling, and the system becomes interference-limited. As a result, the BER-versus-power curve flattens into a floor instead of decreasing indefinitely.
+The behaviour observed in the results has a simple explanation. When the transmit power
+$P$ increases, the useful signal and the interference grow by the same factor, because
+they share the same power scaling. The ratio between them therefore stays almost
+constant, and increasing the power no longer helps. The system becomes
+interference-limited, so the BER-versus-power curve flattens into a floor instead of
+decreasing indefinitely.
 
 == Joint processing at the server with a ZF receiver
 
-Now the three basestations forward their samples to the server without errors. For a given time index, the server holds $bold(Y) = [y_(-1), y_0, y_1]^T$. Stacking the three observations gives a linear system:
+Now the three basestations forward their samples to the server without errors. For a
+given time index, the server holds $bold(Y) = [y_(-1), y_0, y_1]^T$. Stacking the three
+observations gives a linear system:
 
 $ bold(Y) = bold(H) bold(S) + bold(W), quad bold(S) = [s_(-1), s_0, s_1]^T $
 
-where $bold(H)$ is the $3 times 3$ matrix of amplitude gains, with entry $H_(i,j) = h_(i,j)$ equal to the amplitude of the link from user $j$ to basestation $i$:
+where $bold(H)$ is the $3 times 3$ matrix of amplitude gains, with entry
+$H_(i,j) = h_(i,j)$ equal to the amplitude of the link from user $j$ to basestation $i$:
 
 $ bold(H) = mat(h_(-1,-1), h_(-1,0), h_(-1,1); h_(0,-1), h_(0,0), h_(0,1); h_(1,-1), h_(1,0), h_(1,1)) $
 
-The diagonal contains the useful signals, while the off-diagonal terms represent the cross-interference. A Zero-Forcing receiver inverts the channel:
+The diagonal contains the useful signals, while the off-diagonal terms represent the
+cross-interference. A Zero-Forcing receiver inverts the channel:
 
 $ hat(bold(S)) = bold(H)^(-1) bold(Y) = bold(S) + bold(H)^(-1) bold(W) $
-The interference is fully removed, but at the cost of noise amplification. The noise on the estimate of $s_0$ is the central row of $bold(H)^(-1) bold(W)$ (the row associated
+
+The interference is fully removed, but at the cost of noise amplification. The noise on
+the estimate of $s_0$ is the central row of $bold(H)^(-1) bold(W)$ (the row associated
 with cell $cal(C)_0$), with variance:
 
 $ sigma_0^2 = N_0 norm([bold(H)^(-1)]_("central row"))^2 $
 
 The effective SNR and the BER of the central user are then:
 
-$ "SNR"_0^"ZF" = E_s / (N_0 norm([bold(H)^(-1)]_("central row"))^2), quad "BER"_0 = Q(sqrt(2 "SNR"_0^"ZF")) $
+$ "SNR"_0^"ZF" = E_s / (N_0 norm([bold(H)^(-1)]_("central row"))^2), quad
+  "BER"_0 = Q(sqrt(2 "SNR"_0^"ZF")) $
 
-Unlike the previous case, the SNR now grows linearly with $E_s$, so there is no floor. The ZF receiver removes the interference, and with enough power the BER decreases normally.
+As in the previous case, the BER reported here is not computed from this formula. The
+received vector $bold(Y)$ is built with the real BPSK symbols, the ZF receiver is
+applied by inverting $bold(H)$, and the BER of the central user is measured by
+Monte-Carlo simulation. The formula above is used only to predict the behaviour. Unlike
+the previous case, the SNR now grows linearly with $E_s$, so there is no floor: the ZF
+receiver removes the interference, and with enough power the BER keeps decreasing
+normally. This is exactly what we observe in the results.
 
 == The $1 \/ d^4$ case (powers between 40 and 70 dBm)
 
