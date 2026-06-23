@@ -83,7 +83,7 @@ for ii = 1:snr_length
     snr = snr_bits(ii);
     if normalize_symbol_energy
       % analysing the bits2symbols code provided, it considers Eb=1, not Es=1 as in the TE02 subject
-      snr = snr + 10*log10(log2(M));
+      snr = snr - 10*log10(log2(M));
     end
     N0 = 1./10.^(snr/10) / r;
     err_per_bit_total = 0;
@@ -93,8 +93,8 @@ for ii = 1:snr_length
     snr_iteration = 1; %last_snr_iteration;
     while err_total < min_error_bits_per_snr && snr_iteration <= max_snr_simulation_iterations
         frame_number = min(min_frame_number*(snr_bits(ii) + last_snr_iteration)*snr_iteration, max_simultaneous_frame_simulation);
-        disp(sprintf("\t Simultaneous frames = %d", frame_number));
-        tic;
+        %disp(sprintf("\t Simultaneous frames = %d", frame_number));
+        %tic;
         [m_c_total, m_total] = frame_generation(n, k, g, M, frame_size, frame_number, bch_code_option);
         frame_bits = channel_simulation(m_c_total, N0, modulation, M, channel, frame_size, equalization);
         [errors_per_frame, errors_per_bit, amount_of_errors] = frame_decode_compare(m_total, frame_bits, g, t, syndrome_table, n, k);
@@ -104,18 +104,20 @@ for ii = 1:snr_length
         frame_sucess = sum(errors_per_frame == 0);
         message_bits_per_frame = k * floor(size(frame_bits, 1) / n);
         frame_sucess_rate = frame_sucess * message_bits_per_frame / (frame_size * Ts);
-        throughput_total = throughput_total + frame_sucess_rate / length(errors_per_frame) ;
+        throughput_total = throughput_total + frame_sucess_rate / length(errors_per_frame);
+        %throughput_total = throughput_total + frame_sucess * message_bits_per_frame / (frame_size * Ts);
         snr_iteration = snr_iteration + 1;
-        toc
-        disp(sprintf("\t Total amount of errors found = %d | BER = %d | T = %d\n", ...
-                         err_total, err_per_bit_total/(snr_iteration - 1), ...
-                         throughput_total/(snr_iteration - 1)));
+        %toc
     end
+
+    disp(sprintf("\t Total amount of errors found = %d | BER = %d | FSR = %d | T = %d\n", ...
+                     err_total, err_per_bit_total/(snr_iteration - 1), ...
+                     frame_sucess, throughput_total/(snr_iteration - 1)));
     %% Calculates final BER
-    disp(sprintf("\t -- Snr Iterations = %d --", snr_iteration - 1));
+    %disp(sprintf("\t -- Snr Iterations = %d --", snr_iteration - 1));
     ber = err_per_bit_total / (snr_iteration - 1);
-    throughput_total
-    snr_iteration
+    %throughput_total
+    %snr_iteration
     throughput = throughput_total / (snr_iteration - 1);
     ber_per_snr(ii) = ber;
     throughput_per_snr(ii) = throughput;
