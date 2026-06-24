@@ -582,6 +582,7 @@ From the table, we see that the ideal choice consists of an ADC with 12 bits and
   - Full Scale (*$"dBFS"$*) change
 - Fixed *$G_"RX" = -10 "dB"$* to have the transmitter be the only free parameter for SER and BER change
   - Also *avoids non-linearities* that the *automatic RX gain control* might introduce for *low powers*
+- *16QAM* symbols
 - *Removed contribution* from the *line losses* in the experimental setup
 
 
