@@ -380,6 +380,77 @@ But, these types of fibers may not integrate well into the system in place, and 
 
 As an example, we implemented the simulation `extern_mod_main_compensation` that sends a 10 Gbps NRZ OOK signal using an EML with -18 dBm of power through 100 km of ITU G.652 fiber, followed by 17 km of DCF with $D = -100 "ps/nm/km"$. The resulting BER is $2.8 times 10^(-6)$, showing that the concept indeed works in simulation.
 
+== Extra credit - Study the dependence of $L_"max"$ in $R_b$
+
+In this section, we study the dependency of $L_"max"$ on the datarate both from an analytical point of view, through @eq:length_max, and an experimental one, through Monte-Carlo simulations. Starting by the analytical analysis, we know that the spectral occupation term $Delta f$ is proportional to the datarate, such that any increase in the datarate decreases $L_"max"$ quadratically. In this case, we adopted the convention $Delta f = 2 R_b$ for square pulses.
+
+Now, in the experimental aspect, we defined $L_"max"$ as the distance at which the BER becomes $10^(-3)$ in the transmission. For each datarate we calculated the power necessary to achieve a $10^(-6)$ BER in a back-to-back configuration (using @eq:optical_power) and adopted it as the laser power. Thus $L_"max"$ corresponds to a drop of $10^3$ in the BER.
+
+#figure(
+  image("./assets/extra1-datarates.png", width: 95%),
+  caption: [$L_"max"$ as a function of the datarate in Gbit/s, considering both the theoretical value, in orange, and the value obtained through Monte-Carlo simulations, in blue.],
+) <fig:extra1-datarates>
+
+Both an analytical and experimental curve presenting $L_"max"$ as a function of the datarate are shown in @fig:extra1-datarates. Analyzing it, we observe that both curves have the same general shape, verifying the quadratic inverse relation between $L"max"$ and $R_b$ in the two cases. Additionally, we notice a vertical offset between the two curves (equivalent to a multiplicative factor in linear scale), with the analytical curve being much lower, suggesting that the theoretical value calculated earlier is too conservative when compared to what is seen in practice.
+
+== Extra credit - Study the performance of digital equalization and error correction
+
+We start by implementing in this optical transmission chain the coding schemes developed in D1, studying their performance. The characteristics of the BCH codes implemented here can be found in @tab:code_information.
+
+#figure(
+  caption: [Generator polynomials and code rates of the studied BCH codes.],
+  table(
+    columns: (1fr, 2fr, 1fr),
+    inset: 9pt,
+    align: center,
+    stroke: 0.6pt,
+
+    table.header(
+      [$"Error Capability"$],
+      [$g(x)$],
+      [$R$],
+    ),
+
+    table.hline(),
+
+    [$t = 1$],
+    [$x^5 + x^2 + 1$],
+    [$26"/"31$],
+
+    table.hline(),
+
+    [$t = 2$],
+    [$x^(10) + x^9 + x^8 + x^6 + x^5 + x^3 + 1$],
+    [$21"/"31$],
+
+    table.hline(),
+  ),
+) <tab:code_information>
+
+Therefore, after generating a random vector of information bits, we now encode the information using the chosen BCH code before upsampling the symbols vector and convolving it with the square pulse to send it in the fiber. Similarly, at reception, right after obtaining the output symbols from the threshold detector applied in the electrical signal, we perform the decoding and compare the result with the original random vector to measure the BER. The coding and decoding functions used were taken directly from D1.
+
+Importantly, the laser power used in these experiments were normalized to take into account the code rate of the codes used, such that the coded case does not have an unfair advantage in terms of energy. Therefore, the simulation results can be found in @fig:extra2-codes, where uncoded (code 0) and coded performances are compared.
+
+As in D1, we notice that for low laser powers (and thus low SNR) the codes introduce a loss in performance, since the loss in bit energy leads to an increase in BER and the number of errors is still well beyond the error correcting capacity of the code. However, for higher laser power, the coded cases present an improved performance with respect to the uncoded case, and BCH code 2 (with a higher error correcting capacity) eventually takes the lead. 
+
+#figure(
+  image("./assets/extra2-codes.png", width: 95%),
+  caption: [BER as a function of the laser power, considering a non-coded case, and two coded cases, with distinct BCH codes.],
+) <fig:extra2-codes>
+
+Then, we extended the analysis by proposing a digital equalization scheme to be applied on signal outputted by the photodetector. To this end, we implemented coherent detection (extracting the two quadratures) to obtain the signal's phase information. This way, since the transfer function describing the dispersion in the fiber is already known, the equalization can be performed by reverting the phase shifts it introduces in the frequency domain.
+
+Thus, our proposed digital equalizer takes the electric signal outputted by the coherent photodetector (in theory sampled by an ADC), applies an FFT, multiplies it by the transfer function of the fiber but with contrary phases (to revert the phase shift), and then performs an IFFT, finalizing by downsampling the signal to detect the symbols.
+
+@fig:extra2-equalization shows the BER versus laser power considering the base case and the equalized case. Observe that the equalization indeed permits a considerable performance gain by reverting most of the inter-symbol-interference generated by the chromatic dispersion introduced by the fiber.
+
+#figure(
+  image("./assets/extra2-equalization.png", width: 95%),
+  caption: [$L_"max"$ as a function of the datarate in Gbit/s, considering both the theoretical value, in orange, and the value obtained through Monte-Carlo simulations, in blue.],
+) <fig:extra2-equalization>
+
+As a side note, we tried to determine the impulse response $h$ of the fiber empirically (by sending a single pulse through it and measuring the output) and using it to perform ZF and DFE in the direct detection case. However, the results were not satisfactory.
+
 = Conclusion
 
 Throughout this report, we analyzed different properties and behaviors that appear in optical communication systems.
@@ -390,7 +461,5 @@ That resulted in us observing a greater BER degradation
 in higher data rates, as that would decrease the pulse period, which in turn increased the effects of chromatic dispersion, allowing
 for more Inter-Symbol Interference. In addition, we concluded that a bias current bellow threshold for a DML has catastrophic results for the signal integrity, while a current many times above it also has diminishing returns.
 
-Furthermore, we later discussed ways to reduce the effects of chromatic dispersion, and then how to take advantage of this higher BERs
-by using modulations that are more complex than OOK, but that don't use phase like PSK and QAM, allowing for higher data rates without
-raw decrease of pulse period.
+Furthermore, we later discussed ways to reduce the effects of chromatic dispersion, and then how to take advantage of this higher BERs by using modulations that are more complex than OOK, but that don't use phase like PSK and QAM, allowing for higher data rates without raw decrease of pulse period.
 
