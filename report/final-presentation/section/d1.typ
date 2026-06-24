@@ -1,5 +1,4 @@
 #import "@preview/diatypst:0.9.1": *
-#import "@preview/equate:0.3.2": equate
 #import "@preview/lilaq:0.5.0" as lq
 
 // LTeX: language=en-US
