@@ -508,6 +508,15 @@ From the table, we see that the ideal choice consists of an ADC with 12 bits and
 
 == PA Measurements
 
+=== Methodology
+
+- Allocated PA: *ZX60_V62*
+- *Manually* varied the Pluto's output power in code
+  - Focused points in the expected *non-linear region*
+- Measured the PA output with the *pocket spectral analyzer*
+- *Removed contribution* from the *line losses* in the experimental setup
+
+
 #create-pa-am-am-figure(
   "data/d2/ZX60_V62.csv",
   [ZX60_V62 - AM/AM],
@@ -530,6 +539,10 @@ From the table, we see that the ideal choice consists of an ADC with 12 bits and
   [$eta_("DE")$],
   [$eta_("PAE")$],
 )
+
+- Measured values *closely match* the *datasheet* ones
+  - Only big discrepancy in the *$P_(1"dB")$* from the *measurement inaccuracies*
+
 #align(center + top, grid(
   columns: 2,
   gutter: 10%,
@@ -560,6 +573,17 @@ From the table, we see that the ideal choice consists of an ADC with 12 bits and
 ))
 
 == Pluto Self-Communication
+
+=== Methodology
+
+- Used a *single* Pluto Card
+- Emulated *distance* as a:
+  - *TX gain increase / decrease* (*$G_"TX"$*)
+  - Full Scale (*$"dBFS"$*) change
+- Fixed *$G_"RX" = -10 "dB"$* to have the transmitter be the only free parameter for SER and BER change
+  - Also *avoids non-linearities* that the *automatic RX gain control* might introduce for *low powers*
+- *Removed contribution* from the *line losses* in the experimental setup
+
 
 #show figure.caption: set text(size: 8pt)
 #align(center + bottom, grid(
