@@ -40,7 +40,6 @@ $ "PL"_"dB" (d) = 20 log_10((4 pi d) / lambda) $
 
 - A user is *rejected* (in outage) when, even at full power $P_"max"$, it cannot reach the minimum $E_s/N_0$ required for the target $F_"max"$.
 - We build a *Look-Up Table*: for each constellation, channel and equalizer, the smallest $E_s/N_0$ that reaches the target, using
-$ "FER" = 1 - (1 - "BER")^(k N) $
 $ "BER"_"max" = "FER"_"max" / (N log_2(M)) $
 - The *rejection rate* is the fraction of users in outage, averaged over many random user positions (Monte-Carlo).
 
