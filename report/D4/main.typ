@@ -149,6 +149,23 @@ normally. This is exactly what we observe in the results.
 == The $1 \/ d^4$ case (powers between 40 and 70 dBm)
 
 Replacing the Friis law ($1 \/ d^2$) by a $1 \/ d^4$ law makes the attenuation fall much faster with distance. Since the neighbouring users are farther from the central basestation than its own user, the relative interference $h_(0, plus.minus 1) \/ h_(0,0)$ becomes much smaller. The matrix $bold(H)$ is then almost diagonal and well-conditioned. As a consequence, even treating the interference as noise works reasonably well, and the ZF receiver suffers from negligible noise amplification. The higher powers (40 to 70 dBm) are only needed to compensate for the much stronger attenuation in absolute terms.
+== Decode-and-Forward versus Quantize-and-Forward
+
+With *Decode-and-Forward (DF)*, the base station first understands the message: it
+decodes the user bits and sends only these information bits over the fiber. The
+fiber then carries just the useful information, so its rate is low, but the base
+station has to do the heavy decoding work. This rate is highest with the densest
+constellation, 16-QAM:
+
+$ R_"fiber"^"DF" <= log_2(M) dot 1/T_s = 4 times 20 "Mbit/s" = 80 "Mbit/s". $
+
+With *Quantize-and-Forward (QF)*, the base station does not try to understand the
+signal at all. It simply measures the received samples, represents each one with
+$q$ bits, and sends these raw numbers. Since the signal is complex, each sample has
+two real parts and costs $2q$ bits. The rate is then fixed and does not depend on
+the channel:
+
+$ R_"fiber"^"QF" = 2 q dot 1/T_s = 2 times 10 times 20 "Mbit/s" = 400 "Mbit/s". $
 == Simulation's Parameters
 
 #figure(
@@ -173,6 +190,7 @@ Replacing the Friis law ($1 \/ d^2$) by a $1 \/ d^4$ law makes the attenuation f
   caption: [System Parameters],
 )
  == Experimental Results 
+ === Rejection rate per user amount 
  Firstly, we study the global performance of a cellular network using a TDMA access scheme. The objective is to evaluate how the number of active users affects the percentage of users that cannot be served by the base station.
 
 The main performance metric is the rejection rate. It is defined as the ratio between the number of rejected users and the total number of active users:
@@ -231,3 +249,133 @@ interference by using previous decisions, without amplifying the noise as strong
 therefore needs less power to satisfy the same FER constraint, which lowers the
 rejection rate.
 
+=== Performance in multicell interference
+In this experiment we study the effect of inter-cell interference when it is
+left unmanaged. We consider three adjacent cells, each one serving a single
+user with BPSK modulation, and we focus on the user of the central cell. Its
+base station receives the useful signal from its own user together with the
+leakage coming from the two neighbouring users, and it treats this leakage
+simply as extra noise, without any joint processing. For each transmit power
+$P$ from $0$ to $20$ dBm, we place the users at random, build the received
+signal with the actual interfering symbols, and measure the bit error rate
+(BER) of the central user by Monte-Carlo simulation. The curve below shows
+this BER of the central user as a function of $P$.
+ #figure(
+  image("./images/performance in multicell interference.jpg", width: 100%),
+  caption: [Experiment results],
+)
+The curve confirms this interference-limited behaviour. At low power the BER
+decreases a little, because the useful signal is still weak compared with the
+noise, so adding power helps at first. Very quickly, however, the curve stops
+falling and settles into a floor at around 7%. Beyond this point, increasing
+the transmit power brings almost no improvement. The reason is that the useful
+signal and the interference share the same power scaling: when $P$ grows, both
+grow by the same factor, so the ratio between them stays almost constant. The
+performance is therefore limited by the interference and not by the noise, and
+a single base station acting on its own cannot remove it. This is exactly the
+limitation that motivates the next experiment, where the three base stations
+forward their samples to the server so that a joint receiver can separate the
+users and cancel the interference.
+=== Performance in fowarding multicell system
+In this experiment we study the same three-cell scenario, but now the inter-cell
+interference is managed by the network. Instead of letting each base station work
+on its own, the three base stations forward their received samples to the remote
+server over the optical fiber. For a given time index, the server then holds the
+three observations stacked together as $bold(Y) = bold(H) bold(S) + bold(W)$,
+where $bold(S)$ contains the BPSK symbols of the three users and $bold(H)$ is the
+$3 times 3$ matrix of channel gains: its diagonal carries the useful signals and
+its off-diagonal terms carry the cross-interference. Having all three signals at
+once, the server applies a joint Zero-Forcing receiver, which inverts the channel
+matrix to separate the symbols of the three users. As before, for each transmit
+power $P$ from $0$ to $20$ dBm we place the users at random, build the received
+vector with the actual BPSK symbols, apply the Zero-Forcing receiver, and measure
+the bit error rate (BER) of the central user by Monte-Carlo simulation. The curve
+below shows this BER as a function of $P$.
+ #figure(
+  image("./images/performance forward.jpg", width: 100%),
+  caption: [Experiment results],
+)
+The curve shows a completely different behaviour from the unmanaged case: there
+is no floor anymore. The BER decreases steadily over the whole range, from about
+18% at $0$ dBm down to roughly $10^(-3)$ at $20$ dBm, and it keeps falling as the
+power grows. The reason is visible in the Zero-Forcing estimate
+$hat(bold(S)) = bold(H)^(-1) bold(Y) = bold(S) + bold(H)^(-1) bold(W)$: by
+inverting the channel matrix, the receiver cancels the cross-interference exactly,
+and only a noise term remains. The interference that created the floor in the
+previous experiment is therefore removed. This separation is not completely free,
+because inverting $bold(H)$ also amplifies the noise, the noise on the central
+user is the central row of $bold(H)^(-1) bold(W)$, whose power depends on how
+well-conditioned the matrix is. The key difference is that this residual noise no
+longer scales with the transmit power: the effective SNR of the central user now
+grows linearly with $E_s$, so the system is limited by noise again and not by
+interference. That is why adding power keeps helping and the BER decreases
+normally. The small irregularities along the curve come from this noise
+amplification, since the random user positions occasionally produce a
+badly-conditioned matrix $bold(H)$ that increases the noise for that realization;
+averaging over many realizations keeps these fluctuations small. Comparing the two
+experiments at the same power makes the gain explicit: at $20$ dBm the unmanaged
+receiver is stuck around 7%, while the joint Zero-Forcing receiver reaches about
+$10^(-3)$, an improvement of several orders of magnitude. This is the quantitative
+justification of the C-RAN architecture: by collecting the samples of all the
+cells at a central server, the system can jointly process them and remove the
+interference that a single base station, acting alone, simply cannot handle.
+=== Performance with heavy attenuation
+In this last experiment we reuse exactly the same three-cell scenario with joint
+Zero-Forcing processing at the server, and we change only the propagation model.
+The free-space Friis law, in which the path loss is proportional to $d^(-2)$, is
+replaced by a stronger law proportional to $d^(-4)$, which is a more realistic
+model for dense environments where the signal decays faster with distance. Because
+this law attenuates the signal much more, the transmit power $P$ is now swept over
+a higher range, from $40$ to $70$ dBm, so that the received signal stays usable;
+apart from the propagation exponent and this power range, the simulation is
+identical to the previous one. As before, for each power we place the users at
+random, build the received vector $bold(Y) = bold(H) bold(S) + bold(W)$ with the
+actual BPSK symbols, apply the Zero-Forcing receiver, and measure the bit error
+rate (BER) of the central user by Monte-Carlo simulation. The curve below shows
+this BER as a function of $P$.
+#figure(
+  image("./images/performance with heavy attenuation.jpg", width: 100%),
+  caption: [Experiment results],
+)
+Two things stand out in this curve. First, there is again no floor: the BER
+decreases steadily over the whole range, from about 40% at $40$ dBm down to roughly
+$8 times 10^(-3)$ at $70$ dBm. The Zero-Forcing receiver therefore keeps removing
+the interference under this harsher propagation, exactly as in the Friis case.
+Second, and more interesting, the receiver works here in very good conditions. With
+a $d^(-4)$ law the attenuation grows very quickly with distance, and the two
+neighbouring users are farther from the central base station than its own user. The
+relative interference $h_(0, plus.minus 1) \/ h_(0,0)$ is therefore much smaller
+than before, which makes the channel matrix $bold(H)$ almost diagonal and
+well-conditioned. Its inverse is then close to a diagonal matrix, the central row of
+$bold(H)^(-1)$ is close to $1 \/ h_(0,0)$, and the noise amplification caused by the
+inversion is almost negligible. This is also why the curve is smoother than in the
+previous experiment: a well-conditioned $bold(H)$ rarely produces the large noise
+spikes that appear when the matrix is badly conditioned.
+
+The high transmit powers should not be misread as a sign that the receiver performs
+poorly. The $40$ to $70$ dBm range is needed only to compensate for the much
+stronger attenuation in absolute terms: the link budget collapses under the
+$d^(-4)$ law, so a large transmit power is required simply to deliver enough energy
+to the receiver. The contrast with the Friis experiment makes this explicit. There,
+the joint receiver reached about $10^(-3)$ already at $20$ dBm, while here a
+comparable error rate needs roughly $40$ to $50$ dB more power. In other words, the
+quality of the interference cancellation is not the limiting factor under realistic
+propagation — the power budget is. The joint C-RAN processing still does its job and
+removes the interference; what becomes expensive is simply closing the link over a
+fast-decaying channel.
+= Conclusion
+In this project we built a simulator to study the global performance of a
+realistic C-RAN, from a single cell up to a multi-cell system with joint
+processing at the server. The access study showed that the DFE receiver always
+rejects fewer users than the ZF, because the ZF inverts the channel and amplifies
+the noise on frequency-selective channels, while the DFE avoids this penalty. The
+fronthaul comparison showed that the optical fiber is not the bottleneck: DF needs
+at most $80$ Mbit/s per cell and QF about $400$ Mbit/s, both far below the capacity
+of a real optical link. The most important result came from the multi-cell case:
+when the inter-cell interference is treated as noise, the BER saturates at a floor
+around $7%$ and adding power does not help, whereas a joint Zero-Forcing receiver
+at the server removes the interference and brings the BER down to about $10^(-3)$.
+Collecting the signals of all the cells at a central server is therefore the core
+advantage of C-RAN. Finally, the realistic $1 / d^4$ case confirmed that the joint
+receiver still works under stronger attenuation, the only cost being a higher
+transmit power to close the link.
