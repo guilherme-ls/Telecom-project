@@ -1,20 +1,31 @@
 #import "@preview/diatypst:0.9.1": *
 
 #show: slides.with(
-  title: "D4 Network simulation and global performance",
+  title: "Performance Analysis of a realistic Cloud Radio Access Network (C-RAN)",
+  subtitle: "Deliverables D1, D2, D3 and D4",
   date: "2025-2026",
   authors: (
+    "LOUROSA RECH Bernardo",
+    "LORETE SCHMIDT Guilherme",
+    "PANCHENIAK FILHO Ivan Roberto Wagner",
   ),
-  ratio: 16/9,
+  ratio: 16 / 9,
   count: "dot-section",
   layout: "medium",
   title-color: blue.darken(60%),
   toc: true,
 )
 
-= Introduction
+= Simulation of system with ideal hardware (D1)
 
-== System model
+= Radio-frequency system and hardware modeling (D2)
+
+= Optical point-to-point system performance (D3)
+
+= Network simulation and global performance (D4)
+== Introduction
+
+=== System model
 
 - A *cellular network* where the base station is only a *relay*: it forwards the signal to a remote *server* over an *optical fiber*, and the server does the heavy processing (*C-RAN*).
 - Users share the channel with *TDMA* (one time frame per user).
@@ -23,16 +34,17 @@
 
 $ "PL"_"dB" (d) = 20 log_10((4 pi d) / lambda) $
 
-= Single cell: access control
+== Single cell: access control
 
-== Rejection rate — method
+=== Rejection rate — method
 
 - A user is *rejected* (in outage) when, even at full power $P_"max"$, it cannot reach the minimum $E_s/N_0$ required for the target $F_"max"$.
 - We build a *Look-Up Table*: for each constellation, channel and equalizer, the smallest $E_s/N_0$ that reaches the target, using
 $ "FER" = 1 - (1 - "BER")^(k N) $
+$ "BER"_"max" = "FER"_"max" / (N log_2(M)) $
 - The *rejection rate* is the fraction of users in outage, averaged over many random user positions (Monte-Carlo).
 
-== Rejection rate — results
+=== Rejection rate — results
 
 #grid(
   columns: (1.7fr, 1fr),
@@ -51,9 +63,9 @@ $ "FER" = 1 - (1 - "BER")^(k N) $
 
 
 
-= Multi-cell interference
+== Multi-cell interference
 
-== Three-cell model
+=== Three-cell model
 
 - Three adjacent cells $cal(C)_(-1), cal(C)_0, cal(C)_1$, one BPSK user each; we follow the *central* user.
 - The server stacks the three received samples into one linear system:
@@ -63,7 +75,7 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
 - $bold(S) = [s_(-1), s_0, s_1]^T$ are the user symbols, $bold(H)$ is the $3 times 3$ matrix of channel gains (diagonal = useful signal, off-diagonal = interference), $bold(W)$ is the noise.
 - A *joint Zero-Forcing* receiver inverts $bold(H)$ to separate the users.
 
-== Interference treated as noise
+=== Interference treated as noise
 
 #grid(
   columns: (1.4fr, 1fr),
@@ -79,7 +91,7 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
   ],
 )
 
-== Joint processing at the server (ZF)
+=== Joint processing at the server (ZF)
 
 #grid(
   columns: (1.4fr, 1fr),
@@ -90,13 +102,13 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
   ),
   [
     - The server has the three signals: $hat(bold(S)) = bold(H)^(-1) bold(Y) = bold(S) + bold(H)^(-1) bold(W)$.
-    - The *floor disappears*: the BER falls. 
+    - The *floor disappears*: the BER falls.
     - Interference removed, so the system is *noise-limited* again and more power helps.
     - *This is the quantitative justification of C-RAN.*
   ],
 )
 
-== Realistic propagation ($1/d^4$)
+=== Realistic propagation ($1/d^4$)
 
 #grid(
   columns: (1.4fr, 1fr),
@@ -111,8 +123,6 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
     - The high powers only pay for the *link budget*, not for interference cancellation.
   ],
 )
-
-= Conclusion
 
 == Conclusion
 
