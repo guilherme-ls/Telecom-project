@@ -49,11 +49,11 @@
   let file = "./graphs/extra_throughput/bch" + str(code) + "_" + mod + "_none_" + str(ch) + ".csv"
   let (x, y) = lq.load-txt(read(file))
   
-  let x = if mod == "8QAM" {
+  /*let x = if mod == "8QAM" {
     nt.add(x, nt.mult(10, nt.log(3)))
   } else {
     nt.add(x, nt.mult(10, nt.log(4)))
-  }
+  }*/
   
   filter-positive(x, y)
 }
@@ -62,11 +62,11 @@
   let file = "./graphs/extra_throughput/bch" + str(code) + "_" + mod + "_none_" + str(ch) + ".csv"
   let (x, y) = lq.load-txt(read(file))
   
-  let x = if mod == "8QAM" {
+  /*let x = if mod == "8QAM" {
     nt.add(x, nt.mult(10, nt.log(3)))
   } else {
     nt.add(x, nt.mult(10, nt.log(4)))
-  }
+  }*/
 
   filter-positive-2(x, y)
 }
@@ -261,7 +261,7 @@
     )},
 
     caption: [
-      Plot of the throughput T versus the $E_S"/"N_0$ per bit in a semilogarithmic scale for a #mod constellation in a AWGN channel using no codes, BCH code 1, and BCH code 2.
+      Plot of the throughput T versus the $E_S"/"N_0$ in a semilogarithmic scale for a #mod constellation in a AWGN channel using no codes, BCH code 1, and BCH code 2.
     ]
   )
 }
@@ -350,7 +350,7 @@
       ),
 
       title: [
-        Throughput versus $E_b"/"N_0$ for distinct code and modulation pairs.
+        Throughput versus $E_S"/"N_0$ for distinct code and modulation pairs.
       ],
 
       //yscale: "log",
@@ -361,7 +361,7 @@
     )},
 
     caption: [
-      Plot of the throughput T versus the SNR per bit in a semilogarithmic scale for a BPSK, 8QAM and 16QAM constellations in a AWGN channel using no codes, BCH code 1, and BCH code 2.
+      Plot of the throughput T versus $E_S"/"N_0$ in a semilogarithmic scale for a BPSK, 8QAM and 16QAM constellations in a AWGN channel using no codes, BCH code 1, and BCH code 2.
     ]
   )
 }
@@ -778,7 +778,7 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
   $ <eq:t_final>
 
   $
-    P_e = N_"min" Q (sqrt(gamma E_b / N_0))
+    P_e = N_"min" Q (sqrt(gamma E_S / N_0))
   $ <eq:p_e_t>
 
   Given this theoretical result, we can proceed by simulating the throughputs. The individual results for each modulation scheme can be found in @extra2_BPSK, @extra2_8QAM and @extra2_16QAM. We can observe in each case that the codes promote a performance gain in low SNRs, but lead to a loss in throughput in high SNRs, when there are fewer errors. We can also highlight that the loss in throughput for high SNRs is given by the coding rate of each code, and also by the zero-padding we employed to fit the codes (multiple of 31) within the 100 symbol frame.
