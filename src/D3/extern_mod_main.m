@@ -1,4 +1,4 @@
-clear;
+P_dBclear;
 close all;
 
 %%%%%%%%%%%%%%%% Simulation Params
