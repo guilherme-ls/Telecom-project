@@ -447,8 +447,9 @@
 
 
 == Code Correction in Multipath Channels
-#extra-code-channel(3, "none")
-#extra-code-channel(3, "DFE")
+#extra-code-channel(2, "none")
+#extra-code-channel(2, "ZF")
+#extra-code-channel(2, "DFE")
 == Throughput
 
 #extra-throughput-all(0)
