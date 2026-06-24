@@ -579,7 +579,7 @@ From the table, we see that the ideal choice consists of an ADC with 12 bits and
 - Used a *single* Pluto Card
 - Emulated *distance* as a:
   - *TX gain increase / decrease* (*$G_"TX"$*)
-  - Full Scale (*$"dBFS"$*) change
+  - *TX ADC* Full Scale (*$"dBFS"$*) change
 - Fixed *$G_"RX" = -10 "dB"$* to have the transmitter be the only free parameter for SER and BER change
   - Also *avoids non-linearities* that the *automatic RX gain control* might introduce for *low powers*
 - *16QAM* symbols
