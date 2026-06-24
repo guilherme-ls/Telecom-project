@@ -38,7 +38,7 @@ $ "FER" = 1 - (1 - "BER")^(k N) $
   columns: (1.7fr, 1fr),
   gutter: 14pt,
   figure(
-    image("images/rejection_rate_per_user_amount.png", width: 100%),
+    image("images/d4/rejection_rate_per_user_amount.png", width: 100%),
     caption: [Rejection rate versus number of users $K$ for the eight mode–equalizer configurations.],
   ),
   [
@@ -69,7 +69,7 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
   columns: (1.4fr, 1fr),
   gutter: 14pt,
   figure(
-    image("images/performance in multicell interference.jpg", width: 100%),
+    image("images/d4/performance_in_multicell_interference.jpg", width: 100%),
     caption: [BER of the central user when the inter-cell interference is left unmanaged.],
   ),
   [
@@ -85,7 +85,7 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
   columns: (1.4fr, 1fr),
   gutter: 14pt,
   figure(
-    image("images/performance forward.jpg", width: 100%),
+    image("images/d4/performance_forward.jpg", width: 100%),
     caption: [BER of the central user with a joint Zero-Forcing receiver at the server.],
   ),
   [
@@ -102,7 +102,7 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
   columns: (1.4fr, 1fr),
   gutter: 14pt,
   figure(
-    image("images/performance with heavy attenuation.jpg", width: 100%),
+    image("images/d4/performance_with_heavy_attenuation.jpg", width: 100%),
     caption: [Same joint ZF receiver with a $1/d^4$ path loss, powers from 40 to 70 dBm.],
   ),
   [
