@@ -248,29 +248,6 @@
   caption: [Zero order holder and zero padding DAC output spectrums.],
 ) <fig:DAC_styles>
 
-#figure(
-  image("./images/d2/DAC_ACPR.png", width: 95%),
-  caption: [DAC output ACPR per number of bits considering a 16-QAM modulated input.],
-) <fig:DAC_ACPR>
-
-== Reconstruction Filter
-
-#figure(
-  caption: [TX baseband filter specifications.],
-  table(
-    columns: 2,
-    align: center,
-    [$f_1$], [$10 "MHz"$],
-    table.hline(),
-    [$f_2$], [$15 "MHz"$],
-    table.hline(),
-    [$A_"max"$], [$0.5 "dB"$],
-    table.hline(),
-    [$A_"min"$], [$40 "dB"$],
-    table.hline(),
-  ),
-) <tab:TX_filter_specifications>
-
 == Upsampling Mixer
 
 The output of the combiner-mixer is modelled by:
@@ -318,6 +295,8 @@ $ y(t) = A cos(2 pi (f_1 + f_"LO") t) $
   ),
 ) <tab:PA_ACPR>
 
+We must choose the ADL5606 amplifier. It is the one that consumes the least amount of power while still achieving the required ACPR.
+
 #figure(
   image("./images/d2/PA_ACPR.png", width: 60%),
   caption: [PA output around $2.4 "GHz"$, for different PAs.],
@@ -326,13 +305,15 @@ $ y(t) = A cos(2 pi (f_1 + f_"LO") t) $
 == Full TX chain
 
 #figure(
-  image("./images/d2/TX_chain.png", width: 70%),
-  caption: [Signal spectrum through different points of the TX chain.],
+  image("./images/d2/TX_chain2.png", width: 55%),
+  caption: [Signal spectrum through different points of the TX chain. Considers a modulated signal.],
 ) <fig:TX_chain_signal>
 
-We can observe that the transmission chain performs as expected, giving us a $19.9385 "dBm"$ of power at the output and having an ACPR of $-54.2316 "dB"$. Power consumption of the TX chain is of $1.9303 "W"$.
+We can observe that the transmission chain performs as expected, giving us a $20.3 "dBm"$ of power at the output and having an ACPR of $-54.2 "dB"$. Power consumption of the TX chain is of $1.924 "W"$.
 
 == Transmission Channel
+
+For the transmission channel, we will be considering a memoryless channel that can have its attenuation fully characterized by the Friis transmission equation.
 
 $ "Att" = 20 times log ((lambda)/(4 pi d)) $ <eq:Friis_att>
 
@@ -375,9 +356,9 @@ $ "SNR"_r = [78.03, 18.03] $
   ),
 ) <tab:RX_specifications>
 
-$ G_("chain") = 10 "dBm" + 22.97 "dBm" = 32.97 "dBm" $
+$ G_("chain") = 10 "dBm" + 22.97 "dBm" = 32.97 "dB" $
 
-$ "NF"_"chain" = 18.03 "dBm" - 10 "dBm" = 8.03 "dBm" $
+$ "NF"_"chain" = 18.03 "dB" - 10 "dB" = 8.03 "dB" $
 
 == Low Noise Amplifier
 
@@ -408,26 +389,6 @@ $
 $
 
 Therefore, this $6 "dB"$ loss in each arm must be considered in our chain gain calculations.
-
-== Anti-Alias Filter
-
-After the down-mixer the signal passes through a low-pass filter, which seeks to attenuate the replica of the signal at $2 f_("LO")$ and the noise outside the useful band, preventing both from being aliased into the useful signal when passing through the ADC.
-
-#figure(
-  caption: [RX baseband filter specifications.],
-  table(
-    columns: 2,
-    align: center,
-    [$f_1$], [$10 "MHz"$],
-    table.hline(),
-    [$f_2$], [$15 "MHz"$],
-    table.hline(),
-    [$A_"max"$], [$0.5 "dB"$],
-    table.hline(),
-    [$A_"min"$], [$40 "dB"$],
-    table.hline(),
-  ),
-) <tab:RX_filter_specifications>
 
 == Baseband Amplifier
 
@@ -491,14 +452,25 @@ From the table, we see that the ideal choice consists of an ADC with 12 bits and
 == Complete TX/Rx Chain
 
 #figure(
-  image("./images/d2/Full_chain_1400.png", width: 80%),
+  image("./images/d2/Full_chain_1400.png", width: 75%),
   caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "km"$.],
 ) <fig:Full_chain_1400>
 
+#align(center)[Final SNR of $10.7$ dB.]
+
 #figure(
-  image("./images/d2/Full_chain_14.png", width: 80%),
+  image("./images/d2/Full_chain_1400_3.png", width: 75%),
+  caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "km"$, using a 3 bit DAC.],
+) <fig:Full_chain_1400_3>
+
+#align(center)[Final SNR of $10.1$ dB.]
+
+#figure(
+  image("./images/d2/Full_chain_14.png", width: 75%),
   caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "m"$.],
 ) <fig:Full_chain_14>
+
+#align(center)[Final SNR of $22.2$ dB.]
 
 #figure(
   image("./images/d2/SNRversusDist.png", width: 80%),
