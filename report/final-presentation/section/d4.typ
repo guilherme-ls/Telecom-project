@@ -95,7 +95,7 @@ $ bold(Y) = bold(H) bold(S) + bold(W) $
     caption: [Same joint ZF receiver with a $1/d^4$ path loss, powers from 40 to 70 dBm.],
   ),
   [
-    - Stronger attenuation makes the neighbours relatively weaker, so $bold(H)$ is almost diagonal and well-conditioned.
+    - Stronger attenuation makes the neighbours relatively weaker, so $bold(H)$ is almost diagonal.
     - The receiver still works (no floor) and the curve is *smoother*.
     - The high powers only pay for the *link budget*, not for interference cancellation.
   ],
