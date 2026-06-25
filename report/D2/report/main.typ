@@ -455,7 +455,7 @@ Having designed the whole transmission and reception systems, we now perform sim
   caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "km"$.]
 ) <fig:Full_chain_1400>
 
-We can verify that the chain works perfectly together, performing as required. The code gives an SNR of $10.6027 "dB"$ at the output, meeting expectations.
+We can verify that the chain works perfectly together, performing as required. The code gives an SNR of $10.6 "dB"$ at the output, meeting expectations.
 
 And this is the perfect point to go back to the design of the DAC. At this moment, the thermal noise representing the noise floor is well above the quantization noise of the DAC. We can now reduce the number of bits of the DAC until the SNR at the output goes below 10 dB.
 

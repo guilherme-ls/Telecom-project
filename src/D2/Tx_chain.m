@@ -11,7 +11,7 @@ signal_config.test_type = 'mod';
 
 %%% TX Params %%%
 %%%%% DAC %%%%
-tx_config.nBitDAC = 1; % Number of bits of the DAC
+tx_config.nBitDAC = 3; % Number of bits of the DAC
 tx_config.Vref = 1;    % Voltage reference of the DAC
 %%%%% Filter %%%%
 tx_config.TXBB_Filt_rp = 0.5; % Passband ripple in dB
