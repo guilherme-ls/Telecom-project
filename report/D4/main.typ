@@ -15,7 +15,7 @@
 )
 
 // LTeX: language=en-US
-// LTeX: statusBatItem=true 
+// LTeX: statusBatItem=true
 
 #show: project.with(
   title: "Network simulation and global performance",
@@ -24,9 +24,9 @@ Cloud Radio Access Network (C-RAN)",
   authors: (
     "LOUROSA RECH Bernardo",
     "LORETE SCHMIDT Guilherme",
-    "PANCHENIAK FILHO Ivan Roberto Wagner"
+    "PANCHENIAK FILHO Ivan Roberto Wagner",
   ),
-  school-logo: image("./images/logo_telecom_ipparis.png", width: 8cm, height:4.0cm), 
+  school-logo: image("./images/logo_telecom_ipparis.png", width: 8cm, height: 4.0cm),
   company-logo: [],
   mentors: (
     "NIOTAKI Kyriaki",
@@ -84,8 +84,8 @@ With $F_"max" = 10^(-2)$ and $N = 100$, this gives one threshold per constellati
     align: (left, center, center),
     stroke: 0.5pt,
     table.header([*Constellation*], [$k$], [$"BER"_"max"$]),
-    [BPSK],   [1], [$10^(-4)$],
-    [8-QAM],  [3], [$3.33 times 10^(-5)$],
+    [BPSK], [1], [$10^(-4)$],
+    [8-QAM], [3], [$3.33 times 10^(-5)$],
     [16-QAM], [4], [$2.5 times 10^(-5)$],
   ),
   caption: [Maximum tolerable BER for each constellation, with $N = 100$ and $F_"max" = 10^(-2)$.],
@@ -99,30 +99,28 @@ instead of running a new BER simulation for every user.
 
 #figure(
   table(
-    columns: (auto, auto, auto, auto),
-    align: (center, center, center, center),
+    columns: (auto, auto, auto, auto, auto),
+    align: (center, center, center, center, center),
     stroke: 0.5pt,
-    table.header(
-      [*Modulation*], [*Equalizer*], [*Channel*], [$E_b\/N_0$ (dB)],
-    ),
-    [BPSK],   [ZF],  [1], [9],
-    [-],       [ZF],    [2], [13.5],
-    [-],       [ZF],    [3], [21],
-    [-],       [DFE], [1], [8.6],
-    [-],       [DFE],    [2], [11],
-    [-],       [DFE],    [3], [13.5],
-    [8-QAM],  [ZF],  [1], [11.5],
-    [-],       [ZF],    [2], [16.4],
-    [-],       [ZF],    [3], [24],
-    [-],       [DFE], [1], [11.2],
-    [-],       [DFE],    [2], [13.5],
-    [-],       [DFE],    [3], [16.3],
-    [16-QAM], [ZF],  [1], [13.2],
-    [-],       [ZF],    [2], [16.6],
-    [-],       [ZF],    [3], [25.7],
-    [-],       [DFE], [1], [12.8],
-    [-],       [DFE],    [2], [14.4],
-    [-],       [DFE],    [3], [18.6],
+    table.header([*Modulation*], [*Equalizer*], [*Channel*], [$E_b\/N_0$ (dB)], [$E_s\/N_0$ (dB)]),
+    [BPSK], [ZF], [1], [9], [9],
+    [-], [ZF], [2], [13.5], [13.5],
+    [-], [ZF], [3], [21], [21],
+    [-], [DFE], [1], [8.6], [8.6],
+    [-], [DFE], [2], [11], [11],
+    [-], [DFE], [3], [13.5], [13.5],
+    [8-QAM], [ZF], [1], [11.5], [16.3],
+    [-], [ZF], [2], [16.4], [21.2],
+    [-], [ZF], [3], [24], [28.8],
+    [-], [DFE], [1], [11.2], [16],
+    [-], [DFE], [2], [13.5], [18.3],
+    [-], [DFE], [3], [16.3], [21.1],
+    [16-QAM], [ZF], [1], [13.2], [19.2],
+    [-], [ZF], [2], [16.6], [22.6],
+    [-], [ZF], [3], [25.7], [31.7],
+    [-], [DFE], [1], [12.8], [18.8],
+    [-], [DFE], [2], [14.4], [20.4],
+    [-], [DFE], [3], [18.6], [24.6],
   ),
   caption: [Look-Up Table: minimum $E_b\/N_0$ (dB) to reach $"BER"_"max"$ for each configuration.],
 ) <tab-lut>
@@ -199,8 +197,10 @@ $ sigma_0^2 = N_0 norm([bold(H)^(-1)]_("central row"))^2 $
 
 The effective SNR and the BER of the central user are then:
 
-$ "SNR"_0^"ZF" = E_s / (N_0 norm([bold(H)^(-1)]_("central row"))^2), quad
-  "BER"_0 = Q(sqrt(2 "SNR"_0^"ZF")) $
+$
+  "SNR"_0^"ZF" = E_s / (N_0 norm([bold(H)^(-1)]_("central row"))^2), quad
+  "BER"_0 = Q(sqrt(2 "SNR"_0^"ZF"))
+$
 
 As in the previous case, the BER reported here is not computed from this formula. The
 received vector $bold(Y)$ is built with the real BPSK symbols, the ZF receiver is
@@ -238,49 +238,47 @@ $ R_"fiber"^"QF" = 2 q dot 1/T_s = 2 times 10 times 20 "Mbit/s" = 400 "Mbit/s". 
     align: (center, center, left),
     stroke: 0.5pt,
 
-    table.header(
-      [*Parameter*], [*Symbol*], [*Value*],
-    ),
+    table.header([*Parameter*], [*Symbol*], [*Value*]),
 
-    [Maximum transmit power],   [$P_"max"$],   [ 20 dBm],
-    [Maximum error rate],       [$F_"max"$],   [$10^(-2)$],
-    [Maximum distance],         [$D_"max"$],   [2 km],
-    [Bandwidth],                [$B$],         [30 MHz],
-    [Roll-off factor],          [$rho$],       [0.5],
-    [Symbol period],            [$T_s$],       [0.05 µs],
-    [Carrier frequency],        [$f_0$],       [2.4 GHz],
-    [Noise spectral density],   [$N_0$],       [−174 dBm/Hz],
+    [Maximum transmit power], [$P_"max"$], [ 20 dBm],
+    [Maximum error rate], [$F_"max"$], [$10^(-2)$],
+    [Maximum distance], [$D_"max"$], [2 km],
+    [Bandwidth], [$B$], [30 MHz],
+    [Roll-off factor], [$rho$], [0.5],
+    [Symbol period], [$T_s$], [0.05 µs],
+    [Carrier frequency], [$f_0$], [2.4 GHz],
+    [Noise spectral density], [$N_0$], [−174 dBm/Hz],
   ),
   caption: [System Parameters],
 )
- == Experimental Results 
- === Rejection rate per user amount 
- Firstly, we study the global performance of a cellular network using a TDMA access scheme. The objective is to evaluate how the number of active users affects the percentage of users that cannot be served by the base station.
+== Experimental Results
+=== Rejection rate per user amount
+Firstly, we study the global performance of a cellular network using a TDMA access scheme. The objective is to evaluate how the number of active users affects the percentage of users that cannot be served by the base station.
 
 The main performance metric is the rejection rate. It is defined as the ratio between the number of rejected users and the total number of active users:
 
 $
-"Rejection Rate" = ("Number of rejected users") / ("Total number of users")
+  "Rejection Rate" = ("Number of rejected users") / ("Total number of users")
 $
 
 A user is rejected when the required transmission power is higher than the maximum allowed power:
 
 $
-P_"max" = 20 " dBm"
+  P_"max" = 20 " dBm"
 $
 
 This power constraint is imposed in order to satisfy the target frame error rate:
 
 $
-F_"max" = 10^(-2)
+  F_"max" = 10^(-2)
 $
 
 In this simulation, we compare different user rates and two receiver structures: ZF and DFE.
- #figure(
+#figure(
   image("./images/rejection_rate_per_user_amount.png", width: 100%),
   caption: [Experiment results],
 )
- The users are randomly placed inside a square cell. The base station is located at the center of the cell. For each user, the distance between the user and the base station is computed. This distance is then used to calculate the path loss using Friis' equation.
+The users are randomly placed inside a square cell. The base station is located at the center of the cell. For each user, the distance between the user and the base station is computed. This distance is then used to calculate the path loss using Friis' equation.
 
 The channel is frequency-selective. This means that the channel does not affect all frequency components of the signal in the same way. Because of multipath propagation, the received signal may contain delayed versions of the transmitted signal. These delayed components create inter-symbol interference.
 
@@ -324,8 +322,8 @@ $P$ from $0$ to $20$ dBm, we place the users at random, build the received
 signal with the actual interfering symbols, and measure the bit error rate
 (BER) of the central user by Monte-Carlo simulation. The curve below shows
 this BER of the central user as a function of $P$.
- #figure(
-  image("./images/performance in multicell interference.jpg", width: 100%),
+#figure(
+  image("./images/performance_in_multicell_interference.jpg", width: 100%),
   caption: [Experiment results],
 )
 The curve confirms this interference-limited behaviour. At low power the BER
@@ -355,8 +353,8 @@ power $P$ from $0$ to $20$ dBm we place the users at random, build the received
 vector with the actual BPSK symbols, apply the Zero-Forcing receiver, and measure
 the bit error rate (BER) of the central user by Monte-Carlo simulation. The curve
 below shows this BER as a function of $P$.
- #figure(
-  image("./images/performance forward.jpg", width: 100%),
+#figure(
+  image("./images/performance_forward.jpg", width: 100%),
   caption: [Experiment results],
 )
 The curve shows a completely different behaviour from the unmanaged case: there
@@ -398,7 +396,7 @@ actual BPSK symbols, apply the Zero-Forcing receiver, and measure the bit error
 rate (BER) of the central user by Monte-Carlo simulation. The curve below shows
 this BER as a function of $P$.
 #figure(
-  image("./images/performance with heavy attenuation.jpg", width: 100%),
+  image("./images/performance_with_heavy_attenuation.jpg", width: 100%),
   caption: [Experiment results],
 )
 Two things stand out in this curve. First, there is again no floor: the BER
