@@ -266,14 +266,12 @@ Bellow we present the simulation results. @fig:eye_0_bef presents the eye diagra
 
 #figure(
   box(width: 70%)[
-  #grid(
-    columns: (1fr, 1fr),
-    gutter: 0pt,
-    image("./assets/eye/eye_5_0_bef.png", width: 100%),
-    image("./assets/eye/eye_15_0_bef.png", width: 100%),
-    image("./assets/eye/eye_40_0_bef.png", width: 100%),
-    image("./assets/eye/eye_90_0_bef.png", width: 100%),
-  )
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 0pt,
+      image("./assets/eye/eye_5_0_bef.png", width: 100%), image("./assets/eye/eye_15_0_bef.png", width: 100%),
+      image("./assets/eye/eye_40_0_bef.png", width: 100%), image("./assets/eye/eye_90_0_bef.png", width: 100%),
+    )
   ],
   // Add your caption text directly inside the figure container
   caption: [Simulated 1 Gbps DML eye diagrams under various DC bias currents on a back to back configuration. Before detection by photodiode.],
@@ -287,14 +285,12 @@ We proceed to observe @fig:eye_20_bef, which also shows the eye diagram generate
 
 #figure(
   box(width: 70%)[
-  #grid(
-    columns: (1fr, 1fr),
-    gutter: 0pt,
-    image("./assets/eye/eye_5_20_bef.png", width: 100%),
-    image("./assets/eye/eye_15_20_bef.png", width: 100%),
-    image("./assets/eye/eye_40_20_bef.png", width: 100%),
-    image("./assets/eye/eye_90_20_bef.png", width: 100%),
-  )
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 0pt,
+      image("./assets/eye/eye_5_20_bef.png", width: 100%), image("./assets/eye/eye_15_20_bef.png", width: 100%),
+      image("./assets/eye/eye_40_20_bef.png", width: 100%), image("./assets/eye/eye_90_20_bef.png", width: 100%),
+    )
   ],
   // Add your caption text directly inside the figure container
   caption: [Simulated 1 Gbps DML eye diagrams under various DC bias currents with 20 km of fiber. Before detection by photodiode.],
@@ -310,14 +306,12 @@ On the other hand, all the other currents generate similar signals, differentiat
 
 #figure(
   box(width: 70%)[
-  #grid(
-    columns: (1fr, 1fr),
-    gutter: 0pt,
-    image("./assets/eye/eye_5_0_aft.png", width: 100%),
-    image("./assets/eye/eye_15_0_aft.png", width: 100%),
-    image("./assets/eye/eye_40_0_aft.png", width: 100%),
-    image("./assets/eye/eye_90_0_aft.png", width: 100%),
-  )
+    #grid(
+      columns: (1fr, 1fr),
+      gutter: 0pt,
+      image("./assets/eye/eye_5_0_aft.png", width: 100%), image("./assets/eye/eye_15_0_aft.png", width: 100%),
+      image("./assets/eye/eye_40_0_aft.png", width: 100%), image("./assets/eye/eye_90_0_aft.png", width: 100%),
+    )
   ],
   // Add your caption text directly inside the figure container
   caption: [Simulated 1 Gbps DML eye diagrams under various DC bias currents on a back to back configuration. After detection by photodiode.],
@@ -330,10 +324,8 @@ Proceeding with @fig:eye_20_aft, it shows the signal that passed through 20 km o
     #grid(
       columns: (1fr, 1fr),
       gutter: 0pt,
-      image("./assets/eye/eye_5_20_aft.png", width: 100%),
-      image("./assets/eye/eye_15_20_aft.png", width: 100%),
-      image("./assets/eye/eye_40_20_aft.png", width: 100%),
-      image("./assets/eye/eye_90_20_aft.png", width: 100%),
+      image("./assets/eye/eye_5_20_aft.png", width: 100%), image("./assets/eye/eye_15_20_aft.png", width: 100%),
+      image("./assets/eye/eye_40_20_aft.png", width: 100%), image("./assets/eye/eye_90_20_aft.png", width: 100%),
     )
   ],
   // Add your caption text directly inside the figure container
@@ -405,11 +397,7 @@ We start by implementing in this optical transmission chain the coding schemes d
     align: center,
     stroke: 0.6pt,
 
-    table.header(
-      [$"Error Capability"$],
-      [$g(x)$],
-      [$R$],
-    ),
+    table.header([$"Error Capability"$], [$g(x)$], [$R$]),
 
     table.hline(),
 
@@ -429,9 +417,10 @@ We start by implementing in this optical transmission chain the coding schemes d
 
 Therefore, after generating a random vector of information bits, we now encode the information using the chosen BCH code before upsampling the symbols vector and convolving it with the square pulse to send it in the fiber. Similarly, at reception, right after obtaining the output symbols from the threshold detector applied in the electrical signal, we perform the decoding and compare the result with the original random vector to measure the BER. The coding and decoding functions used were taken directly from D1.
 
-Importantly, the laser power used in these experiments were normalized to take into account the code rate of the codes used, such that the coded case does not have an unfair advantage in terms of energy. Therefore, the simulation results can be found in @fig:extra2-codes, where uncoded (code 0) and coded performances are compared.
+Importantly, the laser power used in these experiments were normalized to take into account the code rate of the codes used, such that the coded case does not have an unfair advantage in terms of energy. Therefore, the simulation results can be found in @fig:extra2-codes, where uncoded (code 0) and coded performances are compared for a fiber length of $L = 100 "km"$, which presents a considerable level of ISI
+to be later discussed.
 
-As in D1, we notice that for low laser powers (and thus low SNR) the codes introduce a loss in performance, since the loss in bit energy leads to an increase in BER and the number of errors is still well beyond the error correcting capacity of the code. However, for higher laser power, the coded cases present an improved performance with respect to the uncoded case, and BCH code 2 (with a higher error correcting capacity) eventually takes the lead. 
+As in D1, we notice that for low laser powers (and thus low SNR) the codes introduce a loss in performance, since the loss in bit energy leads to an increase in BER and the number of errors is still well beyond the error correcting capacity of the code. However, for higher laser power, the coded cases present an improved performance with respect to the uncoded case, and BCH code 2 (with a higher error correcting capacity) eventually takes the lead.
 
 #figure(
   image("./assets/extra2-codes.png", width: 95%),
@@ -446,7 +435,7 @@ Thus, our proposed digital equalizer takes the electric signal outputted by the 
 
 #figure(
   image("./assets/extra2-equalization.png", width: 95%),
-  caption: [$L_"max"$ as a function of the datarate in Gbit/s, considering both the theoretical value, in orange, and the value obtained through Monte-Carlo simulations, in blue.],
+  caption: [BER as a function of the laser power, considering a non-coded case with (in orange) and without (in blue) equalization.],
 ) <fig:extra2-equalization>
 
 As a side note, we tried to determine the impulse response $h$ of the fiber empirically (by sending a single pulse through it and measuring the output) and using it to perform ZF and DFE in the direct detection case. However, the results were not satisfactory.
@@ -455,7 +444,7 @@ As a side note, we tried to determine the impulse response $h$ of the fiber empi
 
 Throughout this report, we analyzed different properties and behaviors that appear in optical communication systems.
 In it, we studied the effects of chromatic dispersion, and created a fiber model that was later used to further study the
-effects of it in both direct and external modulation communication schemas. 
+effects of it in both direct and external modulation communication schemas.
 
 That resulted in us observing a greater BER degradation
 in higher data rates, as that would decrease the pulse period, which in turn increased the effects of chromatic dispersion, allowing
