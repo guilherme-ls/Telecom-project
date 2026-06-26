@@ -53,15 +53,79 @@ In this model, $bold(Y) = [y_(-1), y_0, y_1]^T$ holds the samples of the three b
 
 == Relationship between FER and BER
 
-A frame fails if at least one of its $N_b = k dot N$ bits is in error, where $k$ is the number of bits per symbol ($k = 1$ for BPSK, $k = 3$ for 8-QAM, $k = 4$ for 16-QAM) and $N$ is the frame size. Assuming independent bit errors, which is reasonable after equalization, the probability that the whole frame is correct is $(1 - "BER")^(k N)$. Taking the complement gives:
+A frame fails if at least one of its symbols is in error, so the Frame Error Rate
+depends on the Symbol Error Rate (SER). With a frame of $N$ symbols and independent
+symbol errors, the probability that the whole frame is correct is $(1 - "SER")^N$, and
+taking the complement gives:
 
-$ "FER" = 1 - (1 - "BER")^(k N) $
+$ "FER" = 1 - (1 - "SER")^N $
 
-To build the Look-Up Table we invert this expression and obtain the maximum tolerable BER for a target $F_"max"$:
+The symbols carry $k = log_2 M$ bits each, where $M$ is the constellation size. With Gray
+mapping, one symbol error usually causes a single bit error, so the SER and the BER are
+related by $"SER" = k dot "BER"$. Substituting this into the expression above gives:
 
-$ "BER"_"max" = 1 - (1 - F_"max")^(1 \/ (k N)) $
+$ "FER" = 1 - (1 - k dot "BER")^N $
 
-For each combination of constellation, channel, and equalizer, we then read from the D1 curves the smallest $E_s\/N_0$ that reaches this BER. This value is the entry of the Look-Up Table.
+Since the target error rate is small, we use the first-order approximation
+$(1 - x)^N approx 1 - N x$, which leads to a simple linear relation:
+
+$ "FER" approx N dot k dot "BER" $
+
+To build the Look-Up Table, we invert this relation and obtain the maximum tolerable BER
+for a target $F_"max"$:
+
+$ "BER"_"max" = F_"max" / (N log_2 M) = F_"max" / (N k) $
+
+With $F_"max" = 10^(-2)$ and $N = 100$, this gives one threshold per constellation:
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    align: (left, center, center),
+    stroke: 0.5pt,
+    table.header([*Constellation*], [$k$], [$"BER"_"max"$]),
+    [BPSK],   [1], [$10^(-4)$],
+    [8-QAM],  [3], [$3.33 times 10^(-5)$],
+    [16-QAM], [4], [$2.5 times 10^(-5)$],
+  ),
+  caption: [Maximum tolerable BER for each constellation, with $N = 100$ and $F_"max" = 10^(-2)$.],
+)
+
+For each combination of constellation, channel, and equalizer, we then read from the D1
+BER-versus-$E_s\/N_0$ curves the smallest $E_s\/N_0$ that reaches this $"BER"_"max"$. The
+resulting values form the Look-Up Table, shown in @tab-lut. During the network
+simulation, the access control reads the required $E_s\/N_0$ directly from this table
+instead of running a new BER simulation for every user.
+
+#figure(
+  table(
+    columns: (auto, auto, auto, auto),
+    align: (center, center, center, center),
+    stroke: 0.5pt,
+    table.header(
+      [*Modulation*], [*Equalizer*], [*Channel*], [$E_b\/N_0$ (dB)],
+    ),
+    [BPSK],   [ZF],  [1], [9],
+    [-],       [ZF],    [2], [13.5],
+    [-],       [ZF],    [3], [21],
+    [-],       [DFE], [1], [8.6],
+    [-],       [DFE],    [2], [11],
+    [-],       [DFE],    [3], [13.5],
+    [8-QAM],  [ZF],  [1], [11.5],
+    [-],       [ZF],    [2], [16.4],
+    [-],       [ZF],    [3], [24],
+    [-],       [DFE], [1], [11.2],
+    [-],       [DFE],    [2], [13.5],
+    [-],       [DFE],    [3], [16.3],
+    [16-QAM], [ZF],  [1], [13.2],
+    [-],       [ZF],    [2], [16.6],
+    [-],       [ZF],    [3], [25.7],
+    [-],       [DFE], [1], [12.8],
+    [-],       [DFE],    [2], [14.4],
+    [-],       [DFE],    [3], [18.6],
+  ),
+  caption: [Look-Up Table: minimum $E_b\/N_0$ (dB) to reach $"BER"_"max"$ for each configuration.],
+) <tab-lut>
 
 == Maximum $E_s$ and available $E_s\/N_0$ at the transmitter
 
