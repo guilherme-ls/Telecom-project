@@ -38,16 +38,34 @@ Cloud Radio Access Network (C-RAN)",
 )
 
 = Introduction
-In this report, we build a simulator to study the global performance of a cellular network in which the base station works as a relay toward a remote server. We start by modelling a standard cell, then we add the access control that decides which users can be served, and finally we study what happens when several cells interfere with each other. We first consider a standard cellular network. We place $K$ active users at random, with a uniform distribution, inside a square cell of side $D_"max"$, and we put the base station at the center. The users share the channel with Time-Division Multiple Access (TDMA), and each user has a fixed target rate that matches one of four technology modes, from 2G/GPRS at 40 kbit/s up to 4G at 40 Mbit/s. The quality of each link mainly depends on the path loss, which we compute with the Friis equation.
+In this report, we built a simulator to study the global performance of a cellular network in which the base station works as a relay towards a remote server. We start by modelling a standard cell,
+then we add the access control that decides which users can be served, and finally we study what happens when several cells interfere with each other. We first consider a standard cellular network.
+
+We place $K$ active users at random, with a uniform distribution, inside a square cell of side $D_"max"$, and we put the base station at the center. The users share the channel with Time-Division
+Multiple Access (TDMA), and each user has a fixed target rate that matches one of four technology modes, from 2G/GPRS at 40 kbit/s up to 4G at 40 Mbit/s. The quality of each link mainly depends on
+the path loss, which we compute with the Friis equation.
+
 In this equation, $P_t$ is the transmit power, $P_r$ is the received power,
-$lambda$ is the wavelength and $d$ is the distance between the user and the base station; the antenna gains are set to 1. On top of this path loss, we apply a frequency-selective channel chosen at random for each user. We then study the whole system as a Cloud Radio Access Network (C-RAN). The base station does not process the signal alone anymore: it relays it to a remote server over an optical fiber, either by decoding and re-encoding the user streams (Decode and Forward) or by quantizing the raw received signal (Quantize and Forward).
+$lambda$ is the wavelength and $d$ is the distance between the user and the base station; the antenna gains are set to 1. On top of this path loss, we apply a frequency-selective channel
+chosen at random for each user.
+
+We then study the whole system as a Cloud Radio Access Network (C-RAN). The base station does not process the signal alone anymore: it relays it to a remote server over an optical fiber,
+either by decoding and re-encoding the user streams (Decode and Forward) or by quantizing the raw received signal (Quantize and Forward).
+
 Finally, we look at a three-cell case with BPSK transmission. We first measure the bit
 error rate of the central user when the inter-cell interference is left unmanaged and
 simply treated as noise, and then when the three base stations forward their samples to
 the server, which collects the received vector given by @eq-system and applies a joint
 Zero-Forcing receiver to separate the symbols.
+
 $ bold(Y) = bold(H) bold(S) + bold(W) $ <eq-system>
-In this model, $bold(Y) = [y_(-1), y_0, y_1]^T$ holds the samples of the three base stations, $bold(S) = [s_(-1), s_0, s_1]^T$ holds the BPSK symbols of the three users, $bold(H)$ contains the channel amplitude gains and $bold(W)$ is the noise. A Zero-Forcing receiver then inverts $bold(H)$ to separate the symbols. We finalize our analysis by computing the rejection rate against $K$ for eight mode–equalizer configurations, by comparing the data rate that the optical fiber needs for the DF and QF strategies, and by measuring the bit error rate of the central user with and without multi-cell processing, including the case of a stronger $1 \/ d^4$ path loss.
+
+In this model, $bold(Y) = [y_(-1), y_0, y_1]^T$ holds the samples of the three base stations, $bold(S) = [s_(-1), s_0, s_1]^T$ holds the BPSK symbols of the three users, $bold(H)$
+contains the channel amplitude gains and $bold(W)$ is the noise.
+
+A Zero-Forcing receiver then inverts $bold(H)$ to separate the symbols. We finalize our analysis by computing the rejection
+rate against $K$ for eight mode–equalizer configurations, by comparing the data rate that the optical fiber needs for the DF and QF strategies, and by measuring the bit error rate of the
+central user with and without multi-cell processing, including the case of a stronger $1 \/ d^4$ path loss.
 
 = System Implementation
 
@@ -66,7 +84,7 @@ related by $"SER" = k dot "BER"$. Substituting this into the expression above gi
 
 $ "FER" = 1 - (1 - k dot "BER")^N $
 
-Since the target error rate is small, we use the first-order approximation
+Since the target error rate is small, we can use the first-order approximation
 $(1 - x)^N approx 1 - N x$, which leads to a simple linear relation:
 
 $ "FER" approx N dot k dot "BER" $
@@ -81,7 +99,7 @@ With $F_"max" = 10^(-2)$ and $N = 100$, this gives one threshold per constellati
 #figure(
   table(
     columns: (auto, auto, auto),
-    align: (left, center, center),
+    align: (center, center, center),
     stroke: 0.5pt,
     table.header([*Constellation*], [$k$], [$"BER"_"max"$]),
     [BPSK], [1], [$10^(-4)$],
@@ -230,6 +248,11 @@ two real parts and costs $2q$ bits. The rate is then fixed and does not depend o
 the channel:
 
 $ R_"fiber"^"QF" = 2 q dot 1/T_s = 2 times 10 times 20 "Mbit/s" = 400 "Mbit/s". $
+
+Both of these values are well under the data rates studied on the fiber during D3: $R_b = 2.5 "Gb"/s$
+and $R_b = 10 "Gb"/s$. Meaning the optical fiber isn't the bottleneck of the system, allowing for
+31 cells to be connected at the same fiber for the lower $2.5 "Gb"/s$ fiber with *DF*, and 6 cells
+for the same fiber rate and *QF*.
 == Simulation's Parameters
 
 #figure(
@@ -251,8 +274,8 @@ $ R_"fiber"^"QF" = 2 q dot 1/T_s = 2 times 10 times 20 "Mbit/s" = 400 "Mbit/s". 
   ),
   caption: [System Parameters],
 )
-== Experimental Results
-=== Rejection rate per user amount
+= Simulation Results
+== Rejection rate per user amount
 Firstly, we study the global performance of a cellular network using a TDMA access scheme. The objective is to evaluate how the number of active users affects the percentage of users that cannot be served by the base station.
 
 The main performance metric is the rejection rate. It is defined as the ratio between the number of rejected users and the total number of active users:
@@ -311,7 +334,11 @@ interference by using previous decisions, without amplifying the noise as strong
 therefore needs less power to satisfy the same FER constraint, which lowers the
 rejection rate.
 
-=== Performance in multicell interference
+
+
+
+
+== Performance in multicell interference
 In this experiment we study the effect of inter-cell interference when it is
 left unmanaged. We consider three adjacent cells, each one serving a single
 user with BPSK modulation, and we focus on the user of the central cell. Its
@@ -338,7 +365,7 @@ a single base station acting on its own cannot remove it. This is exactly the
 limitation that motivates the next experiment, where the three base stations
 forward their samples to the server so that a joint receiver can separate the
 users and cancel the interference.
-=== Performance in fowarding multicell system
+== Performance in fowarding multicell system
 In this experiment we study the same three-cell scenario, but now the inter-cell
 interference is managed by the network. Instead of letting each base station work
 on its own, the three base stations forward their received samples to the remote
@@ -381,7 +408,7 @@ $10^(-3)$, an improvement of several orders of magnitude. This is the quantitati
 justification of the C-RAN architecture: by collecting the samples of all the
 cells at a central server, the system can jointly process them and remove the
 interference that a single base station, acting alone, simply cannot handle.
-=== Performance with heavy attenuation
+== Performance with heavy attenuation
 In this last experiment we reuse exactly the same three-cell scenario with joint
 Zero-Forcing processing at the server, and we change only the propagation model.
 The free-space Friis law, in which the path loss is proportional to $d^(-2)$, is
