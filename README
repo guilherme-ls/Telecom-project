@@ -1,4 +1,11 @@
-Git repository for code and other documents in course PRJ_4TE05_TP year 2025-2026.
+Git repository for code and other documents related to the Performance Analysis of a realistic Cloud Radio Access Network project from the course PRJ_4TE05_TP year 2025-2026.
 
-The directory ref/ contains references, code samples, etc.  You shouldn't work
-in that directory, your modifications may be overwritten by teachers.
+In the `src` folder you can find the matlab code used for the system simulations executed in this project. The subfolders correspond to different sections of the projet:
+- D1: PSK and QAM modulations, error correcting codes, equalization.
+- D2: Full radio transmission chain (ADC/DAC, amplifiers, anthena, channel, LNA, filters, mixers).
+- D3: Optical transmission chain (lasers, external modulator, optical fiber, photodetectors).
+- D4: Cellular network.
+
+For a full report of the work and analysis conducted in this repository please check this [google Drive folder](https://drive.google.com/drive/folders/1E2XpUsQOY3Fn4mkzVVD3PmEA4W-aDnGB?usp=sharing).
+
+The typst code for the reports can be found in the `report` folder.
