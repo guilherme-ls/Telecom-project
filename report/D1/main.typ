@@ -2,6 +2,7 @@
 
 #import "@preview/equate:0.3.2": equate
 #import "@preview/lilaq:0.5.0" as lq
+#import "@preview/numty:0.1.0" as nt
 
 // LTeX: language=en-US
 // LTeX: statusBatItem=true 
@@ -18,10 +19,56 @@
   )
 }
 
+#let filter-positive-2(xdata, ydata) = {
+  let new-ydata = ()
+  
+  for y in ydata {
+    if y == 0 and new-ydata.len() > 0 {
+      new-ydata.push(new-ydata.last())
+    } else {
+      new-ydata.push(y)
+    }
+  }
+
+  (xdata, new-ydata)
+}
+
 #let load-eq(mod, eq, ch) = {
   let file = "./graphs/eq_sims/" + mod + "_" + eq + "_" + str(ch) + ".csv"
   let (x, y) = lq.load-txt(read(file))
   filter-positive(x, y)
+}
+
+#let load-eq-extra1(code, ch, eq) = {
+  let file = "./graphs/extra_bpks/bch" + str(code) + "_" + eq + "_" + str(ch) + ".csv"
+  let (x, y) = lq.load-txt(read(file))
+  filter-positive(x, y)
+}
+
+#let load-eq-extra2(code, mod, ch) = {
+  let file = "./graphs/extra_throughput/bch" + str(code) + "_" + mod + "_none_" + str(ch) + ".csv"
+  let (x, y) = lq.load-txt(read(file))
+  
+  /*let x = if mod == "8QAM" {
+    nt.add(x, nt.mult(10, nt.log(3)))
+  } else {
+    nt.add(x, nt.mult(10, nt.log(4)))
+  }*/
+  
+  filter-positive(x, y)
+}
+
+#let load-eq-extra2-2(code, mod, ch) = {
+  let file = "./graphs/extra_throughput/bch" + str(code) + "_" + mod + "_none_" + str(ch) + ".csv"
+  let (x, y) = lq.load-txt(read(file))
+  
+  /*let x = if mod == "8QAM" {
+    nt.add(x, nt.mult(10, nt.log(3)))
+  } else {
+    nt.add(x, nt.mult(10, nt.log(4)))
+  }*/
+
+  filter-positive-2(x, y)
 }
 
 // Ploting semilog from csv function
@@ -116,6 +163,206 @@
     caption: [
       Plot of the BER versus the SNR per bit in a semilogarithmic scale for a #mod constellation in channel #ch using three distinct equalizations: no equalization, Zero Forcing and Decision Feedback Equalization.
     ],
+  )
+}
+
+#let extra-code-channel(ch, eq) = {
+  let (x_none, y_none) = load-eq("PSK2", eq, ch)
+  let (x_c1,  y_c1)   = load-eq-extra1(1, ch, eq)
+  let (x_c2,  y_c2)  = load-eq-extra1(2, ch, eq)
+
+  figure(
+    lq.diagram(
+      width: 15cm,
+      height: 7cm,
+
+      lq.plot(
+        x_none, y_none,
+        label: [No code],
+        mark: "x",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_c1, y_c1,
+        label: [BCH code 1],
+        mark: "o",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_c2, y_c2,
+        label: [BCH code 2],
+        mark: "+",
+        stroke: (thickness: 1pt)
+      ),
+
+      title: [
+        BER versus $E_b"/"N_0$ for distinct codes with BPSK modulation in channel #ch
+      ],
+
+      yscale: "log",
+      ylabel: [BER],
+      xlabel: [$E_b"/"N_0 ("dB")$],
+      xaxis: (subticks: none),
+      legend: (position: left + bottom)
+    ),
+
+    caption: [
+      Plot of the BER versus the SNR per bit in a semilogarithmic scale for a BPSK constellation in channel #ch using no codes, BCH code 1, and BCH code 2.
+    ],
+  )
+}
+
+#let extra-throughput(mod, ch) = {
+  let (x_none, y_none) = load-eq-extra2(0, mod, ch)
+  let (x_c1,  y_c1)   = load-eq-extra2(1, mod, ch)
+  let (x_c2,  y_c2)  = load-eq-extra2(2, mod, ch)
+
+  figure({
+    show: lq.set-grid(
+      stroke-sub: 0.5pt + luma(80%)
+    )
+
+    lq.diagram(
+      width: 15cm,
+      height: 7cm,
+
+      lq.plot(
+        x_none, y_none,
+        label: [No code],
+        mark: "x",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_c1, y_c1,
+        label: [BCH code 1],
+        mark: "o",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_c2, y_c2,
+        label: [BCH code 2],
+        mark: "+",
+        stroke: (thickness: 1pt)
+      ),
+
+      title: [
+        Throughput versus $E_S"/"N_0$ for distinct codes with #mod modulation
+      ],
+
+      yscale: "log",
+      ylabel: [Throughput],
+      xlabel: [$E_S"/"N_0 ("dB")$],
+      xaxis: (subticks: none),
+      legend: (position: right + bottom)
+    )},
+
+    caption: [
+      Plot of the throughput T versus the $E_S"/"N_0$ in a semilogarithmic scale for a #mod constellation in a AWGN channel using no codes, BCH code 1, and BCH code 2.
+    ]
+  )
+}
+
+#let extra-throughput-all(ch) = {
+  let (x_none_bp, y_none_bp) = load-eq-extra2-2(0, "2PSK", ch)
+  let (x_c1_bp,  y_c1_bp)   = load-eq-extra2-2(1, "2PSK", ch)
+  let (x_c2_bp,  y_c2_bp)  = load-eq-extra2-2(2, "2PSK", ch)
+  let (x_none_8q, y_none_8q) = load-eq-extra2-2(0, "8QAM", ch)
+  let (x_c1_8q,  y_c1_8q)   = load-eq-extra2-2(1, "8QAM", ch)
+  let (x_c2_8q,  y_c2_8q)  = load-eq-extra2-2(2, "8QAM", ch)
+  let (x_none_16q, y_none_16q) = load-eq-extra2-2(0, "16QAM", ch)
+  let (x_c1_16q,  y_c1_16q)   = load-eq-extra2-2(1, "16QAM", ch)
+  let (x_c2_16q,  y_c2_16q)  = load-eq-extra2-2(2, "16QAM", ch)
+
+  figure({
+    show: lq.set-grid(
+      stroke-sub: 0.5pt + luma(80%)
+    )
+
+    lq.diagram(
+      width: 15cm,
+      height: 7cm,
+
+      lq.plot(
+        x_none_bp, y_none_bp,
+        label: [BPSK],
+        mark: "x",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_c1_bp, y_c1_bp,
+        label: [BPSK + BCH1],
+        mark: "o",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_c2_bp, y_c2_bp,
+        label: [BPSK + BCH2],
+        mark: "+",
+        stroke: (thickness: 1pt)
+      ),
+
+      lq.plot(
+        x_none_8q, y_none_8q,
+        label: [8QAM],
+        mark: "d",
+        stroke: (thickness: 1pt)
+      ),
+      
+      lq.plot(
+        x_c1_8q, y_c1_8q,
+        label: [8QAM + BCH1],
+        mark: "v",
+        stroke: (thickness: 1pt)
+      ),
+      
+      lq.plot(
+        x_c2_8q, y_c2_8q,
+        label: [8QAM + BCH2],
+        mark: "<",
+        stroke: (thickness: 1pt)
+      ),
+      
+      lq.plot(
+        x_none_16q, y_none_16q,
+        label: [16QAM],
+        mark: ">",
+        stroke: (thickness: 1pt)
+      ),
+      
+      lq.plot(
+        x_c1_16q, y_c1_16q,
+        label: [16QAM + BCH1],
+        mark: "s5",
+        stroke: (thickness: 1pt)
+      ),
+      
+      lq.plot(
+        x_c2_16q, y_c2_16q,
+        label: [16QAM + BCH2],
+        mark: "a5",
+        stroke: (thickness: 1pt)
+      ),
+
+      title: [
+        Throughput versus $E_S"/"N_0$ for distinct code and modulation pairs.
+      ],
+
+      //yscale: "log",
+      ylabel: [Throughput],
+      xlabel: [$E_S"/"N_0 ("dB")$],
+      xaxis: (subticks: none),
+      legend: (position: left + top)
+    )},
+
+    caption: [
+      Plot of the throughput T versus $E_S"/"N_0$ in a semilogarithmic scale for a BPSK, 8QAM and 16QAM constellations in a AWGN channel using no codes, BCH code 1, and BCH code 2.
+    ]
   )
 }
 
@@ -493,6 +740,62 @@ $ bold("z")'_(D F E) = bold("Ts") + bold("w")' $ <eq:dfe>
   #create-ber-figure("QAM16", 2) <16QAM_channel2>
   
   #create-ber-figure("QAM16", 3) <16QAM_channel3>
+
+== Extra - Coding with Frequency-Selective Channel
+
+  In this section, we seek to analyze the influence of the use of different error correcting codes on the BER of a BPSK modulated signal transmitted through different frequency-selective channels, employing DFE equalization.
+
+  First, @extra1_channel1 shows the BER per SNR curves of a BPSK modulated signal being transmitted in channel 1 and employing three distinct coding schemes. We observe that general shape of the curves mostly similar to the AWGN channel case studied previously, where the BCH codes underperform in low SNRs, but provide a considerable gain in high SNR, specially BCH code 2. 
+
+  #extra-code-channel(1, "dfe") <extra1_channel1>
+
+  Continuing with @extra1_channel2, as the ISI increases, the codes stop leading to performance gains even at high SNRs. In this case, the bit energy $E_b$ loss induced by the code leads to a loss in BER greater than the gain introduced by the error correction of the codes.
+
+  The same phenomena can be seen in @extra1_channel3, with channel 3.
+
+  #extra-code-channel(2, "dfe") <extra1_channel2>
+  
+  #extra-code-channel(3, "dfe") <extra1_channel3>
+
+== Extra - Throughput
+
+  We start the throughput analysis by deducing an analytical equation to calculate it in an AWGN channel. @eq:base_throughput presents the general definition of throughput, as the number of bits in a frame $N_b$, times the frame success rate FSR, divided by the period of a frame $T_F$.
+
+  $
+    T = (N_b dot F S R) / T_F
+  $ <eq:base_throughput>
+
+  Knowing that the FSR is equivalent to the probability that all the $N$ emitted symbols are correctly detected, it can be described by @eq:fsr, where $P_e$ is the symbol error probability.
+
+  $
+    F S R = (1 - P_e)^N
+  $ <eq:fsr>
+
+  Thus, also substituting $N_b = N log_2 M$ and $T_F = N space T_s$, where $M$ is the number of symbols in the constellation and $T_s$ is the symbol period, the throughput is given by @eq:t_final. $P_e$ depends on the constellation gain $gamma$ and is given by @eq:p_e_t.
+
+  $
+    T = (R log_2 M space (1 - P_e)^N) / T_s
+  $ <eq:t_final>
+
+  $
+    P_e = N_"min" Q (sqrt(gamma E_S / N_0))
+  $ <eq:p_e_t>
+
+  Given this theoretical result, we can proceed by simulating the throughputs. The individual results for each modulation scheme can be found in @extra2_BPSK, @extra2_8QAM and @extra2_16QAM. We can observe in each case that the codes promote a performance gain in low SNRs, but lead to a loss in throughput in high SNRs, when there are fewer errors. We can also highlight that the loss in throughput for high SNRs is given by the coding rate of each code, and also by the zero-padding we employed to fit the codes (multiple of 31) within the 100 symbol frame.
+
+  #extra-throughput("2PSK", 0) <extra2_BPSK>
+
+  #extra-throughput("8QAM", 0) <extra2_8QAM>
+  
+  #extra-throughput("16QAM", 0) <extra2_16QAM>
+
+  Additionally, comparing the maximum throughput (in high SNRs) for different modulation schemes, we notice that they correspond directly to the values predicted by the analytical throughput equation when $P_e = 0$. The maximum throughput $T_max$ in bit/s is $2 dot 10^7$ for BPSK, $6 dot 10^7$ for 8QAM and $8 dot 10^7$ for 16QAM.
+
+  Lastly, we plot a superposition of every throughput curve in @extra2_tot. As expected, more complex modulations like 8QAM and 16QAM require a higher SNR before becoming viable, but deliver a considerably higher throughput.
+
+  #extra-throughput-all(0) <extra2_tot>
+
+  By taking the envelope of all curves, this image enables us to choose the best pair modulation-code for each SNR.
 
 = Conclusion
 
