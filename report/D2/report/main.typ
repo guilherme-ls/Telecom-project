@@ -111,16 +111,7 @@ The figure shows that the zero padding DAC's output suffers an intense attenuati
 
 Based on the power requirements of the system being implemented, we opt for the ZOH implementation. Now, we must follow the analysis by determining the minimum number of bits the ADC must have for the system to achieve the desired performance.
 
-To obtain a preliminary estimation of the number of bits to choose for the DAC, we employ the heuristic that the output ACPR of the DAC itself must not be affected by its quantization noise, such that its influence on the final ACPR of the chain is minimized. To this end, a testbench was created to insert a single 16-QAM modulated signals in a series of DACs with different number of bits, measuring the ACPR of the output in each case. The results are shown in @fig:DAC_ACPR.
-
-#figure(
-  image("./assets/DAC_ACPR.png", width: 95%),
-  caption: [DAC output ACPR per number of bits considering a 16-QAM modulated input.]
-) <fig:DAC_ACPR>
-
-The plot shows that from 10 bits onwards the ACPR stabilizes around a fixed value, suggesting that at this point the DAC's quantization noise becomes insignificant when compared to the signal in the adjacent bands. Therefore, we adopt 10 bits as the number of bits for the DAC.
-
-As an addendum, it is interesting to mention that when conducting further tests with the full chain, a much lower number of bits was capable of achieving the desired performances in terms of ACPR. This will be later commented.
+At this point, we are not capable of determining the number of bits that we should adopt for the DAC. This will only be possible at the last step, after the design of the rest of the chain. Therefore, we will employ a temporary values of 10 bits for the DAC, sufficiently high for it not to be a limiting factor.
 
 === Reconstruction Filter
 
@@ -223,7 +214,7 @@ Having designed every component of the chain, we now proceed with testing the wh
   caption: [Signal spectrum through different points of the TX chain.]
 ) <fig:TX_chain_signal>
 
-We can observe that the transmission chain performs as expected, giving us a $19.9385 "dBm"$ of power at the output and having an ACPR of $-54.2316 "dB"$. Therefore, all the specifications are met. We outline that the signal power is slightly lower than $20 "dBm"$ to prevent saturation of the ADC on reception.
+We can observe that the transmission chain performs as expected, giving us a $19.9 "dBm"$ of power at the output and having an ACPR of $-54.2 "dB"$. Therefore, all the specifications are met. We outline that the signal power is slightly lower than $20 "dBm"$ to prevent saturation of the ADC on reception.
 
 Interestingly, during testing we came to the conclusion that even with a 1 bit DAC the system would reach the desired ACPR target. However, practical limitations of such an implementation led us to opt for continuing the usage of the 10 bit DAC.
 
@@ -253,7 +244,7 @@ $ N_r = 10 times log ((k T B)/(1 "mW")) = -101 "dBm" $ <eq:thermal_noise>
 
 Thus, subtracting the noise power from the input power we can calculate the input SNR range as:
 
-$ "SNR"_r = [78.03, 18.03] $
+$ "SNR"_r = [78.03, 18.03] "dB" $
 
 Having characterized the input signal of the receiver, we can proceed in designing its individual components.
 
@@ -464,7 +455,16 @@ Having designed the whole transmission and reception systems, we now perform sim
   caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "km"$.]
 ) <fig:Full_chain_1400>
 
-We can verify that the chain works perfectly together, performing as required. The code gives an SNR of $10.6027 "dB"$ at the output, meeting expectations.
+We can verify that the chain works perfectly together, performing as required. The code gives an SNR of $10.6 "dB"$ at the output, meeting expectations.
+
+And this is the perfect point to go back to the design of the DAC. At this moment, the thermal noise representing the noise floor is well above the quantization noise of the DAC. We can now reduce the number of bits of the DAC until the SNR at the output goes below 10 dB.
+
+After consecutive measures, we determine that the lowest number of bits the DAC can have and still reach the desired performance is 3, with an SNR of $10.1$ dB. We will adopt this value from now on, as this is the value that leads to the lowest power consumption. See @fig:Full_chain_1400_3 to observe the behavior of the signal along the chain in this case.
+
+#figure(
+  image("./assets/Full_chain_1400.png", width: 95%),
+  caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "km"$, considering a DAC with 3 bits.]
+) <fig:Full_chain_1400_3>
 
 Now we perform the same simulation considering a channel where $d = 1.4 "m"$.
 
@@ -473,7 +473,7 @@ Now we perform the same simulation considering a channel where $d = 1.4 "m"$.
   caption: [Signal spectrum through different points of the communication chain, considering a distance $d = 1.4 "m"$.]
 ) <fig:Full_chain_14>
 
-Again, the communication chain performs as expected. Even if the output appears to have some harmonics due to saturation of the ADC, they are simply the quantization noise of the DAC that created the signal. We can confirm this through the SNR of $64.0591 "dB"$ at the output, which is close to the SQNR of a 10 bit DAC.
+Again, the communication chain performs as expected. Even if the output appears to have some harmonics due to saturation of the ADC, they are simply the quantization noise of the DAC that created the signal. We can confirm this through the SNR of $22.2 "dB"$ at the output, which is close to the SQNR of a 3 bit DAC.
 
 Lastly, we perform a sweep over different distances inside the established limits and collect the SNRs along these points. The results are shown in @fig:SNR_dist.
 
