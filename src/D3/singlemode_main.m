@@ -2,14 +2,14 @@ clear;
 close all;
 %%%%%%%%%%%%%%%% Fiber Constants
 
-fiber_config.alpha = 0; %0.2; % db/km
+fiber_config.alpha = 0.2; % db/km
 fiber_config.dispersion_0 = 17; % ps/nm/km
-fiber_config.dispersion_slope = 0.09; % ps/nm2/km
-fiber_config.fiber_length = 1; % km
+fiber_config.dispersion_slope = 0.056; % ps/nm2/km
+fiber_config.fiber_length = 100; % km
 
 %%%%%%%%%%%%%%%% Physical Constants
   
-c = 3e8; % physconst("LightSpeed"); % m/s
+c = 3e5; % physconst("LightSpeed") / 1000; % nm/ps
 
 %%%%%%%%%% Transmission Constants 
 
@@ -23,64 +23,62 @@ signal_central_wavelength = 1554; % nm
 
 dispersion = fiber_config.dispersion_0 + fiber_config.dispersion_slope*(signal_central_wavelength - wavelength_0);
 
-beta_2 = - dispersion * signal_central_wavelength^2 / (2*pi*c);
+%%%%%%%%%%% Pulse Signal Creation
+pulse_T0 = 100; % ps
 
 %%%%%%%%%%% Pulse Signal Creation
-pulse_T0 = 7; % ps
-pulse_a = log(2) / (2 * (pulse_T0 / 2)^2);
-pulse_FWHM = 2 * sqrt(2 * log(2)) * pulse_T0;
+[pulse, t_vec, f_vec, f_sampling, pulse_freq_width] = gaussian_pulse(fiber_config, signal_A0, pulse_T0,...
+                                       wavelength_0, signal_central_wavelength);
+[pulse, t_vec, f_vec, f_sampling, pulse_freq_width] = square_pulse(fiber_config, signal_A0, pulse_T0,...
+                                       wavelength_0, signal_central_wavelength);
 
-pulse_freq_width =  0.44 / pulse_FWHM; % 0.44 / pulse_FWHM; % THz ; % sqrt(2 * log(2)) / pulse_T0; % THz 
-pulse_delta_lambda = pulse_freq_width * signal_central_wavelength^2 / (c / 1000); % nm
+pulse_delta_lambda = pulse_freq_width * signal_central_wavelength^2 / c; % nm
 analitical_time_dispersion = dispersion * pulse_delta_lambda * fiber_config.fiber_length; % ps
-
 fprintf("DeltaTau Ana = %.2f ps\n", analitical_time_dispersion);
-
-time_window = 1/pulse_freq_width + abs(analitical_time_dispersion) * 2; % ps
-
-bw_cutoff = 0.01;
-
-pulse_bw = 2 * sqrt(2 * pulse_a * log(1 / sqrt(bw_cutoff))); % THz
-
-f_sampling = pulse_bw * 2; % THz 
-
-N_pulse = ceil(2 * f_sampling / pulse_freq_width);
-N_dispersion = ceil(abs(2 * analitical_time_dispersion * f_sampling));
-N_total = N_pulse*2 + N_dispersion*2;
-
-N_total = 2^ceil(log2(N_total));
-
-t_vec = (-N_total:1:N_total) / f_sampling / 2;
-f_vec = (-N_total:1:N_total) * f_sampling / 4;
-
-%%%%%%%%%%% Pulse Signal Creation
-pulse = signal_A0*exp(-t_vec.^2 / (2 * pulse_T0^2));
 
 %%%%%%%%%%% Simulated Dispersion
 
 [pulse_out, fiber_trans] = singlemode_fiber(fiber_config, wavelength_0, signal_central_wavelength, ...
-                                            pulse, f_vec);
+                                            pulse, f_sampling, 'True');
 
-input_pulse_width = pulsewidth(abs(pulse), t_vec);
-exit_pulse_width = pulsewidth(abs(pulse_out), t_vec);
+signal_in = abs(pulse).^2;
+lower_state_in = min(signal_in); 
+upper_state_in = max(signal_in);
+input_pulse_width = pulsewidth(signal_in, t_vec, 'StateLevels', [lower_state_in, upper_state_in]);
+signal_out = abs(pulse_out).^2;
+lower_state_out = min(signal_out);
+upper_state_out = max(signal_out);
+exit_pulse_width = pulsewidth(signal_out, t_vec, 'StateLevels', [lower_state_out, upper_state_out]);
+
+
+figure();
+pulsewidth(signal_in, t_vec, 'StateLevels', [lower_state_in, upper_state_in]);
+figure();
+pulsewidth(signal_out, t_vec, 'StateLevels', [lower_state_out, upper_state_out]);
 
 fprintf("DeltaTau Sim In = %.2f ps\n", input_pulse_width);
 fprintf("DeltaTau Sim Out= %.2f ps\n", exit_pulse_width);
 
-%figure();
-%subplot(2,1,1);
-%plot(f_vec, abs(fiber_trans));
-%subplot(2,1,2);
-%plot(f_vec, angle(fiber_trans));
 
 figure();
 subplot(2,1,1);
-plot(t_vec, abs(pulse));
+plot(f_vec, abs(fiber_trans));
+xlabel('Frequency (THz)') 
+ylabel('|T(f)|') 
+subplot(2,1,2);
+plot(f_vec, unwrap(angle(fiber_trans)));
+xlabel('Frequency (THz)') 
+ylabel('phase(T(f))') 
+xlim([-3*pulse_freq_width 3*pulse_freq_width])
+
+figure();
+subplot(2,1,1);
+plot(t_vec, abs(pulse).^2);
 title('Input pulse')
-xlabel('time (ps)') 
-ylabel('I(t)') 
+xlabel('Time (ps)') 
+ylabel('Optical Power') 
 subplot(2,1,2);
 plot(t_vec, abs(pulse_out));
 title('Output pulse')
-xlabel('time (ps)') 
-ylabel('I(t)') 
+xlabel('Time (ps)') 
+ylabel('Optical Power') 
